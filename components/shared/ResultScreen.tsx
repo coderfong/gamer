@@ -10,11 +10,16 @@ export interface ResultScreenProps {
     is_loss: boolean;
   } | null;
   voucherCode: string | null;
+  flagged?: boolean;
   shareUrl: string;
   campaignName: string;
 }
 
-export function ResultScreen({ prize, voucherCode, shareUrl, campaignName }: ResultScreenProps) {
+export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName }: ResultScreenProps) {
+  // Flagged plays: show the prize visual but withhold the code.
+  const showVoucher = !!voucherCode && !flagged;
+  const showPending = !!prize && !prize.is_loss && (flagged || (!voucherCode && !flagged && !prize.is_loss));
+
   return (
     <section className="space-y-6">
       {prize ? (
@@ -27,7 +32,18 @@ export function ResultScreen({ prize, voucherCode, shareUrl, campaignName }: Res
       ) : (
         <PrizeDisplay name="Thanks for playing!" isLoss />
       )}
-      {voucherCode ? <VoucherCodeDisplay code={voucherCode} /> : null}
+
+      {showVoucher ? <VoucherCodeDisplay code={voucherCode!} /> : null}
+
+      {showPending ? (
+        <div className="border rounded-xl p-4 bg-amber-50 text-amber-900 text-center">
+          <div className="text-sm font-semibold">Voucher pending verification</div>
+          <p className="text-sm mt-1">
+            We&apos;ll contact you within 24 hours to confirm your prize.
+          </p>
+        </div>
+      ) : null}
+
       <div className="flex justify-center gap-2">
         <ShareButton url={shareUrl} title={`${campaignName} — play & win`} />
       </div>

@@ -4,6 +4,7 @@ export type GameType =
   | "memory"
   | "slot_machine"
   | "lucky_dip"
+  | "quiz"
   | "trivia"
   | "tap_target"
   | "match_three"

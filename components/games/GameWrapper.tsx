@@ -7,6 +7,10 @@ import { BrandingPanel } from "@/components/shared/BrandingPanel";
 import { PlayerCapture, type CaptureSubmit } from "./PlayerCapture";
 import { ResultScreen } from "@/components/shared/ResultScreen";
 import { SpinWheel } from "./SpinWheel";
+import { ScratchCard } from "./ScratchCard";
+import { Quiz } from "./Quiz";
+import { SlotMachine } from "./SlotMachine";
+import { PickABox } from "./PickABox";
 
 type Stage = "capture" | "playing" | "submitting" | "result";
 
@@ -20,6 +24,7 @@ interface SubmitResponse {
     is_loss: boolean;
   } | null;
   voucherCode: string | null;
+  flagged?: boolean;
 }
 
 export function GameWrapper({
@@ -47,12 +52,12 @@ export function GameWrapper({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Could not start");
+        setError(prettyError(json));
         return;
       }
       setPlayId(json.playId);
       setStage("playing");
-    } catch (e) {
+    } catch {
       setError("Network error");
     } finally {
       setSubmitting(false);
@@ -73,13 +78,13 @@ export function GameWrapper({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Could not submit");
+        setError(prettyError(json));
         setStage("playing");
         return;
       }
       setResult(json);
       setStage("result");
-    } catch (e) {
+    } catch {
       setError("Network error");
       setStage("playing");
     }
@@ -113,6 +118,7 @@ export function GameWrapper({
             <ResultScreen
               prize={result?.prize ?? null}
               voucherCode={result?.voucherCode ?? null}
+              flagged={result?.flagged}
               shareUrl={shareUrl}
               campaignName={campaign.name}
             />
@@ -134,11 +140,33 @@ function GameByType(props: {
   if (props.busy) {
     return <div className="text-center py-12 text-zinc-500">Picking your prize...</div>;
   }
-  // Phase 1: only SpinWheel is implemented. Other game types fall back to it
-  // so the rest of the flow remains testable.
   switch (props.gameType) {
     case "spin_wheel":
+      return <SpinWheel {...props} />;
+    case "scratch":
+      return <ScratchCard {...props} />;
+    case "quiz":
+    case "trivia":
+      return <Quiz {...props} />;
+    case "slot_machine":
+      return <SlotMachine {...props} />;
+    case "lucky_dip":
+      return <PickABox {...props} />;
     default:
       return <SpinWheel {...props} />;
   }
+}
+
+function prettyError(json: { error?: string; layer?: string; reason?: string }): string {
+  if (json.error === "rate_limited") {
+    if (json.layer === "contact") return "You've already played this campaign recently. Please try again later.";
+    if (json.layer === "ip") return "Too many attempts from your network. Please wait a few minutes.";
+    if (json.layer === "global") return "We're busy right now — please try again shortly.";
+    return "Rate limit hit. Please try again later.";
+  }
+  if (json.error === "velocity_blocked") return "Too many recent plays detected. Please try again later.";
+  if (json.error === "captcha_failed") return "Please complete the captcha and try again.";
+  if (json.error === "max_plays_reached") return "You've reached the max plays for this campaign.";
+  if (json.error === "campaign_inactive") return "This campaign is not currently active.";
+  return json.error ?? "Something went wrong";
 }

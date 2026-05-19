@@ -2,23 +2,24 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { DrawPrizeResult } from "@/lib/types/database";
 
 /**
- * Resolve a play to a prize + voucher code using the SQL RPC `draw_prize`.
- * Atomic on the DB side: stock decrement and voucher claim happen in one txn.
+ * Atomic chance-game prize draw. Calls the SQL RPC `draw_prize_atomic`.
+ * When `flagged=true`, the RPC still picks a prize but skips stock decrement
+ * and voucher claim, and sets play.status='flagged'.
  */
 export async function drawPrize(args: {
   campaignId: string;
   playId: string;
   score?: number;
+  flagged?: boolean;
 }): Promise<DrawPrizeResult> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("draw_prize", {
+  const { data, error } = await supabase.rpc("draw_prize_atomic", {
     p_campaign_id: args.campaignId,
     p_play_id: args.playId,
     p_score: args.score ?? null,
+    p_flagged: args.flagged ?? false,
   });
   if (error) throw error;
-
-  // Postgres functions returning TABLE come back as an array of rows.
   const row = Array.isArray(data) ? data[0] : data;
   return {
     prize_id: row?.prize_id ?? null,

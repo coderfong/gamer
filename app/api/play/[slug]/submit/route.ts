@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { submitPlaySchema } from "@/lib/utils/validation";
 import { drawPrize } from "@/lib/prizes/drawPrize";
-import { ipHash, rateLimitCheck } from "@/lib/fraud/rateLimit";
+import { lookupAndClaim } from "@/lib/prizes/skillScoreLookup";
+import { ipHash } from "@/lib/fraud/rateLimit";
+import { preflightCheck } from "@/lib/fraud/velocityCheck";
 
 export const dynamic = "force-dynamic";
+
+// Game types that are skill-based (score → tier via campaign.config.win_thresholds).
+// Chance games use the weighted random draw.
+const SKILL_GAMES = new Set(["quiz", "trivia"]);
 
 export async function POST(
   req: NextRequest,
@@ -12,8 +18,6 @@ export async function POST(
 ) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? null;
   const ipH = ipHash(ip);
-  const rl = rateLimitCheck(`submit:${params.slug}:${ipH}`);
-  if (!rl.ok) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   const body = await req.json().catch(() => ({}));
   const parsed = submitPlaySchema.safeParse(body);
@@ -24,20 +28,22 @@ export async function POST(
   const supabase = createAdminClient();
   const { data: play, error } = await supabase
     .from("plays")
-    .select("id, campaign_id, status, campaigns!inner(slug, status)")
+    .select("id, campaign_id, status, player_id, campaigns!inner(slug, status, game_type)")
     .eq("id", parsed.data.playId)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!play) return NextResponse.json({ error: "play_not_found" }, { status: 404 });
-  // @ts-expect-error nested select
-  if (play.campaigns.slug !== params.slug) {
+  const campaign = (Array.isArray((play as any).campaigns)
+    ? (play as any).campaigns[0]
+    : (play as any).campaigns) as { slug: string; status: string; game_type: string };
+  if (campaign.slug !== params.slug) {
     return NextResponse.json({ error: "slug_mismatch" }, { status: 400 });
   }
   if (play.status !== "started") {
     return NextResponse.json({ error: "play_already_resolved" }, { status: 409 });
   }
 
-  // Persist score/outcome before drawing (used by skill-game prize logic).
+  // Persist score/outcome before drawing.
   await supabase
     .from("plays")
     .update({
@@ -49,28 +55,71 @@ export async function POST(
     })
     .eq("id", play.id);
 
-  const result = await drawPrize({
+  // Soft velocity check at submit time. If it trips, we still resolve a
+  // prize (so a bot can't tell), but draw with flagged=true so no voucher
+  // is claimed and no inventory is decremented.
+  // Fetch player email/fingerprint for the check.
+  let playerEmail: string | null = null;
+  let playerFingerprint: string | null = null;
+  if (play.player_id) {
+    const { data: p } = await supabase
+      .from("players")
+      .select("email, fingerprint")
+      .eq("id", play.player_id)
+      .maybeSingle();
+    playerEmail = (p as { email?: string | null } | null)?.email ?? null;
+    playerFingerprint = (p as { fingerprint?: string | null } | null)?.fingerprint ?? null;
+  }
+  const verdict = await preflightCheck({
     campaignId: play.campaign_id,
-    playId: play.id,
-    score: parsed.data.score,
+    ipHash: ipH,
+    fingerprint: playerFingerprint,
+    email: playerEmail,
   });
+  const flagged = !verdict.ok;
+  if (flagged) {
+    await supabase.from("fraud_events").insert({
+      campaign_id: play.campaign_id,
+      play_id: play.id,
+      ip_hash: ipH,
+      fingerprint: playerFingerprint,
+      reason: `submit_velocity_${verdict.reason}`,
+      details: { count: verdict.count, window_minutes: verdict.windowMinutes },
+    });
+  }
 
-  // Fetch prize details for the response.
-  let prize = null as
+  const isSkill = SKILL_GAMES.has(campaign.game_type);
+  const result =
+    isSkill && typeof parsed.data.score === "number"
+      ? await lookupAndClaim({
+          campaignId: play.campaign_id,
+          playId: play.id,
+          score: parsed.data.score,
+          flagged,
+        })
+      : await drawPrize({
+          campaignId: play.campaign_id,
+          playId: play.id,
+          score: parsed.data.score,
+          flagged,
+        });
+
+  let prize:
     | null
-    | { id: string; name: string; description: string | null; image_url: string | null; is_loss: boolean };
+    | { id: string; name: string; description: string | null; image_url: string | null; is_loss: boolean } = null;
   if (result.prize_id) {
     const { data: p } = await supabase
       .from("prizes")
       .select("id, name, description, image_url, is_loss")
       .eq("id", result.prize_id)
       .maybeSingle();
-    prize = p ?? null;
+    prize = (p as typeof prize) ?? null;
   }
 
   return NextResponse.json({
     playId: play.id,
     prize,
-    voucherCode: result.code,
+    voucherCode: flagged ? null : result.code,
+    flagged,
   });
 }
