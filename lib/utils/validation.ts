@@ -5,6 +5,7 @@ export const playerCaptureSchema = z.object({
   email: z.string().trim().email().max(200).optional(),
   phone: z.string().trim().min(5).max(40).optional(),
   fingerprint: z.string().max(200).optional(),
+  turnstileToken: z.string().max(4096).optional(),
 });
 
 export type PlayerCaptureInput = z.infer<typeof playerCaptureSchema>;

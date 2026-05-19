@@ -4,7 +4,7 @@ import type { CampaignRow, PrizeRow } from "@/lib/types/database";
 import { readTheme } from "@/lib/types/campaign";
 import type { GameResult, GameType } from "@/lib/types/game";
 import { BrandingPanel } from "@/components/shared/BrandingPanel";
-import { PlayerCapture } from "./PlayerCapture";
+import { PlayerCapture, type CaptureSubmit } from "./PlayerCapture";
 import { ResultScreen } from "@/components/shared/ResultScreen";
 import { SpinWheel } from "./SpinWheel";
 
@@ -36,7 +36,7 @@ export function GameWrapper({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleCapture(form: { name: string; email: string; phone: string }) {
+  async function handleCapture(form: CaptureSubmit) {
     setSubmitting(true);
     setError(null);
     try {

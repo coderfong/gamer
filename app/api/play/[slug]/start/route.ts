@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { playerCaptureSchema } from "@/lib/utils/validation";
 import { ipHash, rateLimitCheck } from "@/lib/fraud/rateLimit";
+import { verifyTurnstileToken } from "@/lib/fraud/turnstile";
+import { preflightCheck } from "@/lib/fraud/velocityCheck";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +42,42 @@ export async function POST(
   }
   if (campaign.require_capture && !parsed.data.email && !parsed.data.phone) {
     return NextResponse.json({ error: "capture_required" }, { status: 400 });
+  }
+
+  // --- security stack ---
+  const ts = await verifyTurnstileToken(parsed.data.turnstileToken, ip);
+  if (!ts.ok) {
+    await supabase.from("fraud_events").insert({
+      campaign_id: campaign.id,
+      ip_hash: ipH,
+      fingerprint: parsed.data.fingerprint ?? null,
+      reason: "turnstile_failed",
+      details: { codes: ts.errorCodes ?? [] },
+    });
+    return NextResponse.json(
+      { error: "captcha_failed", codes: ts.errorCodes ?? [] },
+      { status: 403 },
+    );
+  }
+
+  const velocity = await preflightCheck({
+    campaignId: campaign.id,
+    ipHash: ipH,
+    fingerprint: parsed.data.fingerprint ?? null,
+    email: parsed.data.email ?? null,
+  });
+  if (!velocity.ok) {
+    await supabase.from("fraud_events").insert({
+      campaign_id: campaign.id,
+      ip_hash: ipH,
+      fingerprint: parsed.data.fingerprint ?? null,
+      reason: `preflight_velocity_${velocity.reason}`,
+      details: { count: velocity.count, window_minutes: velocity.windowMinutes },
+    });
+    return NextResponse.json(
+      { error: "velocity_blocked", reason: velocity.reason },
+      { status: 429 },
+    );
   }
 
   // Insert player (best-effort: each capture is a new row; dedupe is Phase 2+)
