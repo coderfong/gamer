@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendWelcomeEmail } from "@/lib/messaging/resend";
 
 // All server actions for the auth flow. Each writes session cookies via
 // the SSR server client; the brand row is created server-side via the
@@ -39,6 +40,10 @@ export async function signupAction(formData: FormData) {
         contact_email: email,
       },
       { onConflict: "owner_id" },
+    );
+    // Welcome email (fire-and-forget — failure shouldn't block signup).
+    sendWelcomeEmail({ to: email, brandName }).catch((e) =>
+      console.error("[welcome email failed]", e),
     );
   }
 

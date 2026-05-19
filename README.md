@@ -70,3 +70,5 @@ types/shims.d.ts                                — module declarations
 ## Tags
 - `phase-1-complete` — playable e2e, single game
 - `phase-2-complete` — security stack + 4 more games + skill scoring
+- `phase-3-step-1-complete` — supabase auth + middleware
+- `phase-3-step-2-complete` — admin shell + dashboard + welcome email

@@ -10,7 +10,7 @@ export default function Home() {
         </p>
         <div className="flex gap-3 justify-center">
           <Link href="/play/test-campaign" className="btn-brand">Play test campaign</Link>
-          <Link href="/admin" className="rounded-lg border px-5 py-3 font-semibold">Admin</Link>
+          <Link href="/login" className="rounded-lg border px-5 py-3 font-semibold">Log in</Link>
         </div>
       </div>
     </main>
