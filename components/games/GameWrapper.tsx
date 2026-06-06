@@ -53,15 +53,15 @@ export function GameWrapper({
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
       });
-      const json = await res.json();
+      const { json, raw } = await readResponse(res);
       if (!res.ok) {
-        setError(prettyError(json));
+        setError(json ? prettyError(json) : `Server error ${res.status}: ${raw.slice(0, 200)}`);
         return;
       }
       setPlayId(json.playId);
       setStage("playing");
-    } catch {
-      setError("Network error");
+    } catch (e) {
+      setError(`Request failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSubmitting(false);
     }
@@ -79,16 +79,16 @@ export function GameWrapper({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ playId, ...r }),
       });
-      const json = await res.json();
+      const { json, raw } = await readResponse(res);
       if (!res.ok) {
-        setError(prettyError(json));
+        setError(json ? prettyError(json) : `Server error ${res.status}: ${raw.slice(0, 200)}`);
         setStage("playing");
         return;
       }
       setResult(json);
       setStage("result");
-    } catch {
-      setError("Network error");
+    } catch (e) {
+      setError(`Request failed: ${e instanceof Error ? e.message : String(e)}`);
       setStage("playing");
     }
   }
@@ -114,14 +114,21 @@ export function GameWrapper({
           {stage === "capture" ? (
             <PlayerCapture onSubmit={handleCapture} submitting={submitting} error={error} />
           ) : stage === "playing" || stage === "submitting" ? (
-            <GameByType
-              gameType={campaign.game_type as GameType}
-              campaignId={campaign.id}
-              config={campaign.config}
-              theme={theme}
-              onComplete={handleGameComplete}
-              busy={stage === "submitting"}
-            />
+            <>
+              {error ? (
+                <div className="mb-4 rounded-lg bg-red-50 text-red-700 text-sm text-center px-3 py-2 border border-red-200">
+                  {error}
+                </div>
+              ) : null}
+              <GameByType
+                gameType={campaign.game_type as GameType}
+                campaignId={campaign.id}
+                config={campaign.config}
+                theme={theme}
+                onComplete={handleGameComplete}
+                busy={stage === "submitting"}
+              />
+            </>
           ) : (
             <ResultScreen
               prize={result?.prize ?? null}
@@ -163,6 +170,16 @@ function GameByType(props: {
       return <PickABox {...props} />;
     default:
       return <SpinWheel {...props} />;
+  }
+}
+
+// Read a response body once, tolerating non-JSON error pages (HTML 500s).
+async function readResponse(res: Response): Promise<{ json: any; raw: string }> {
+  const raw = await res.text();
+  try {
+    return { json: raw ? JSON.parse(raw) : null, raw };
+  } catch {
+    return { json: null, raw };
   }
 }
 

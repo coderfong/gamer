@@ -132,20 +132,26 @@ export async function POST(
   }
 
   const isSkill = SKILL_GAMES.has(campaign.game_type);
-  const result =
-    isSkill && typeof parsed.data.score === "number"
-      ? await lookupAndClaim({
-          campaignId: play.campaign_id,
-          playId: play.id,
-          score: parsed.data.score,
-          flagged,
-        })
-      : await drawPrize({
-          campaignId: play.campaign_id,
-          playId: play.id,
-          score: parsed.data.score,
-          flagged,
-        });
+  let result;
+  try {
+    result =
+      isSkill && typeof parsed.data.score === "number"
+        ? await lookupAndClaim({
+            campaignId: play.campaign_id,
+            playId: play.id,
+            score: parsed.data.score,
+            flagged,
+          })
+        : await drawPrize({
+            campaignId: play.campaign_id,
+            playId: play.id,
+            score: parsed.data.score,
+            flagged,
+          });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: "draw_failed", message }, { status: 500 });
+  }
 
   let prize:
     | null
