@@ -10,11 +10,16 @@
 
 -- ----- 0. Seed auth user + brand (owner of all test campaigns) -----
 -- Fixed UUIDs so re-runs and the campaign inserts below stay stable.
+-- NOTE: GoTrue (Supabase Auth) scans the token columns below into non-nullable
+-- Go strings; if a hand-inserted row leaves them NULL you get
+-- "Database error querying schema" on login. So we set them to '' explicitly.
 insert into auth.users (
   instance_id, id, aud, role, email,
   encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data,
-  created_at, updated_at
+  created_at, updated_at,
+  confirmation_token, recovery_token,
+  email_change, email_change_token_new
 )
 values (
   '00000000-0000-0000-0000-000000000000',
@@ -22,7 +27,8 @@ values (
   'authenticated', 'authenticated', 'seed@example.com',
   crypt('password123', gen_salt('bf')), now(),
   '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
-  now(), now()
+  now(), now(),
+  '', '', '', ''
 )
 on conflict (id) do nothing;
 
