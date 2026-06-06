@@ -15,11 +15,16 @@ export const playerCaptureSchema = z.object({
 
 export type PlayerCaptureInput = z.infer<typeof playerCaptureSchema>;
 
+// Games report durationMs from performance.now() (a float) and may send null
+// for fields they don't use, so round numbers and coerce blanks to undefined.
+const roundNum = (v: unknown) =>
+  v === "" || v === null ? undefined : typeof v === "number" ? Math.round(v) : v;
+
 export const submitPlaySchema = z.object({
   playId: z.string().uuid(),
-  score: z.number().int().min(0).max(1_000_000).optional(),
-  outcome: z.string().max(200).optional(),
-  durationMs: z.number().int().nonnegative().max(60 * 60 * 1000).optional(),
+  score: z.preprocess(roundNum, z.number().int().min(0).max(1_000_000).optional()),
+  outcome: z.preprocess(blankToUndef, z.string().max(200).optional()),
+  durationMs: z.preprocess(roundNum, z.number().int().nonnegative().max(60 * 60 * 1000).optional()),
 });
 
 export type SubmitPlayInput = z.infer<typeof submitPlaySchema>;
