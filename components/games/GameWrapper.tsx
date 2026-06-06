@@ -30,11 +30,14 @@ interface SubmitResponse {
 export function GameWrapper({
   campaign,
   shareUrl,
+  preview = false,
 }: {
   campaign: CampaignRow & { prizes: PrizeRow[] };
   shareUrl: string;
+  preview?: boolean;
 }) {
   const theme = readTheme(campaign);
+  const previewQuery = preview ? "?preview=1" : "";
   const [stage, setStage] = useState<Stage>(campaign.require_capture ? "capture" : "playing");
   const [playId, setPlayId] = useState<string | null>(null);
   const [result, setResult] = useState<SubmitResponse | null>(null);
@@ -45,7 +48,7 @@ export function GameWrapper({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/play/${campaign.slug}/start`, {
+      const res = await fetch(`/api/play/${campaign.slug}/start${previewQuery}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
@@ -71,7 +74,7 @@ export function GameWrapper({
     }
     setStage("submitting");
     try {
-      const res = await fetch(`/api/play/${campaign.slug}/submit`, {
+      const res = await fetch(`/api/play/${campaign.slug}/submit${previewQuery}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ playId, ...r }),
@@ -101,6 +104,11 @@ export function GameWrapper({
       }
     >
       <div className="max-w-md mx-auto">
+        {preview ? (
+          <div className="mb-3 rounded-lg bg-amber-100 text-amber-800 text-sm text-center px-3 py-2">
+            Preview mode — plays don’t count and no vouchers are claimed.
+          </div>
+        ) : null}
         <BrandingPanel theme={theme} campaignName={campaign.name} />
         <div className="bg-white rounded-2xl shadow-sm border p-6">
           {stage === "capture" ? (

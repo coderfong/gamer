@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { playerCaptureSchema } from "@/lib/utils/validation";
 import { ipHash } from "@/lib/fraud/rateLimit";
 import { verifyTurnstileToken } from "@/lib/fraud/turnstile";
 import { preflightCheck } from "@/lib/fraud/velocityCheck";
 import { checkAllLimits } from "@/lib/fraud/upstashLimits";
+import { ownsCampaignBySlug } from "@/lib/admin/previewGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,23 @@ export async function POST(
 
   if (cErr) return NextResponse.json({ error: cErr.message }, { status: 500 });
   if (!campaign) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  // --- preview mode ---
+  // Owners can dry-run their own campaign (any status). Skip the security stack
+  // and all writes; hand back a synthetic play id the submit route ignores.
+  const isPreview = req.nextUrl.searchParams.get("preview") === "1";
+  if (isPreview) {
+    if (!(await ownsCampaignBySlug(params.slug))) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    return NextResponse.json({
+      playId: randomUUID(),
+      campaignId: campaign.id,
+      gameType: campaign.game_type,
+      preview: true,
+    });
+  }
+
   if (campaign.status !== "active") {
     return NextResponse.json({ error: "campaign_inactive" }, { status: 409 });
   }

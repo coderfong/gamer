@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { submitPlaySchema } from "@/lib/utils/validation";
 import { drawPrize } from "@/lib/prizes/drawPrize";
 import { lookupAndClaim } from "@/lib/prizes/skillScoreLookup";
+import { previewDraw } from "@/lib/prizes/previewDraw";
+import { ownsCampaignBySlug } from "@/lib/admin/previewGuard";
 import { ipHash } from "@/lib/fraud/rateLimit";
 import { preflightCheck } from "@/lib/fraud/velocityCheck";
 
@@ -26,6 +28,47 @@ export async function POST(
   }
 
   const supabase = createAdminClient();
+
+  // --- preview mode ---
+  // Owner dry-run: compute a realistic outcome without touching plays/players/
+  // voucher inventory. The synthetic playId from /start isn't a real row.
+  const isPreview = req.nextUrl.searchParams.get("preview") === "1";
+  if (isPreview) {
+    if (!(await ownsCampaignBySlug(params.slug))) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    const { data: previewCampaign } = await supabase
+      .from("campaigns")
+      .select("id, game_type, config")
+      .eq("slug", params.slug)
+      .maybeSingle();
+    if (!previewCampaign) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    const result = await previewDraw({
+      campaignId: previewCampaign.id,
+      gameType: previewCampaign.game_type,
+      score: parsed.data.score,
+      config: (previewCampaign.config ?? {}) as Record<string, unknown>,
+    });
+    let previewPrize = null;
+    if (result.prize_id) {
+      const { data: p } = await supabase
+        .from("prizes")
+        .select("id, name, description, image_url, is_loss")
+        .eq("id", result.prize_id)
+        .maybeSingle();
+      previewPrize = p ?? null;
+    }
+    return NextResponse.json({
+      playId: parsed.data.playId,
+      prize: previewPrize,
+      voucherCode: result.code,
+      flagged: false,
+      preview: true,
+    });
+  }
+
   const { data: play, error } = await supabase
     .from("plays")
     .select("id, campaign_id, status, player_id, campaigns!inner(slug, status, game_type)")
