@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import Link from "next/link";
 import { PrizeDisplay } from "./PrizeDisplay";
 import { VoucherCodeDisplay } from "./VoucherCodeDisplay";
 import { ShareButton } from "./ShareButton";
@@ -17,9 +18,10 @@ export interface ResultScreenProps {
   shareUrl: string;
   campaignName: string;
   brandColor?: string;
+  homeUrl?: string;
 }
 
-export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName, brandColor }: ResultScreenProps) {
+export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName, brandColor, homeUrl = "/" }: ResultScreenProps) {
   // Flagged plays: show the prize visual but withhold the code.
   const showVoucher = !!voucherCode && !flagged;
   const showPending = !!prize && !prize.is_loss && (flagged || (!voucherCode && !flagged && !prize.is_loss));
@@ -56,7 +58,10 @@ export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignNa
         </div>
       ) : null}
 
-      <div className="flex justify-center gap-2">
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <Link href={homeUrl} className="btn-brand w-full text-center">
+          Back to home
+        </Link>
         <ShareButton url={shareUrl} title={`${campaignName} — play & win`} />
       </div>
     </section>
