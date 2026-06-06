@@ -13,10 +13,12 @@ export default async function RedemptionsPage({ params }: { params: { id: string
   const supabase = createClient();
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, name, status")
+    .select("id, name, status, theme")
     .eq("id", params.id)
     .maybeSingle();
   if (!campaign) notFound();
+
+  const theme = (campaign.theme ?? {}) as { brandColor?: string; brandFg?: string };
 
   const { data: recentRows } = await supabase
     .from("redemptions")
@@ -40,7 +42,15 @@ export default async function RedemptionsPage({ params }: { params: { id: string
   });
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      style={
+        {
+          "--brand-color": theme.brandColor ?? "#6d28d9",
+          "--brand-fg": theme.brandFg ?? "#ffffff",
+        } as React.CSSProperties
+      }
+    >
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{campaign.name}</h1>
@@ -53,11 +63,11 @@ export default async function RedemptionsPage({ params }: { params: { id: string
 
       <RedemptionClient campaignId={campaign.id} />
 
-      <section className="space-y-2">
-        <h2 className="text-sm font-medium text-zinc-700">Recent redemptions</h2>
-        <div className="rounded-xl border bg-white overflow-hidden">
+      <section className="arcade-shell rounded-3xl p-5 sm:p-6">
+        <h2 className="arcade-title text-lg text-white mb-3">Recent redemptions</h2>
+        <div className="overflow-hidden rounded-xl border border-white/10">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-zinc-500 text-xs uppercase tracking-wide">
+            <thead className="bg-white/5 text-white/50 text-xs uppercase tracking-wide">
               <tr>
                 <th className="text-left px-3 py-2">When</th>
                 <th className="text-left px-3 py-2">Code</th>
@@ -65,10 +75,10 @@ export default async function RedemptionsPage({ params }: { params: { id: string
                 <th className="text-left px-3 py-2">Redeemed by</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-white/90">
               {recent.map((r) => (
-                <tr key={r.id} className="border-t">
-                  <td className="px-3 py-2 text-zinc-600">{new Date(r.at).toLocaleString()}</td>
+                <tr key={r.id} className="border-t border-white/10">
+                  <td className="px-3 py-2 text-white/60">{new Date(r.at).toLocaleString()}</td>
                   <td className="px-3 py-2 font-mono">{r.code}</td>
                   <td className="px-3 py-2">{r.prizeName}</td>
                   <td className="px-3 py-2">{r.redeemedBy}</td>
@@ -76,7 +86,7 @@ export default async function RedemptionsPage({ params }: { params: { id: string
               ))}
               {recent.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-8 text-center text-zinc-500">
+                  <td colSpan={4} className="px-3 py-8 text-center arcade-muted">
                     No redemptions yet.
                   </td>
                 </tr>

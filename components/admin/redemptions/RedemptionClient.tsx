@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { VoucherTicket, type VoucherStatus } from "@/components/shared/VoucherTicket";
 
 const QrScanner = dynamic(() => import("./QrScanner").then((m) => m.QrScanner), { ssr: false });
 
@@ -74,10 +75,8 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
         setError(json?.error?.message ?? "Could not redeem.");
         return;
       }
-      setMessage("Voucher marked as redeemed.");
-      setResult((r) =>
-        r && r.voucher ? { ...r, voucher: { ...r.voucher, redeemed: true } } : r,
-      );
+      setMessage("Voucher redeemed!");
+      setResult((r) => (r && r.voucher ? { ...r, voucher: { ...r.voucher, redeemed: true } } : r));
       router.refresh();
     } catch {
       setError("Network error.");
@@ -86,85 +85,122 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
     }
   }
 
+  function reset() {
+    setCode("");
+    setResult(null);
+    setError(null);
+    setMessage(null);
+  }
+
+  const v = result?.voucher;
+  const ticketStatus: VoucherStatus = v
+    ? v.redeemed
+      ? "redeemed"
+      : v.claimed
+        ? "valid"
+        : "pending"
+    : "valid";
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && lookup()}
-          placeholder="Enter voucher code"
-          className="flex-1 min-w-[200px] rounded-lg border px-3 py-2 text-sm font-mono"
-        />
-        <button onClick={() => lookup()} disabled={loading} className="btn-brand">
-          {loading ? "Looking up…" : "Look up"}
-        </button>
-        <button
-          onClick={() => setScanning((s) => !s)}
-          className="rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50"
-        >
-          {scanning ? "Stop scan" : "Scan QR"}
-        </button>
-      </div>
-
-      {scanning ? (
-        <QrScanner
-          onScan={(text) => {
-            const c = extractCode(text);
-            setCode(c);
-            setScanning(false);
-            lookup(c);
-          }}
-          onClose={() => setScanning(false)}
-        />
-      ) : null}
-
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {message ? <p className="text-sm text-green-600">{message}</p> : null}
-
-      {result && !result.found ? (
-        <div className="rounded-xl border bg-white p-4 text-sm text-zinc-600">
-          No voucher with that code in this campaign.
+    <div className="arcade-shell rounded-3xl p-6 sm:p-8">
+      <div className="mx-auto max-w-md space-y-5">
+        <div className="text-center">
+          <div className="arcade-title text-2xl text-white">🎟️ Redeem a Voucher</div>
+          <p className="arcade-muted text-sm">Scan the QR or enter the code to verify and redeem.</p>
         </div>
-      ) : null}
 
-      {result?.found && result.voucher ? (
-        <div className="rounded-xl border bg-white p-4 space-y-2">
-          <Row label="Voucher code" value={result.voucher.code} mono />
-          <Row label="Prize" value={result.voucher.prizeName ?? "—"} />
-          <Row
-            label="Won at"
-            value={result.play?.wonAt ? new Date(result.play.wonAt).toLocaleString() : "—"}
+        {/* code entry */}
+        <div className="flex flex-col gap-3">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && lookup()}
+            placeholder="ENTER CODE"
+            className="w-full rounded-xl border-2 border-white/20 bg-black/25 px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-white placeholder-white/30 outline-none focus:border-[var(--brand-color)]"
           />
-          <Row label="Player" value={result.play?.contact ?? "—"} />
-          <Row
-            label="Status"
-            value={result.voucher.redeemed ? "Already redeemed" : "Not redeemed"}
-          />
-          <div className="pt-2">
-            {result.voucher.redeemed ? (
-              <span className="text-sm text-zinc-500">This voucher was already redeemed.</span>
-            ) : !result.play ? (
-              <span className="text-sm text-zinc-500">
-                Voucher not yet claimed by a play — nothing to redeem.
-              </span>
-            ) : (
-              <button onClick={redeem} disabled={redeeming} className="btn-brand">
-                {redeeming ? "Marking…" : "Mark as Redeemed"}
-              </button>
-            )}
+          <div className="flex gap-3">
+            <button onClick={() => lookup()} disabled={loading || !code.trim()} className="btn-arcade flex-1">
+              {loading ? "Looking…" : "LOOK UP"}
+            </button>
+            <button
+              onClick={() => setScanning((s) => !s)}
+              className="rounded-xl border-2 border-white/25 px-4 font-semibold text-white/90 hover:bg-white/10 transition"
+            >
+              {scanning ? "Stop" : "📷 Scan"}
+            </button>
           </div>
         </div>
-      ) : null}
+
+        {scanning ? (
+          <div className="overflow-hidden rounded-xl border-2 border-white/15">
+            <QrScanner
+              onScan={(text) => {
+                const c = extractCode(text);
+                setCode(c);
+                setScanning(false);
+                lookup(c);
+              }}
+              onClose={() => setScanning(false)}
+            />
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="rounded-xl border border-red-400/40 bg-red-500/15 px-4 py-2 text-center text-sm font-semibold text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {result && !result.found ? (
+          <div className="rounded-xl border-2 border-white/15 bg-black/20 p-5 text-center">
+            <div className="text-3xl">🔎</div>
+            <div className="mt-1 font-semibold text-white">No voucher found</div>
+            <p className="arcade-muted text-sm">No voucher with that code in this campaign.</p>
+          </div>
+        ) : null}
+
+        {result?.found && v ? (
+          <div className="space-y-4 animate-[pop-in_0.4s_ease-out]">
+            <VoucherTicket code={v.code} prizeName={v.prizeName} status={ticketStatus} showQr={false} />
+
+            <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
+              <Row label="Won at" value={result.play?.wonAt ? new Date(result.play.wonAt).toLocaleString() : "—"} />
+              <Row label="Player" value={result.play?.contact ?? "—"} />
+            </div>
+
+            {message ? (
+              <div className="rounded-xl border border-green-400/40 bg-green-500/15 px-4 py-3 text-center font-semibold text-green-200 animate-[pop-in_0.4s_ease-out]">
+                ✅ {message}
+              </div>
+            ) : v.redeemed ? (
+              <div className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-center text-sm arcade-muted">
+                This voucher was already redeemed.
+              </div>
+            ) : !result.play ? (
+              <div className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-center text-sm arcade-muted">
+                Voucher not yet claimed by a play — nothing to redeem.
+              </div>
+            ) : (
+              <button onClick={redeem} disabled={redeeming} className="btn-arcade w-full">
+                {redeeming ? "Redeeming…" : "✓ MARK AS REDEEMED"}
+              </button>
+            )}
+
+            <button onClick={reset} className="w-full text-center text-sm font-semibold text-white/60 hover:text-white">
+              Look up another
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4 text-sm">
-      <span className="text-zinc-500">{label}</span>
-      <span className={mono ? "font-mono" : ""}>{value}</span>
+    <div className="flex justify-between gap-4 py-0.5">
+      <span className="arcade-muted">{label}</span>
+      <span className="font-medium text-white">{value}</span>
     </div>
   );
 }

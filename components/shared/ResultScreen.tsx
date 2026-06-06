@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { PrizeDisplay } from "./PrizeDisplay";
-import { VoucherCodeDisplay } from "./VoucherCodeDisplay";
+import { VoucherTicket } from "./VoucherTicket";
 import { ShareButton } from "./ShareButton";
 import { celebrate } from "@/lib/games/celebrate";
 
@@ -47,7 +47,15 @@ export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignNa
         <PrizeDisplay name="Thanks for playing!" isLoss />
       )}
 
-      {showVoucher ? <VoucherCodeDisplay code={voucherCode!} /> : null}
+      {showVoucher ? (
+        <VoucherTicket
+          code={voucherCode!}
+          prizeName={prize?.name}
+          status="valid"
+          copyable
+          brandColor={brandColor}
+        />
+      ) : null}
 
       {showPending ? (
         <div className="border rounded-xl p-4 bg-amber-50 text-amber-900 text-center">
