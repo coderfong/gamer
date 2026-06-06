@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = { status?: string; sort?: string; q?: string };
 
-export default async function DashboardPage({
+export default async function CampaignsPage({
   searchParams,
 }: {
   searchParams: SearchParams;
@@ -21,15 +21,8 @@ export default async function DashboardPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: brand } = await supabase
-    .from("brands")
-    .select("name, subscription_tier, contact_email")
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
   const { cards, createdAtById, error } = await loadCampaignCards(supabase);
 
-  // ---- Apply filter / sort / search (URL-driven) ----
   const statusFilter = (searchParams.status ?? "all") as CampaignStatus | "all";
   const sort = searchParams.sort ?? "recent";
   const q = (searchParams.q ?? "").trim().toLowerCase();
@@ -48,12 +41,7 @@ export default async function DashboardPage({
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Welcome back, {brand?.name ?? "there"}</h1>
-          <p className="text-sm text-zinc-600">
-            {brand?.contact_email ?? user.email} · {brand?.subscription_tier ?? "—"}
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Campaigns</h1>
         <a href="/campaigns/new" className="btn-brand shrink-0">
           New campaign
         </a>
@@ -79,7 +67,7 @@ export default async function DashboardPage({
       ) : (
         <EmptyState
           title="No campaigns yet"
-          description="Create your first prize-game campaign to start collecting plays and growing your audience."
+          description="Create your first prize-game campaign to get started."
           actionLabel="New campaign"
           actionHref="/campaigns/new"
         />
