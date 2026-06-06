@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBrand } from "@/lib/admin/brand";
+import { sendCampaignLaunchedEmail } from "@/lib/messaging/resend";
+import { toDataUrl } from "@/lib/utils/qrcode";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +19,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, status, theme")
+    .select("id, status, theme, slug, name")
     .eq("id", params.id)
     .maybeSingle();
   if (!campaign) return err("not_found", "Campaign not found.", 404);
@@ -61,6 +63,24 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     .update({ status: "active" })
     .eq("id", params.id);
   if (updateErr) return err("update_failed", updateErr.message, 500);
+
+  // Campaign-launched email (fire-and-forget — failure must not block launch).
+  if (brand.contact_email) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const publicUrl = `${appUrl}/play/${campaign.slug}`;
+    try {
+      const qrDataUrl = await toDataUrl(publicUrl);
+      await sendCampaignLaunchedEmail({
+        to: brand.contact_email,
+        brandName: brand.name,
+        campaignName: campaign.name,
+        publicUrl,
+        qrDataUrl,
+      });
+    } catch (e) {
+      console.error("[campaign launched email failed]", e);
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

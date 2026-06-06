@@ -13,6 +13,32 @@ This brief replaces all prior in-chat guidance for Phase 3. Read it end to end b
 
 ---
 
+## IMPLEMENTATION STATUS (updated 2026-06-06)
+
+All of Phase 3 is implemented in code and the production build passes clean (`npm run build`, `npm run typecheck`). Committed on `master`:
+
+- **3.2 retro-fill** — GAME_META, CampaignCard, dashboard server actions, URL filter/sort/search, loading/error/EmptyState.
+- **3.0 schema** — `0005` (brands extras, `campaigns.brand_id` FK, RLS on all 7 tables), `0006` (brand_id NOT NULL), seed brand + brand_id backfill.
+- **3.3 builder** — 5-step wizard (`/campaigns/new` + `/campaigns/[id]/edit`), admin API routes, `0007` brand-assets storage bucket + RLS, `/campaigns` list.
+- **3.4 analytics** — `/campaigns/[id]/analytics` with recharts + CSV export + masking.
+- **3.5 redemption** — `/campaigns/[id]/redemptions` with code search + html5-qrcode scan; redeem API.
+- **3.6 preview** — `/campaigns/[id]/preview`; play API honors `?preview=1` with ownership guard, no writes.
+- **3.7 billing** — `/billing` + invoice-request API; campaign-launched / low-inventory / invoice-request Resend templates.
+
+**Still manual (cannot be done from code here):**
+1. Apply migrations `0005`–`0007` and re-run `seed.sql` against the database (no local Supabase `config.toml` in this repo).
+2. Create the `brand-assets` storage bucket if your environment doesn't run SQL bucket creation (the migration does `insert into storage.buckets`).
+3. Set env: `NEXT_PUBLIC_OWNER_EMAIL`, `NEXT_PUBLIC_OWNER_PAYNOW_UEN` (billing), `RESEND_API_KEY`/`RESEND_FROM` (emails fall back to console stub otherwise).
+4. Runtime end-to-end verification and the `phase-3-*-complete` git tags.
+
+**Schema deviations from this brief** (adapted to the actual DB):
+- DB campaign status uses `active` (not `live`); UI labels it "Live".
+- Redemptions link via `voucher_codes.redeemed_at` + a `redemptions` row (table has `voucher_code_id`, not `play_id`); there is no `plays.redeemed_at` column.
+- PayNow QR encodes the UEN as text, not a full EMVCo/SGQR payload (upgrade later if bank-scannable QR is needed).
+- GAME_META keys match the existing `GameType` enum (27 entries), not the brief's hypothetical key list.
+
+---
+
 ## 3.0 Schema completion (must verify before proceeding)
 
 Verify these are in place. If not, write `0005_brands_extras.sql`:

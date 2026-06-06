@@ -61,6 +61,75 @@ export async function sendWelcomeEmail(args: {
   });
 }
 
+export async function sendCampaignLaunchedEmail(args: {
+  to: string;
+  brandName: string;
+  campaignName: string;
+  publicUrl: string;
+  qrDataUrl?: string | null;
+}): Promise<SendResult> {
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="margin:0 0 16px 0;">Your campaign is live 🚀</h1>
+      <p>Hi ${escapeHtml(args.brandName)},</p>
+      <p><strong>${escapeHtml(args.campaignName)}</strong> is now accepting plays. Share this link:</p>
+      <p style="margin: 16px 0;">
+        <a href="${args.publicUrl}" style="color:#6d28d9;">${escapeHtml(args.publicUrl)}</a>
+      </p>
+      ${args.qrDataUrl ? `<p><img src="${args.qrDataUrl}" alt="Campaign QR code" width="180" height="180" /></p>` : ""}
+      <p style="color:#666; font-size:13px;">Manage it anytime from your dashboard.</p>
+    </div>
+  `;
+  return send({ to: args.to, subject: `“${args.campaignName}” is live!`, html });
+}
+
+export async function sendLowInventoryEmail(args: {
+  to: string;
+  brandName: string;
+  campaignName: string;
+  prizeName: string;
+  remaining: number;
+  total: number;
+}): Promise<SendResult> {
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="margin:0 0 16px 0;">Low prize inventory ⚠️</h1>
+      <p>Hi ${escapeHtml(args.brandName)},</p>
+      <p>The prize <strong>${escapeHtml(args.prizeName)}</strong> in
+      <strong>${escapeHtml(args.campaignName)}</strong> is running low:
+      <strong>${args.remaining}</strong> of ${args.total} vouchers left.</p>
+      <p style="color:#666; font-size:13px;">Upload more codes from the campaign editor to keep it running.</p>
+    </div>
+  `;
+  return send({
+    to: args.to,
+    subject: `Low inventory: ${args.prizeName} (${args.remaining} left)`,
+    html,
+  });
+}
+
+export async function sendInvoiceRequestEmail(args: {
+  to: string;
+  brandName: string;
+  brandEmail: string;
+  campaignCount: number;
+  notes?: string;
+}): Promise<SendResult> {
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="margin:0 0 16px 0;">Invoice request</h1>
+      <p><strong>${escapeHtml(args.brandName)}</strong> (${escapeHtml(args.brandEmail)}) requested an invoice.</p>
+      <p>Campaign count: <strong>${args.campaignCount}</strong></p>
+      ${args.notes ? `<p>Notes:<br/>${escapeHtml(args.notes).replace(/\n/g, "<br/>")}</p>` : ""}
+    </div>
+  `;
+  return send({
+    to: args.to,
+    subject: `Invoice request from ${args.brandName}`,
+    html,
+  });
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({
     "&": "&amp;",
