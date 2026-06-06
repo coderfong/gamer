@@ -2,18 +2,50 @@
 -- Five test campaigns, one per game type.
 -- Idempotent: safe to re-run. Slugs: test-spinwheel, test-scratch, test-quiz,
 -- test-slot, test-pickbox.
+--
+-- Phase 3: campaigns.brand_id is NOT NULL (migration 0006), so every campaign
+-- below is owned by a single seed brand created here. The seed brand needs an
+-- auth.users owner; we insert a deterministic local-dev user for that. LOCAL/DEV
+-- ONLY — never run this seed against production.
+
+-- ----- 0. Seed auth user + brand (owner of all test campaigns) -----
+-- Fixed UUIDs so re-runs and the campaign inserts below stay stable.
+insert into auth.users (
+  instance_id, id, aud, role, email,
+  encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
+)
+values (
+  '00000000-0000-0000-0000-000000000000',
+  '00000000-0000-0000-0000-0000000000a1',
+  'authenticated', 'authenticated', 'seed@example.com',
+  crypt('password123', gen_salt('bf')), now(),
+  '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
+  now(), now()
+)
+on conflict (id) do nothing;
+
+insert into brands (id, owner_id, name, subscription_tier, contact_email)
+values (
+  '00000000-0000-0000-0000-0000000000b1',
+  '00000000-0000-0000-0000-0000000000a1',
+  'Seed Brand', 'active', 'seed@example.com'
+)
+on conflict (owner_id) do nothing;
 
 -- ----- 1. test-spinwheel (chance game; weighted random) -----
-insert into campaigns (slug, name, game_type, status, theme, max_plays_per_player, require_capture, cooldown_hours)
+insert into campaigns (slug, name, game_type, status, theme, max_plays_per_player, require_capture, cooldown_hours, brand_id)
 values (
   'test-spinwheel',
   'Spin Wheel Test',
   'spin_wheel',
   'active',
   '{"brandColor":"#6d28d9","brandFg":"#ffffff","headline":"Spin to win!"}'::jsonb,
-  3, true, 24
+  3, true, 24,
+  '00000000-0000-0000-0000-0000000000b1'
 )
-on conflict (slug) do update set status = 'active', updated_at = now();
+on conflict (slug) do update set status = 'active', brand_id = excluded.brand_id, updated_at = now();
 
 -- Migrate old 'test-campaign' rows to the new slug if they exist
 update campaigns set slug = 'test-spinwheel'
@@ -61,7 +93,7 @@ select disc.id, 'TEN-' || lpad(g::text, 4, '0') from disc, generate_series(1,100
 on conflict do nothing;
 
 -- ----- 2. test-scratch (chance game) -----
-insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours)
+insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours, brand_id)
 values (
   'test-scratch',
   'Scratch Card Test',
@@ -69,9 +101,10 @@ values (
   'active',
   '{"brandColor":"#0ea5e9","brandFg":"#ffffff","headline":"Scratch to reveal!"}'::jsonb,
   '{"percentToReveal": 50}'::jsonb,
-  3, true, 24
+  3, true, 24,
+  '00000000-0000-0000-0000-0000000000b1'
 )
-on conflict (slug) do update set status = 'active', updated_at = now();
+on conflict (slug) do update set status = 'active', brand_id = excluded.brand_id, updated_at = now();
 
 with c as (select id from campaigns where slug = 'test-scratch')
 insert into prizes (campaign_id, name, description, tier, weight, stock_total, stock_remaining, is_loss)
@@ -103,7 +136,7 @@ select stk.id, 'SCR-STK-' || lpad(g::text, 4, '0') from stk, generate_series(1,5
 on conflict do nothing;
 
 -- ----- 3. test-quiz (SKILL game; uses win_thresholds → tier) -----
-insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours)
+insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours, brand_id)
 values (
   'test-quiz',
   'Quiz Test',
@@ -123,9 +156,10 @@ values (
       { "question": "Which is a NoSQL DB?", "options": ["Postgres","MySQL","MongoDB","SQLite"], "correctAnswerIndex": 2, "points": 1 }
     ]
   } $$::jsonb,
-  3, true, 24
+  3, true, 24,
+  '00000000-0000-0000-0000-0000000000b1'
 )
-on conflict (slug) do update set status = 'active', config = excluded.config, updated_at = now();
+on conflict (slug) do update set status = 'active', config = excluded.config, brand_id = excluded.brand_id, updated_at = now();
 
 with c as (select id from campaigns where slug = 'test-quiz')
 insert into prizes (campaign_id, name, description, tier, weight, stock_total, stock_remaining, is_loss)
@@ -157,7 +191,7 @@ select ru.id, 'QUIZ-RU-' || lpad(g::text, 4, '0') from ru, generate_series(1,50)
 on conflict do nothing;
 
 -- ----- 4. test-slot (chance game) -----
-insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours)
+insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours, brand_id)
 values (
   'test-slot',
   'Slot Machine Test',
@@ -165,9 +199,10 @@ values (
   'active',
   '{"brandColor":"#dc2626","brandFg":"#ffffff","headline":"Pull the lever!"}'::jsonb,
   '{"symbols": ["🍒","🍋","⭐","🔔","💎","7️⃣","🍀"]}'::jsonb,
-  3, true, 24
+  3, true, 24,
+  '00000000-0000-0000-0000-0000000000b1'
 )
-on conflict (slug) do update set status = 'active', updated_at = now();
+on conflict (slug) do update set status = 'active', brand_id = excluded.brand_id, updated_at = now();
 
 with c as (select id from campaigns where slug = 'test-slot')
 insert into prizes (campaign_id, name, description, tier, weight, stock_total, stock_remaining, is_loss)
@@ -199,7 +234,7 @@ select sw.id, 'SLOT-SW-' || lpad(g::text, 4, '0') from sw, generate_series(1,40)
 on conflict do nothing;
 
 -- ----- 5. test-pickbox (chance game; lucky_dip game type) -----
-insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours)
+insert into campaigns (slug, name, game_type, status, theme, config, max_plays_per_player, require_capture, cooldown_hours, brand_id)
 values (
   'test-pickbox',
   'Pick A Box Test',
@@ -207,9 +242,10 @@ values (
   'active',
   '{"brandColor":"#d97706","brandFg":"#ffffff","headline":"Pick a box!"}'::jsonb,
   '{"boxCount": 6}'::jsonb,
-  3, true, 24
+  3, true, 24,
+  '00000000-0000-0000-0000-0000000000b1'
 )
-on conflict (slug) do update set status = 'active', updated_at = now();
+on conflict (slug) do update set status = 'active', brand_id = excluded.brand_id, updated_at = now();
 
 with c as (select id from campaigns where slug = 'test-pickbox')
 insert into prizes (campaign_id, name, description, tier, weight, stock_total, stock_remaining, is_loss)
