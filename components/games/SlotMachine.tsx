@@ -166,7 +166,7 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
       <button
         onClick={spin}
         disabled={spinning || done}
-        className="btn-brand text-lg tracking-wide"
+        className="btn-arcade"
         style={!spinning && !done ? { animation: "pulse-glow 2.2s ease-in-out infinite" } : undefined}
       >
         {spinning ? "Spinning…" : done ? "Done" : "PULL THE LEVER"}

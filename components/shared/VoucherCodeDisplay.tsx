@@ -11,10 +11,10 @@ export function VoucherCodeDisplay({ code }: { code: string }) {
   }, [code]);
 
   return (
-    <div className="border rounded-xl p-4 bg-white flex flex-col items-center gap-3">
-      <div className="text-xs uppercase tracking-wider text-zinc-500">Your voucher code</div>
-      <div className="font-mono text-xl font-bold tracking-wider">{code}</div>
-      {qr ? <img src={qr} alt="voucher QR" className="h-40 w-40" /> : null}
+    <div className="rounded-2xl p-4 bg-white flex flex-col items-center gap-3 shadow-lg">
+      <div className="text-xs uppercase tracking-widest text-zinc-500">Your voucher code</div>
+      <div className="font-mono text-2xl font-bold tracking-wider text-zinc-900">{code}</div>
+      {qr ? <img src={qr} alt="voucher QR" className="h-40 w-40 rounded-lg" /> : null}
       <button
         type="button"
         onClick={async () => {
@@ -22,7 +22,7 @@ export function VoucherCodeDisplay({ code }: { code: string }) {
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         }}
-        className="text-sm underline text-zinc-700"
+        className="text-sm font-semibold underline text-zinc-700"
       >
         {copied ? "Copied!" : "Copy code"}
       </button>

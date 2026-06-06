@@ -6,6 +6,10 @@
   --brand-color: #6d28d9;
   --brand-fg: #ffffff;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-arcade: "Luckiest Guy", "Bungee", system-ui, sans-serif;
+  --font-display: "Titan One", "Luckiest Guy", system-ui, sans-serif;
+  --font-body: "Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --arcade-bg: #221b2e;
 }
 
 html, body { height: 100%; }
@@ -60,6 +64,81 @@ body {
   25% { transform: rotate(-3deg); }
   75% { transform: rotate(3deg); }
 }
+@keyframes mole-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(8%); }
+}
+@keyframes balloon-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+@keyframes dice-tumble {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(200deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes flash-bg {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+}
+
+/* ---- FIZZ&POP arcade theme ---- */
+.arcade-shell {
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--brand-color) 45%, transparent), transparent 60%),
+    radial-gradient(100% 60% at 100% 100%, color-mix(in srgb, var(--brand-color) 25%, transparent), transparent 55%),
+    linear-gradient(180deg, #2a2140 0%, var(--arcade-bg) 55%, #18121f 100%);
+  font-family: var(--font-body);
+  color: #f5f0ff;
+}
+.arcade-title {
+  font-family: var(--font-arcade);
+  letter-spacing: 1px;
+  line-height: 1.05;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 0 18px color-mix(in srgb, var(--brand-color) 60%, transparent);
+}
+.arcade-display { font-family: var(--font-display); }
+.arcade-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 2px solid color-mix(in srgb, var(--brand-color) 55%, #ffffff 0%);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 0 0 4px rgba(0,0,0,0.25),
+    0 24px 60px -20px rgba(0,0,0,0.7),
+    inset 0 0 32px color-mix(in srgb, var(--brand-color) 18%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  backdrop-filter: blur(6px);
+}
+.arcade-chip {
+  background: color-mix(in srgb, var(--brand-color) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-color) 50%, transparent);
+  border-radius: 999px;
+}
+.btn-arcade {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  font-family: var(--font-arcade);
+  letter-spacing: 1px;
+  font-size: 1.15rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 1rem;
+  color: var(--brand-fg);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--brand-color) 78%, white) 0%, var(--brand-color) 60%, color-mix(in srgb, var(--brand-color) 70%, black) 100%);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  box-shadow:
+    0 6px 0 color-mix(in srgb, var(--brand-color) 55%, black),
+    0 12px 24px -6px color-mix(in srgb, var(--brand-color) 70%, transparent),
+    inset 0 2px 0 rgba(255,255,255,0.35);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.btn-arcade:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05); }
+.btn-arcade:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--brand-color) 55%, black), inset 0 2px 0 rgba(255,255,255,0.35);
+}
+.btn-arcade:disabled { opacity: 0.55; cursor: not-allowed; }
+.arcade-muted { color: #c8bfe0; }
 
 /* ---- Branded skin for react-quiz-component ---- */
 .quiz-host {
@@ -70,9 +149,12 @@ body {
   width: 100% !important;
 }
 .quiz-host h2,
-.quiz-host h3 {
+.quiz-host h3,
+.quiz-host .questionWrapperBody,
+.quiz-host .question-body,
+.quiz-host .tag-container {
   font-weight: 800;
-  color: #18181b;
+  color: #f5f0ff;
   margin-bottom: 0.5rem;
 }
 .quiz-host .questionWrapperBody,

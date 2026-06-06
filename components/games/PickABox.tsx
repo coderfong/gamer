@@ -55,7 +55,7 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-6 py-2">
-      <p className="text-base font-semibold" style={{ color: pal.dark }}>
+      <p className="arcade-muted text-base font-semibold">
         Pick a gift to reveal your prize
       </p>
       <div

@@ -11,6 +11,19 @@ import { ScratchCard } from "./ScratchCard";
 import { Quiz } from "./Quiz";
 import { SlotMachine } from "./SlotMachine";
 import { PickABox } from "./PickABox";
+import { CardFlip } from "./CardFlip";
+import { DiceRoll } from "./DiceRoll";
+import { Pinata } from "./Pinata";
+import { PopBalloon } from "./PopBalloon";
+import { TreasureHunt } from "./TreasureHunt";
+import { WhackAMole } from "./WhackAMole";
+import { SpeedTap } from "./SpeedTap";
+import { Reaction } from "./Reaction";
+import { TapTarget } from "./TapTarget";
+import { ColorMatch } from "./ColorMatch";
+import { Memory } from "./Memory";
+import { ClawMachine } from "./ClawMachine";
+import { StackBlocks } from "./StackBlocks";
 
 type Stage = "capture" | "playing" | "submitting" | "result";
 
@@ -95,7 +108,7 @@ export function GameWrapper({
 
   return (
     <main
-      className="min-h-screen px-4 py-8"
+      className="arcade-shell min-h-screen px-4 py-8"
       style={
         {
           "--brand-color": theme.brandColor ?? "#6d28d9",
@@ -105,12 +118,12 @@ export function GameWrapper({
     >
       <div className="max-w-md mx-auto">
         {preview ? (
-          <div className="mb-3 rounded-lg bg-amber-100 text-amber-800 text-sm text-center px-3 py-2">
+          <div className="mb-3 rounded-lg bg-amber-400/90 text-amber-950 text-sm font-semibold text-center px-3 py-2">
             Preview mode — plays don’t count and no vouchers are claimed.
           </div>
         ) : null}
         <BrandingPanel theme={theme} campaignName={campaign.name} />
-        <div className="bg-white rounded-2xl shadow-sm border p-6">
+        <div className="arcade-panel p-6">
           {stage === "capture" ? (
             <PlayerCapture onSubmit={handleCapture} submitting={submitting} error={error} />
           ) : stage === "playing" || stage === "submitting" ? (
@@ -154,10 +167,16 @@ function GameByType(props: {
   busy?: boolean;
 }) {
   if (props.busy) {
-    return <div className="text-center py-12 text-zinc-500">Picking your prize...</div>;
+    return (
+      <div className="flex flex-col items-center gap-3 py-12">
+        <div className="h-10 w-10 rounded-full border-4 border-white/20 border-t-[var(--brand-color)] animate-spin" />
+        <div className="arcade-muted">Picking your prize…</div>
+      </div>
+    );
   }
   switch (props.gameType) {
     case "spin_wheel":
+    case "wheel_of_fortune":
       return <SpinWheel {...props} />;
     case "scratch":
       return <ScratchCard {...props} />;
@@ -168,6 +187,32 @@ function GameByType(props: {
       return <SlotMachine {...props} />;
     case "lucky_dip":
       return <PickABox {...props} />;
+    case "card_flip":
+      return <CardFlip {...props} />;
+    case "dice_roll":
+      return <DiceRoll {...props} />;
+    case "pinata":
+      return <Pinata {...props} />;
+    case "pop_balloon":
+      return <PopBalloon {...props} />;
+    case "treasure_hunt":
+      return <TreasureHunt {...props} />;
+    case "whack_a_mole":
+      return <WhackAMole {...props} />;
+    case "speed_tap":
+      return <SpeedTap {...props} />;
+    case "reaction":
+      return <Reaction {...props} />;
+    case "tap_target":
+      return <TapTarget {...props} />;
+    case "color_match":
+      return <ColorMatch {...props} />;
+    case "memory":
+      return <Memory {...props} />;
+    case "claw_machine":
+      return <ClawMachine {...props} />;
+    case "stack_blocks":
+      return <StackBlocks {...props} />;
     default:
       return <SpinWheel {...props} />;
   }

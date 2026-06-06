@@ -59,8 +59,8 @@ export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignNa
       ) : null}
 
       <div className="flex flex-col items-center gap-3 pt-2">
-        <Link href={homeUrl} className="btn-brand w-full text-center">
-          Back to home
+        <Link href={homeUrl} className="btn-arcade w-full text-center">
+          BACK TO HOME
         </Link>
         <ShareButton url={shareUrl} title={`${campaignName} — play & win`} />
       </div>

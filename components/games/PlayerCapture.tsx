@@ -81,18 +81,18 @@ export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProp
       className="space-y-4"
     >
       <div>
-        <label className="block text-sm font-medium mb-1">Name</label>
+        <label className="block text-sm font-semibold mb-1 text-white/90">Name</label>
         <input
-          className="w-full rounded-lg border px-3 py-2"
+          className="w-full rounded-xl border-2 border-white/20 bg-black/25 text-white placeholder-white/40 px-3 py-2.5 outline-none focus:border-[var(--brand-color)]"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           placeholder="Your name"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-semibold mb-1 text-white/90">Email</label>
         <input
-          className="w-full rounded-lg border px-3 py-2"
+          className="w-full rounded-xl border-2 border-white/20 bg-black/25 text-white placeholder-white/40 px-3 py-2.5 outline-none focus:border-[var(--brand-color)]"
           type="email"
           required
           value={form.email}
@@ -101,9 +101,9 @@ export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProp
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Phone (optional)</label>
+        <label className="block text-sm font-semibold mb-1 text-white/90">Phone (optional)</label>
         <input
-          className="w-full rounded-lg border px-3 py-2"
+          className="w-full rounded-xl border-2 border-white/20 bg-black/25 text-white placeholder-white/40 px-3 py-2.5 outline-none focus:border-[var(--brand-color)]"
           type="tel"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -111,9 +111,9 @@ export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProp
         />
       </div>
       {captchaRequired ? <div ref={widgetRef} className="flex justify-center" /> : null}
-      {error ? <p className="text-red-600 text-sm">{error}</p> : null}
-      <button type="submit" className="btn-brand w-full" disabled={!canSubmit}>
-        {submitting ? "Starting..." : "Start"}
+      {error ? <p className="text-red-300 text-sm font-semibold">{error}</p> : null}
+      <button type="submit" className="btn-arcade w-full" disabled={!canSubmit}>
+        {submitting ? "Starting…" : "PLAY"}
       </button>
     </form>
   );

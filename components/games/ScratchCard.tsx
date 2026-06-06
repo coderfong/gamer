@@ -79,7 +79,7 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
 
   return (
     <div className="flex flex-col items-center gap-5 py-2">
-      <p className="text-base font-semibold flex items-center gap-2" style={{ color: pal.dark }}>
+      <p className="arcade-muted text-base font-semibold flex items-center gap-2">
         <span className="text-xl">🪙</span> Scratch the panel to reveal
       </p>
       <div

@@ -19,7 +19,8 @@
       "WebSearch",
       "Bash(curl -s -i -X POST \"http://localhost:3000/api/play/test-spinwheel/start\" -H \"content-type: application/json\" -d '{\"name\":\"Test\",\"email\":\"t@example.com\",\"phone\":\"\",\"fingerprint\":\"\",\"turnstileToken\":null}')",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/play/test-spinwheel\" -Method GET -UseBasicParsing -TimeoutSec 15; \"OK STATUS: $\\($r.StatusCode\\)\" } catch { \"EXCEPTION: $\\($_.Exception.Message\\)\" })",
-      "PowerShell(Get-NetTCPConnection *)"
+      "PowerShell(Get-NetTCPConnection *)",
+      "WebFetch(domain:claude.ai)"
     ]
   }
 }

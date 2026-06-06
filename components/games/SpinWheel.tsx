@@ -198,7 +198,7 @@ export function SpinWheel({ config, theme, onComplete }: GameProps) {
       <button
         onClick={spin}
         disabled={spinning}
-        className="btn-brand text-lg tracking-wide"
+        className="btn-arcade"
         style={!spinning ? { animation: "pulse-glow 2.2s ease-in-out infinite" } : undefined}
       >
         {spinning ? "Spinning…" : "SPIN TO WIN"}
