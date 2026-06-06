@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
+import { palette } from "@/lib/games/colors";
 
 interface QuizQuestion {
   question: string;
@@ -22,10 +23,11 @@ interface QuizPayload {
 // react-quiz-component is rendered client-side only.
 let LazyQuiz: any = null;
 
-export function Quiz({ config, onComplete }: GameProps) {
+export function Quiz({ config, theme, onComplete }: GameProps) {
   const cfg = (config ?? {}) as { questions?: any[]; passingScore?: number };
   const [ready, setReady] = useState(false);
   const startTs = useRef<number>(0);
+  const pal = palette(theme.brandColor, theme.brandFg);
 
   useEffect(() => {
     startTs.current = performance.now();
@@ -44,12 +46,23 @@ export function Quiz({ config, onComplete }: GameProps) {
   const quiz: QuizPayload = normalizeQuiz(cfg.questions ?? [], cfg.passingScore);
 
   if (!ready || !LazyQuiz) {
-    return <div className="text-center py-12 text-zinc-500">Loading quiz...</div>;
+    return (
+      <div className="flex flex-col items-center gap-3 py-12">
+        <div
+          className="h-10 w-10 rounded-full border-4 border-zinc-200 animate-spin"
+          style={{ borderTopColor: pal.brand }}
+        />
+        <div className="text-zinc-500 text-sm">Loading quiz…</div>
+      </div>
+    );
   }
 
   const RQ = LazyQuiz;
   return (
-    <div className="quiz-host">
+    <div
+      className="quiz-host"
+      style={{ ["--brand-color" as string]: pal.brand, ["--brand-fg" as string]: pal.fg }}
+    >
       <RQ
         quiz={quiz}
         shuffle={false}

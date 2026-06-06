@@ -18,10 +18,117 @@ body {
 
 @layer utilities {
   .btn-brand {
-    @apply inline-flex items-center justify-center rounded-lg px-5 py-3 font-semibold transition;
-    background: var(--brand-color);
+    @apply relative inline-flex items-center justify-center rounded-xl px-6 py-3 font-semibold transition-all duration-200;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-color) 88%, white) 0%, var(--brand-color) 100%);
     color: var(--brand-fg);
+    box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--brand-color) 60%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
-  .btn-brand:hover { filter: brightness(0.95); }
-  .btn-brand:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-brand:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px -6px color-mix(in srgb, var(--brand-color) 70%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .btn-brand:active:not(:disabled) { transform: translateY(1px) scale(0.99); }
+  .btn-brand:disabled { opacity: 0.55; cursor: not-allowed; }
 }
+
+/* ---- Shared game / result animations ---- */
+@keyframes result-in {
+  0% { opacity: 0; transform: translateY(12px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-color) 45%, transparent); }
+  50% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--brand-color) 0%, transparent); }
+}
+@keyframes float-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes shimmer {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* ---- Branded skin for react-quiz-component ---- */
+.quiz-host {
+  --q: var(--brand-color);
+}
+.quiz-host .questionWrapper,
+.quiz-host .react-quiz-container {
+  width: 100% !important;
+}
+.quiz-host h2,
+.quiz-host h3 {
+  font-weight: 800;
+  color: #18181b;
+  margin-bottom: 0.5rem;
+}
+.quiz-host .questionWrapperBody,
+.quiz-host .question-body,
+.quiz-host .tag-container {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.quiz-host ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+.quiz-host .btn,
+.quiz-host button.answerBtn,
+.quiz-host ul li button,
+.quiz-host ul li > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  border: 2px solid color-mix(in srgb, var(--q) 22%, #e4e4e7);
+  background: #fff;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.quiz-host .btn:hover,
+.quiz-host ul li button:hover {
+  border-color: var(--q);
+  background: color-mix(in srgb, var(--q) 8%, #fff);
+  transform: translateY(-1px);
+}
+.quiz-host .btn.correct,
+.quiz-host .correct {
+  border-color: #16a34a !important;
+  background: #dcfce7 !important;
+  color: #14532d !important;
+}
+.quiz-host .btn.incorrect,
+.quiz-host .incorrect {
+  border-color: #dc2626 !important;
+  background: #fee2e2 !important;
+  color: #7f1d1d !important;
+}
+.quiz-host .nextQuestionBtn,
+.quiz-host .startQuizBtn,
+.quiz-host .lock-answer-btn {
+  background: var(--q) !important;
+  color: var(--brand-fg) !important;
+  border: none !important;
+  text-align: center !important;
+  font-weight: 700;
+  border-radius: 0.9rem !important;
+  padding: 0.75rem 1.25rem !important;
+  margin-top: 0.75rem;
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--q) 70%, transparent);
+}
+.quiz-host .questionBtnContainer { margin-top: 0.5rem; }
+.quiz-host .quiz-result-filter { display: none; }
+.quiz-host .startQuizWrapper { text-align: center; }

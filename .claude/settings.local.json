@@ -10,7 +10,13 @@
       "Bash(npx next *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git tag *)"
+      "Bash(git tag *)",
+      "Bash(npm run *)",
+      "Bash(npx supabase *)",
+      "Bash(docker --version)",
+      "Bash(psql --version)",
+      "Bash(git check-ignore *)",
+      "WebSearch"
     ]
   }
 }

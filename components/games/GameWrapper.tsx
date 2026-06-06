@@ -129,6 +129,7 @@ export function GameWrapper({
               flagged={result?.flagged}
               shareUrl={shareUrl}
               campaignName={campaign.name}
+              brandColor={theme.brandColor}
             />
           )}
         </div>

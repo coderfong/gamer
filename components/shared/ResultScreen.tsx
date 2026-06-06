@@ -1,6 +1,9 @@
+"use client";
+import { useEffect } from "react";
 import { PrizeDisplay } from "./PrizeDisplay";
 import { VoucherCodeDisplay } from "./VoucherCodeDisplay";
 import { ShareButton } from "./ShareButton";
+import { celebrate } from "@/lib/games/celebrate";
 
 export interface ResultScreenProps {
   prize: {
@@ -13,15 +16,24 @@ export interface ResultScreenProps {
   flagged?: boolean;
   shareUrl: string;
   campaignName: string;
+  brandColor?: string;
 }
 
-export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName }: ResultScreenProps) {
+export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName, brandColor }: ResultScreenProps) {
   // Flagged plays: show the prize visual but withhold the code.
   const showVoucher = !!voucherCode && !flagged;
   const showPending = !!prize && !prize.is_loss && (flagged || (!voucherCode && !flagged && !prize.is_loss));
+  const isWin = !!prize && !prize.is_loss;
+
+  useEffect(() => {
+    if (isWin) {
+      const t = setTimeout(() => celebrate(brandColor), 150);
+      return () => clearTimeout(t);
+    }
+  }, [isWin, brandColor]);
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 animate-[result-in_0.5s_ease-out]">
       {prize ? (
         <PrizeDisplay
           name={prize.name}
