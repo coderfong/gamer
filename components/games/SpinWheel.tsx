@@ -1,208 +1,132 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
-import { palette, mix, lighten, darken, readableText } from "@/lib/games/colors";
+import { ArcadeButton } from "./arcade/Kit";
 
-const DEFAULT_SEGMENTS = ["🎁", "⭐", "💎", "🍀", "🎉", "🍩", "🍫", "🎈"];
+// ARCADE POP spin wheel — chunky candy wheel with sticker outlines, sun pegs,
+// a coral pointer and a paper hub. Server decides the prize; the wheel lands on
+// a random slice for show. Ported from the reference design (games/spinwheel.jsx).
+
+const INK = "#231B2E";
+const SUN = "#FFC23C";
+const CORAL = "#FF5A4D";
+const PAPER = "#FFFCF4";
+
+const SLICE_COLORS = ["#27C4D9", "#EAD9F2", "#FF74B0", "#FFC23C", "#8A6BFF", "#EAD9F2", "#FF5A4D", "#36CF8E"];
+const DEFAULT_LABELS = ["FREE DRINK", "TRY AGAIN", "20% OFF", "BOGO", "GIFT", "TRY AGAIN", "TOPPING", "JACKPOT"];
+const DEFAULT_ICONS = ["🥤", "🍀", "🏷️", "🍩", "🎁", "🍀", "🧋", "💎"];
+
 const SIZE = 300;
 const R = SIZE / 2;
 
-/**
- * Visual-only wheel. The actual prize is decided server-side by draw_prize();
- * the wheel just lands on a random segment for show. Rendered as SVG so labels,
- * gradients and dividers stay crisp at any size.
- */
-export function SpinWheel({ config, theme, onComplete }: GameProps) {
-  const segments = (config?.segments as string[] | undefined) ?? DEFAULT_SEGMENTS;
+export function SpinWheel({ config, onComplete }: GameProps) {
+  const icons = (config?.segments as string[] | undefined) ?? DEFAULT_ICONS;
+  const labels = (config?.labels as string[] | undefined) ?? DEFAULT_LABELS;
+  const N = icons.length;
+  const slice = 360 / N;
+
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const startTs = useRef<number>(0);
-  const pal = palette(theme.brandColor, theme.brandFg);
+  const [tick, setTick] = useState(false);
+  const startTs = useRef(0);
 
-  const slice = 360 / segments.length;
-
-  // Alternating segment fills derived from the brand color.
-  const fills = useMemo(
-    () =>
-      segments.map((_, i) =>
-        i % 2 === 0
-          ? { from: lighten(pal.brand, 0.12), to: darken(pal.brand, 0.08) }
-          : { from: lighten(pal.accent, 0.1), to: darken(pal.accent, 0.12) },
-      ),
-    [segments, pal.brand, pal.accent],
-  );
+  useEffect(() => {
+    if (!spinning) return;
+    const i = setInterval(() => setTick((t) => !t), 90);
+    return () => clearInterval(i);
+  }, [spinning]);
 
   function spin() {
     if (spinning) return;
     setSpinning(true);
     startTs.current = performance.now();
-    const turns = 6 + Math.random() * 3;
-    const landing = Math.random() * 360;
-    const target = rotation + turns * 360 + landing;
-    setRotation(target);
+    const idx = Math.floor(Math.random() * N);
+    const turns = 5 + Math.floor(Math.random() * 3);
+    const target = turns * 360 + (360 - (idx * slice + slice / 2));
+    const final = rotation - (rotation % 360) + target;
+    setRotation(final);
     setTimeout(() => {
       setSpinning(false);
-      const segIdx = Math.floor(((360 - (target % 360)) % 360) / slice);
-      onComplete({
-        outcome: `segment_${segIdx}`,
-        durationMs: performance.now() - startTs.current,
-      });
-    }, 4600);
+      setTimeout(() => onComplete({ outcome: `segment_${idx}`, durationMs: performance.now() - startTs.current }), 600);
+    }, 4400);
   }
 
   return (
-    <div className="flex flex-col items-center gap-7 py-2">
-      <div
-        className="relative"
-        style={{ width: SIZE + 24, height: SIZE + 24 }}
-      >
-        {/* Ambient glow */}
-        <div
-          className="absolute inset-0 rounded-full blur-2xl opacity-40"
-          style={{ background: `radial-gradient(circle, ${pal.brand}, transparent 70%)` }}
-        />
+    <div className="flex flex-col items-center gap-6 py-2">
+      <div className="pop-display titlepop text-center text-4xl leading-none">SPIN<br />TO WIN</div>
 
-        {/* Outer bezel ring with pegs */}
+      <div className="relative grid place-items-center" style={{ width: SIZE + 36, height: SIZE + 36 }}>
+        {/* outer ring with pegs */}
         <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: `conic-gradient(from 0deg, ${lighten(pal.dark, 0.3)}, ${pal.dark}, ${lighten(
-              pal.dark,
-              0.3,
-            )}, ${pal.dark})`,
-            boxShadow: `0 18px 40px -12px ${mix(pal.dark, "#000", 0.3)}, inset 0 2px 6px rgba(255,255,255,0.25)`,
-            padding: 12,
-          }}
+          className="sticker-lg absolute rounded-full"
+          style={{ inset: 6, background: INK, padding: 12, boxShadow: `0 8px 0 ${INK}` }}
         >
-          {/* Pegs around the rim */}
-          {Array.from({ length: segments.length }).map((_, i) => {
+          {Array.from({ length: N }).map((_, i) => {
             const a = (i * slice - 90) * (Math.PI / 180);
-            const rr = R + 6;
+            const rr = R + 8;
             return (
               <span
                 key={i}
-                className="absolute h-2 w-2 rounded-full"
+                className="absolute rounded-full"
                 style={{
-                  left: R + 12 + Math.cos(a) * rr - 4,
-                  top: R + 12 + Math.sin(a) * rr - 4,
-                  background: lighten(pal.brand, 0.5),
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                  width: 12, height: 12, background: SUN, border: `2px solid ${INK}`,
+                  left: R + 6 + Math.cos(a) * rr - 6, top: R + 6 + Math.sin(a) * rr - 6,
+                  boxShadow: tick && spinning ? `0 0 8px ${SUN}` : "none",
                 }}
               />
             );
           })}
 
-          {/* The rotating wheel face */}
           <svg
             viewBox={`0 0 ${SIZE} ${SIZE}`}
             width={SIZE}
             height={SIZE}
-            className="relative"
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: "transform 4.6s cubic-bezier(0.17, 0.67, 0.16, 1)",
-              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-            }}
+            style={{ transform: `rotate(${rotation}deg)`, transition: spinning ? "transform 4.4s cubic-bezier(.15,.7,.12,1)" : "none", display: "block" }}
           >
-            <defs>
-              {fills.map((f, i) => (
-                <radialGradient id={`seg-${i}`} key={i} cx="50%" cy="50%" r="75%">
-                  <stop offset="0%" stopColor={f.from} />
-                  <stop offset="100%" stopColor={f.to} />
-                </radialGradient>
-              ))}
-              <radialGradient id="gloss" cx="50%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.45)" />
-                <stop offset="55%" stopColor="rgba(255,255,255,0.05)" />
-                <stop offset="100%" stopColor="rgba(0,0,0,0.12)" />
-              </radialGradient>
-            </defs>
-
-            {segments.map((label, i) => {
+            {Array.from({ length: N }).map((_, i) => {
               const a0 = (i * slice - 90) * (Math.PI / 180);
               const a1 = ((i + 1) * slice - 90) * (Math.PI / 180);
-              const x0 = R + R * Math.cos(a0);
-              const y0 = R + R * Math.sin(a0);
-              const x1 = R + R * Math.cos(a1);
-              const y1 = R + R * Math.sin(a1);
-              const large = slice > 180 ? 1 : 0;
+              const x0 = R + R * Math.cos(a0), y0 = R + R * Math.sin(a0);
+              const x1 = R + R * Math.cos(a1), y1 = R + R * Math.sin(a1);
               const mid = (i * slice + slice / 2 - 90) * (Math.PI / 180);
-              const lr = R * 0.62;
-              const lx = R + lr * Math.cos(mid);
-              const ly = R + lr * Math.sin(mid);
-              const segFg = readableText(fills[i].to);
+              const ix = R + R * 0.66 * Math.cos(mid), iy = R + R * 0.66 * Math.sin(mid);
+              const tx = R + R * 0.4 * Math.cos(mid), ty = R + R * 0.4 * Math.sin(mid);
+              const rot = i * slice + slice / 2;
               return (
                 <g key={i}>
-                  <path
-                    d={`M${R},${R} L${x0},${y0} A${R},${R} 0 ${large} 1 ${x1},${y1} Z`}
-                    fill={`url(#seg-${i})`}
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth={1.5}
-                  />
-                  <text
-                    x={lx}
-                    y={ly}
-                    fill={segFg}
-                    fontSize={segments.length > 8 ? 18 : 24}
-                    fontWeight={700}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    transform={`rotate(${i * slice + slice / 2}, ${lx}, ${ly})`}
-                    style={{ paintOrder: "stroke" }}
-                  >
-                    {label}
+                  <path d={`M${R},${R} L${x0},${y0} A${R},${R} 0 0 1 ${x1},${y1} Z`} fill={SLICE_COLORS[i % SLICE_COLORS.length]} stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+                  <text x={ix} y={iy} fontSize="30" textAnchor="middle" dominantBaseline="central" transform={`rotate(${rot},${ix},${iy})`}>{icons[i]}</text>
+                  <text x={tx} y={ty} fontSize="11" textAnchor="middle" dominantBaseline="central" fontFamily="'Luckiest Guy', cursive" fill={INK} transform={`rotate(${rot},${tx},${ty})`}>
+                    {labels[i % labels.length]}
                   </text>
                 </g>
               );
             })}
-
-            {/* Glossy highlight overlay */}
-            <circle cx={R} cy={R} r={R} fill="url(#gloss)" pointerEvents="none" />
           </svg>
 
-          {/* Center hub */}
+          {/* hub */}
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center z-10"
-            style={{
-              height: 64,
-              width: 64,
-              background: `radial-gradient(circle at 35% 30%, ${lighten(pal.brand, 0.4)}, ${pal.brand} 70%)`,
-              boxShadow: `0 4px 12px rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.4)`,
-              border: `3px solid ${lighten(pal.brand, 0.55)}`,
-            }}
+            className="sticker absolute grid place-items-center rounded-full"
+            style={{ left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 66, height: 66, background: PAPER, zIndex: 5 }}
           >
-            <span className="text-2xl" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.3))" }}>
-              ✦
-            </span>
+            <svg width="30" height="30" viewBox="0 0 24 24">
+              <path d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0 Z" fill={CORAL} stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+            </svg>
           </div>
         </div>
 
-        {/* Pointer */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-20"
-          style={{ top: -4 }}
-        >
-          <div
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "14px solid transparent",
-              borderRight: "14px solid transparent",
-              borderTop: `28px solid ${darken(pal.brand, 0.1)}`,
-              filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.35))",
-            }}
-          />
+        {/* pointer */}
+        <div className="absolute z-10" style={{ top: -6, left: "50%", transform: "translateX(-50%) rotate(180deg)", filter: `drop-shadow(2px -2px 0 ${INK})` }}>
+          <svg width="40" height="46" viewBox="0 0 40 46">
+            <path d="M20 46 L4 8 Q20 -4 36 8 Z" fill={CORAL} stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+            <circle cx="20" cy="14" r="5" fill={PAPER} stroke={INK} strokeWidth="2.5" />
+          </svg>
         </div>
       </div>
 
-      <button
-        onClick={spin}
-        disabled={spinning}
-        className="btn-arcade"
-        style={!spinning ? { animation: "pulse-glow 2.2s ease-in-out infinite" } : undefined}
-      >
-        {spinning ? "Spinning…" : "SPIN TO WIN"}
-      </button>
+      <ArcadeButton onClick={spin} disabled={spinning} pulse={!spinning}>
+        {spinning ? "GOOD LUCK…" : "SPIN!"}
+      </ArcadeButton>
     </div>
   );
 }
