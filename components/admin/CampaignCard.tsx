@@ -130,6 +130,7 @@ export function CampaignCard({ campaign }: { campaign: CampaignCardData }) {
       <div className="flex items-center gap-1 text-sm">
         <ActionLink href={`/campaigns/${campaign.id}/edit`}>Edit</ActionLink>
         <ActionLink href={`/campaigns/${campaign.id}/analytics`}>Analytics</ActionLink>
+        <ActionLink href={`/campaigns/${campaign.id}/share`}>Share</ActionLink>
         <ActionLink href={`/campaigns/${campaign.id}/preview`}>Preview</ActionLink>
         <button
           type="button"

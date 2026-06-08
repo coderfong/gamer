@@ -9,8 +9,13 @@
   --font-arcade: "Luckiest Guy", "Bungee", system-ui, sans-serif;
   --font-display: "Titan One", "Luckiest Guy", system-ui, sans-serif;
   --font-body: "Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-ui: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --arcade-bg: #221b2e;
 }
+
+.font-ui { font-family: var(--font-ui); }
+.font-jb { font-family: var(--font-mono); }
 
 html, body { height: 100%; }
 body {
