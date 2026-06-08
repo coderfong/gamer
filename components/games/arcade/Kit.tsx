@@ -73,7 +73,7 @@ export function Readout({ label, value, color }: { label: string; value: ReactNo
   return (
     <div className="arcade-chip px-4 py-1.5 text-center">
       <div className="text-[10px] uppercase tracking-widest arcade-muted">{label}</div>
-      <div className="arcade-display text-xl leading-none" style={{ color: color ?? "#fff" }}>
+      <div className="arcade-display text-xl leading-none" style={{ color: color ?? "var(--ink)" }}>
         {value}
       </div>
     </div>

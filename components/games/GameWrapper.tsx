@@ -169,7 +169,7 @@ function GameByType(props: {
   if (props.busy) {
     return (
       <div className="flex flex-col items-center gap-3 py-12">
-        <div className="h-10 w-10 rounded-full border-4 border-white/20 border-t-[var(--brand-color)] animate-spin" />
+        <div className="h-10 w-10 rounded-full border-4 border-black/10 border-t-[var(--brand-color)] animate-spin" />
         <div className="arcade-muted">Picking your prize…</div>
       </div>
     );

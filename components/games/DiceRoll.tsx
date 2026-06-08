@@ -74,7 +74,7 @@ export function DiceRoll({ theme, onComplete }: GameProps) {
         <Die value={dice[0]} color={pal.brand} rolling={rolling} />
         <Die value={dice[1]} color={pal.accent} rolling={rolling} />
       </div>
-      <div className="arcade-display text-2xl text-white">{rolling ? "…" : `Total ${dice[0] + dice[1]}`}</div>
+      <div className="arcade-display text-2xl">{rolling ? "…" : `Total ${dice[0] + dice[1]}`}</div>
       <ArcadeButton onClick={roll} disabled={rolling || done} pulse={!done}>
         {rolling ? "Rolling…" : done ? "Done" : "ROLL"}
       </ArcadeButton>

@@ -23,7 +23,7 @@ export function BrandingPanel({ theme, campaignName }: { theme: Theme; campaignN
         </div>
       )}
       <div>
-        <div className="arcade-title text-2xl text-white">{campaignName}</div>
+        <div className="arcade-title text-2xl">{campaignName}</div>
         {theme.headline ? <div className="text-sm arcade-muted">{theme.headline}</div> : null}
       </div>
     </header>

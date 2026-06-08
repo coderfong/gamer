@@ -14,7 +14,7 @@ export function ShareButton({ url, title }: { url: string; title: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="rounded-xl border-2 border-white/25 text-white/90 px-4 py-2 text-sm font-semibold hover:bg-white/10 transition"
+      className="sticker-sm rounded-xl bg-[var(--paper)] text-[var(--ink)] px-4 py-2 text-sm font-bold hover:translate-y-[-1px] transition-transform"
     >
       {copied ? "Link copied!" : "Share"}
     </button>

@@ -48,10 +48,7 @@ export function VoucherTicket({
       <span className="absolute -left-2 top-[116px] h-4 w-4 rounded-full" style={{ background: "var(--arcade-bg, #221b2e)" }} />
       <span className="absolute -right-2 top-[116px] h-4 w-4 rounded-full" style={{ background: "var(--arcade-bg, #221b2e)" }} />
 
-      <div
-        className="overflow-hidden rounded-3xl bg-white shadow-2xl"
-        style={{ boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)" }}
-      >
+      <div className="sticker-lg overflow-hidden rounded-3xl bg-white">
         {/* header band */}
         <div
           className="relative px-5 py-3 text-center"

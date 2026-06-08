@@ -105,7 +105,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
     <div className="arcade-shell rounded-3xl p-6 sm:p-8">
       <div className="mx-auto max-w-md space-y-5">
         <div className="text-center">
-          <div className="arcade-title text-2xl text-white">🎟️ Redeem a Voucher</div>
+          <div className="arcade-title text-2xl">🎟️ Redeem a Voucher</div>
           <p className="arcade-muted text-sm">Scan the QR or enter the code to verify and redeem.</p>
         </div>
 
@@ -116,7 +116,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && lookup()}
             placeholder="ENTER CODE"
-            className="w-full rounded-xl border-2 border-white/20 bg-black/25 px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-white placeholder-white/30 outline-none focus:border-[var(--brand-color)]"
+            className="sticker-sm w-full rounded-xl bg-[var(--paper)] px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-[var(--ink)] placeholder-zinc-400 outline-none"
           />
           <div className="flex gap-3">
             <button onClick={() => lookup()} disabled={loading || !code.trim()} className="btn-arcade flex-1">
@@ -124,7 +124,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
             </button>
             <button
               onClick={() => setScanning((s) => !s)}
-              className="rounded-xl border-2 border-white/25 px-4 font-semibold text-white/90 hover:bg-white/10 transition"
+              className="sticker-sm rounded-xl bg-[var(--paper)] px-4 font-bold text-[var(--ink)] hover:-translate-y-px transition-transform"
             >
               {scanning ? "Stop" : "📷 Scan"}
             </button>
@@ -132,7 +132,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
         </div>
 
         {scanning ? (
-          <div className="overflow-hidden rounded-xl border-2 border-white/15">
+          <div className="overflow-hidden rounded-xl sticker-sm">
             <QrScanner
               onScan={(text) => {
                 const c = extractCode(text);
@@ -152,9 +152,9 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
         ) : null}
 
         {result && !result.found ? (
-          <div className="rounded-xl border-2 border-white/15 bg-black/20 p-5 text-center">
+          <div className="sticker-sm rounded-xl bg-[var(--paper)] p-5 text-center">
             <div className="text-3xl">🔎</div>
-            <div className="mt-1 font-semibold text-white">No voucher found</div>
+            <div className="mt-1 font-bold text-[var(--ink)]">No voucher found</div>
             <p className="arcade-muted text-sm">No voucher with that code in this campaign.</p>
           </div>
         ) : null}
@@ -163,7 +163,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
           <div className="space-y-4 animate-[pop-in_0.4s_ease-out]">
             <VoucherTicket code={v.code} prizeName={v.prizeName} status={ticketStatus} showQr={false} />
 
-            <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
+            <div className="sticker-sm rounded-xl bg-[var(--paper)] p-3 text-sm">
               <Row label="Won at" value={result.play?.wonAt ? new Date(result.play.wonAt).toLocaleString() : "—"} />
               <Row label="Player" value={result.play?.contact ?? "—"} />
             </div>
@@ -173,11 +173,11 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
                 ✅ {message}
               </div>
             ) : v.redeemed ? (
-              <div className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-center text-sm arcade-muted">
+              <div className="sticker-sm rounded-xl bg-[var(--paper)] px-4 py-3 text-center text-sm arcade-muted">
                 This voucher was already redeemed.
               </div>
             ) : !result.play ? (
-              <div className="rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-center text-sm arcade-muted">
+              <div className="sticker-sm rounded-xl bg-[var(--paper)] px-4 py-3 text-center text-sm arcade-muted">
                 Voucher not yet claimed by a play — nothing to redeem.
               </div>
             ) : (
@@ -186,7 +186,7 @@ export function RedemptionClient({ campaignId }: { campaignId: string }) {
               </button>
             )}
 
-            <button onClick={reset} className="w-full text-center text-sm font-semibold text-white/60 hover:text-white">
+            <button onClick={reset} className="w-full text-center text-sm font-semibold text-zinc-500 hover:text-[var(--ink)]">
               Look up another
             </button>
           </div>
@@ -200,7 +200,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4 py-0.5">
       <span className="arcade-muted">{label}</span>
-      <span className="font-medium text-white">{value}</span>
+      <span className="font-bold text-[var(--ink)]">{value}</span>
     </div>
   );
 }

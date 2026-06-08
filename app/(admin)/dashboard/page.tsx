@@ -44,20 +44,30 @@ export default async function DashboardPage({
   });
 
   const hasAnyCampaign = cards.length > 0 && !error;
+  const liveCount = cards.filter((c) => c.status === "active").length;
+  const totalPlays = cards.reduce((sum, c) => sum + c.plays_count, 0);
+  const vouchersLeft = cards.reduce((sum, c) => sum + c.vouchers_remaining, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="ad space-y-6">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back, {brand?.name ?? "there"}</h1>
-          <p className="text-sm text-zinc-600">
+          <h1 className="text-2xl font-extrabold">Welcome back, {brand?.name ?? "there"}</h1>
+          <p className="text-sm" style={{ color: "var(--ad-muted)" }}>
             {brand?.contact_email ?? user.email} · {brand?.subscription_tier ?? "—"}
           </p>
         </div>
-        <a href="/campaigns/new" className="btn-brand shrink-0">
-          New campaign
+        <a href="/campaigns/new" className="ad-btn ad-btn-primary shrink-0">
+          + New campaign
         </a>
       </header>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard label="Campaigns" value={cards.length} />
+        <StatCard label="Live now" value={liveCount} accent />
+        <StatCard label="Total plays" value={totalPlays} />
+        <StatCard label="Vouchers left" value={vouchersLeft} />
+      </div>
 
       {hasAnyCampaign ? (
         <>
@@ -84,6 +94,22 @@ export default async function DashboardPage({
           actionHref="/campaigns/new"
         />
       )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div className="ad-card p-4">
+      <div
+        className="text-2xl font-extrabold"
+        style={{ color: accent ? "var(--ad-accent)" : "var(--ad-ink)" }}
+      >
+        {value}
+      </div>
+      <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ad-faint)" }}>
+        {label}
+      </div>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export function ColorMatch({ theme, onComplete }: GameProps) {
             <Readout label="Correct" value={score} color={pal.brand} />
           </div>
           <div
-            className="arcade-title text-4xl text-white"
+            className="arcade-title text-4xl"
             style={{ animation: flash ? "flash-bg 0.4s" : undefined }}
           >
             {NAMES[current.targetIdx]}

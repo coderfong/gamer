@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -19,45 +19,39 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq("owner_id", user.id)
     .maybeSingle();
 
-  return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold">
-            <span className="h-7 w-7 rounded bg-brand text-brand-fg grid place-items-center text-sm">
-              {(brand?.name ?? "G").slice(0, 1).toUpperCase()}
-            </span>
-            <span>{brand?.name ?? "gamer"}</span>
-            {brand?.subscription_tier ? (
-              <span className="text-xs uppercase tracking-wide px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">
-                {brand.subscription_tier}
-              </span>
-            ) : null}
-          </Link>
-          <form action="/logout" method="post">
-            <button type="submit" className="text-sm text-zinc-600 hover:text-zinc-900">
-              Log out
-            </button>
-          </form>
-        </div>
-        <nav className="max-w-5xl mx-auto px-4 flex gap-4 text-sm">
-          <NavLink href="/dashboard" label="Dashboard" />
-          <NavLink href="/campaigns" label="Campaigns" />
-          <NavLink href="/billing" label="Billing" />
-        </nav>
-      </header>
-      <main className="max-w-5xl mx-auto p-6">{children}</main>
-    </div>
-  );
-}
+  const brandName = brand?.name ?? "gamer";
+  const initials = (user.email ?? "G").slice(0, 2).toUpperCase();
 
-function NavLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link
-      href={href}
-      className="px-2 py-3 -mb-px border-b-2 border-transparent hover:border-zinc-300 text-zinc-600 hover:text-zinc-900"
-    >
-      {label}
-    </Link>
+    <div className="ad" style={{ display: "flex", minHeight: "100vh", background: "var(--ad-bg)" }}>
+      <AdminSidebar brandName={brandName} tier={brand?.subscription_tier ?? null} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Topbar */}
+        <header
+          className="flex items-center justify-between px-6"
+          style={{ height: 58, flex: "0 0 58px", borderBottom: "1px solid var(--ad-border)", background: "var(--ad-surface)" }}
+        >
+          <div className="text-sm font-bold">{brandName}</div>
+          <div className="flex items-center gap-3">
+            <form action="/logout" method="post">
+              <button type="submit" className="ad-btn ad-btn-ghost" style={{ padding: "7px 13px" }}>
+                Log out
+              </button>
+            </form>
+            <span
+              className="grid place-items-center text-white font-extrabold text-sm"
+              style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#FF8A5B,#FF5A4D)" }}
+            >
+              {initials}
+            </span>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-6">
+          <div className="mx-auto max-w-5xl">{children}</div>
+        </main>
+      </div>
+    </div>
   );
 }

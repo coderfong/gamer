@@ -63,11 +63,11 @@ export default async function RedemptionsPage({ params }: { params: { id: string
 
       <RedemptionClient campaignId={campaign.id} />
 
-      <section className="arcade-shell rounded-3xl p-5 sm:p-6">
-        <h2 className="arcade-title text-lg text-white mb-3">Recent redemptions</h2>
-        <div className="overflow-hidden rounded-xl border border-white/10">
+      <section className="arcade-shell sticker-lg rounded-3xl p-5 sm:p-6">
+        <h2 className="arcade-title text-lg mb-3">Recent redemptions</h2>
+        <div className="overflow-hidden rounded-xl sticker-sm bg-[var(--paper)]">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-white/50 text-xs uppercase tracking-wide">
+            <thead className="bg-black/5 text-zinc-500 text-xs uppercase tracking-wide">
               <tr>
                 <th className="text-left px-3 py-2">When</th>
                 <th className="text-left px-3 py-2">Code</th>
@@ -75,10 +75,10 @@ export default async function RedemptionsPage({ params }: { params: { id: string
                 <th className="text-left px-3 py-2">Redeemed by</th>
               </tr>
             </thead>
-            <tbody className="text-white/90">
+            <tbody className="text-[var(--ink)]">
               {recent.map((r) => (
-                <tr key={r.id} className="border-t border-white/10">
-                  <td className="px-3 py-2 text-white/60">{new Date(r.at).toLocaleString()}</td>
+                <tr key={r.id} className="border-t border-black/10">
+                  <td className="px-3 py-2 text-zinc-500">{new Date(r.at).toLocaleString()}</td>
                   <td className="px-3 py-2 font-mono">{r.code}</td>
                   <td className="px-3 py-2">{r.prizeName}</td>
                   <td className="px-3 py-2">{r.redeemedBy}</td>

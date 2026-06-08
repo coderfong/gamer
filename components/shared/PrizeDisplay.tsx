@@ -19,8 +19,8 @@ export function PrizeDisplay({
         <img src={imageUrl} alt="" className="mx-auto h-32 object-contain drop-shadow-lg" />
       ) : null}
       <h2
-        className="arcade-title text-3xl"
-        style={{ color: isLoss ? "#fff" : "var(--brand-color)" }}
+        className={isLoss ? "arcade-title text-3xl" : "arcade-title titlepop text-3xl"}
+        style={isLoss ? { color: "var(--ink)" } : undefined}
       >
         {name}
       </h2>

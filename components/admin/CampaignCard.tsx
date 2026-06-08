@@ -97,10 +97,10 @@ export function CampaignCard({ campaign }: { campaign: CampaignCardData }) {
       : `${Math.round(campaign.win_rate * 100)}%`;
 
   return (
-    <div className="relative rounded-xl border bg-white p-4 flex flex-col gap-3">
+    <div className="ad relative ad-card p-4 flex flex-col gap-3">
       {/* Row 1: name + status */}
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold truncate" title={campaign.name}>
+        <h3 className="font-bold truncate" title={campaign.name}>
           {campaign.name}
         </h3>
         <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${badge.cls}`}>
