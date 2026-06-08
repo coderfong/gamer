@@ -33,39 +33,54 @@ export function CampaignBuilder({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="ad space-y-6">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-extrabold">
             {hasCampaign ? campaign.name || "Untitled campaign" : "New campaign"}
           </h1>
-          <p className="text-sm text-zinc-600">
-            {hasCampaign ? `Status: ${campaign.status}` : "Pick a game to get started"}
+          <p className="text-sm" style={{ color: "var(--ad-muted)" }}>
+            {hasCampaign ? `Draft · ${campaign.status}` : "Pick a game to get started"}
           </p>
         </div>
       </header>
 
       {/* Stepper */}
-      <nav className="flex flex-wrap gap-1 border-b">
+      <nav className="ad-card flex items-center gap-0 p-4">
         {STEPS.map((label, i) => {
           const active = i === step;
+          const done = i < step;
           const disabled = i > 0 && !hasCampaign;
           return (
-            <button
-              key={label}
-              type="button"
-              onClick={() => goTo(i as StepIndex)}
-              disabled={disabled}
-              className={[
-                "px-4 py-2 -mb-px border-b-2 text-sm",
-                active
-                  ? "border-brand text-zinc-900 font-medium"
-                  : "border-transparent text-zinc-500 hover:text-zinc-800",
-                disabled ? "opacity-40 cursor-not-allowed" : "",
-              ].join(" ")}
-            >
-              {i + 1}. {label}
-            </button>
+            <div key={label} className="flex flex-1 items-center last:flex-none">
+              <button
+                type="button"
+                onClick={() => goTo(i as StepIndex)}
+                disabled={disabled}
+                className="flex items-center gap-2.5"
+                style={{ cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}
+              >
+                <span
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-extrabold"
+                  style={{
+                    background: done ? "var(--ad-accent)" : active ? "var(--ad-accent-soft)" : "#ECECF1",
+                    color: done ? "#fff" : active ? "var(--ad-accent-ink)" : "var(--ad-faint)",
+                    border: active ? "2px solid var(--ad-accent)" : "2px solid transparent",
+                  }}
+                >
+                  {done ? "✓" : i + 1}
+                </span>
+                <span
+                  className="text-sm"
+                  style={{ fontWeight: active ? 800 : 600, color: active ? "var(--ad-ink)" : done ? "var(--ad-body)" : "var(--ad-faint)" }}
+                >
+                  {label}
+                </span>
+              </button>
+              {i < STEPS.length - 1 ? (
+                <span className="mx-3 h-0.5 min-w-[16px] flex-1 rounded" style={{ background: i < step ? "var(--ad-accent)" : "#ECECF1" }} />
+              ) : null}
+            </div>
           );
         })}
       </nav>

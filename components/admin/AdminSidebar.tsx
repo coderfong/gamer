@@ -27,11 +27,13 @@ const ICON = {
   grid: ["M3 3h7v7H3z", "M14 3h7v7h-7z", "M14 14h7v7h-7z", "M3 14h7v7H3z"],
   rocket: ["M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2", "M19 3c-4 0-7 1.5-10 5l-2 3 4 4 3-2c3.5-3 5-6 5-10z", "M12.5 8.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0"],
   card: ["M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z", "M2 10h20"],
+  palette: ["M12 2a10 10 0 1 0 0 20c1 0 2-1 2-2s-1-2 0-3 2 1 3 1a4 4 0 0 0 4-4c0-6-4-12-9-12z", "M7.5 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1", "M12 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1", "M16 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"],
 };
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: ICON.grid },
   { href: "/campaigns", label: "Campaigns", icon: ICON.rocket },
+  { href: "/brand", label: "Brand", icon: ICON.palette },
   { href: "/billing", label: "Billing", icon: ICON.card },
 ];
 
