@@ -1,12 +1,17 @@
 import type { GameType } from "@/lib/types/game";
+import type { FreeTextBlock, OverlayElement } from "@/lib/types/campaign";
 
 export interface BuilderTheme {
   brandColor?: string;
   brandFg?: string;
   bgColor?: string;
+  bgImageUrl?: string;
   logoUrl?: string | null;
   headline?: string;
   fontFamily?: string;
+  nameBlock?: FreeTextBlock;
+  headlineBlock?: FreeTextBlock;
+  overlayElements?: OverlayElement[];
 }
 
 // Extra settings that don't have dedicated campaign columns live in config.
@@ -49,9 +54,35 @@ export interface BuilderCampaign {
   cooldown_hours: number;
 }
 
-export const FONT_OPTIONS = [
-  "Inter",
-  "Poppins",
-  "Playfair Display",
-  "Roboto Mono",
-] as const;
+export const FONT_OPTIONS: { label: string; value: string }[] = [
+  // Display / arcade
+  { label: "Luckiest Guy", value: "Luckiest Guy" },
+  { label: "Bungee", value: "Bungee" },
+  { label: "Titan One", value: "Titan One" },
+  { label: "Bangers", value: "Bangers" },
+  { label: "Righteous", value: "Righteous" },
+  { label: "Russo One", value: "Russo One" },
+  { label: "Oswald", value: "Oswald" },
+  // Friendly / rounded
+  { label: "Fredoka", value: "Fredoka" },
+  { label: "Nunito", value: "Nunito" },
+  { label: "Poppins", value: "Poppins" },
+  { label: "Outfit", value: "Outfit" },
+  { label: "Pacifico", value: "Pacifico" },
+  // Clean / modern
+  { label: "Inter", value: "Inter" },
+  { label: "Plus Jakarta Sans", value: "Plus Jakarta Sans" },
+  { label: "Space Grotesk", value: "Space Grotesk" },
+  { label: "Raleway", value: "Raleway" },
+  { label: "Montserrat", value: "Montserrat" },
+  // Serif
+  { label: "Playfair Display", value: "Playfair Display" },
+  { label: "Merriweather", value: "Merriweather" },
+  { label: "Lora", value: "Lora" },
+  // Script / handwriting
+  { label: "Lobster", value: "Lobster" },
+  { label: "Satisfy", value: "Satisfy" },
+  // Monospace
+  { label: "JetBrains Mono", value: "JetBrains Mono" },
+  { label: "Roboto Mono", value: "Roboto Mono" },
+];

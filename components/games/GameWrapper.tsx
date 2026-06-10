@@ -2,27 +2,42 @@
 import { useState } from "react";
 import type { CampaignRow, PrizeRow } from "@/lib/types/database";
 import { readTheme } from "@/lib/types/campaign";
-import type { GameResult, GameType } from "@/lib/types/game";
+
+const ANIM_MAP: Record<string, string> = {
+  float:         "el-float 2.4s ease-in-out infinite",
+  spin:          "el-spin 3s linear infinite",
+  pulse:         "el-pulse 1.6s ease-in-out infinite",
+  bounce:        "el-bounce 1.2s ease infinite",
+  shake:         "el-shake 0.8s ease-in-out infinite",
+  wiggle:        "el-wiggle 1.2s ease-in-out infinite",
+  swing:         "el-swing 2s ease-in-out infinite",
+  "rubber-band": "el-rubber-band 2s ease infinite",
+  heartbeat:     "el-heartbeat 2.4s ease-in-out infinite",
+  jello:         "el-jello 3s ease infinite",
+  tada:          "el-tada 2.5s ease infinite",
+};
+import type { GameProps, GameResult, GameType } from "@/lib/types/game";
 import { BrandingPanel } from "@/components/shared/BrandingPanel";
 import { PlayerCapture, type CaptureSubmit } from "./PlayerCapture";
 import { ResultScreen } from "@/components/shared/ResultScreen";
 import { SpinWheel } from "./SpinWheel";
+import { CupShuffle } from "./CupShuffle";
+import { RingShooter } from "./RingShooter";
 import { ScratchCard } from "./ScratchCard";
 import { Quiz } from "./Quiz";
 import { SlotMachine } from "./SlotMachine";
 import { PickABox } from "./PickABox";
-import { CardFlip } from "./CardFlip";
-import { DiceRoll } from "./DiceRoll";
-import { Pinata } from "./Pinata";
+import { Plinko } from "./Plinko";
+import { PrecisionMeter } from "./PrecisionMeter";
 import { PopBalloon } from "./PopBalloon";
-import { TreasureHunt } from "./TreasureHunt";
+import { AngleStop } from "./AngleStop";
 import { WhackAMole } from "./WhackAMole";
 import { SpeedTap } from "./SpeedTap";
 import { Reaction } from "./Reaction";
 import { TapTarget } from "./TapTarget";
-import { ColorMatch } from "./ColorMatch";
+import { PinDrop } from "./PinDrop";
 import { Memory } from "./Memory";
-import { ClawMachine } from "./ClawMachine";
+import { CatchDrops } from "./CatchDrops";
 import { StackBlocks } from "./StackBlocks";
 
 type Stage = "capture" | "playing" | "submitting" | "result";
@@ -113,17 +128,94 @@ export function GameWrapper({
         {
           "--brand-color": theme.brandColor ?? "#6d28d9",
           "--brand-fg": theme.brandFg ?? "#ffffff",
+          fontFamily: theme.fontFamily ?? "inherit",
+          backgroundColor: theme.bgColor ?? undefined,
+          // Setting backgroundImage inline overrides arcade-shell's halftone dots
+          backgroundImage: theme.bgImageUrl ? `url(${theme.bgImageUrl})` : undefined,
+          backgroundSize: theme.bgImageUrl ? "cover" : undefined,
+          backgroundPosition: theme.bgImageUrl ? "center" : undefined,
+          backgroundRepeat: theme.bgImageUrl ? "no-repeat" : undefined,
         } as React.CSSProperties
       }
     >
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto relative">
+        {/* Free-position text overlays (set via builder drag handles) */}
+        {theme.nameBlock && (
+          <div
+            className="arcade-title absolute pointer-events-none z-10"
+            style={{
+              left: theme.nameBlock.x,
+              top: theme.nameBlock.y,
+              fontSize: theme.nameBlock.fontSize,
+              color: "var(--brand-color)",
+              textAlign: theme.nameBlock.align ?? "left",
+            }}
+          >
+            {campaign.name}
+          </div>
+        )}
+        {theme.headlineBlock && theme.headline && (
+          <div
+            className="arcade-title font-semibold absolute pointer-events-none z-10"
+            style={{
+              left: theme.headlineBlock.x,
+              top: theme.headlineBlock.y,
+              fontSize: theme.headlineBlock.fontSize,
+              color: "var(--brand-color)",
+              textAlign: theme.headlineBlock.align ?? "left",
+            }}
+          >
+            {theme.headline}
+          </div>
+        )}
+
+        {/* Decorative overlay elements */}
+        {(theme.overlayElements ?? []).map((el) => {
+          const animStyle =
+            el.animation !== "none"
+              ? ({ "--el-rot": `${el.rotation}deg`, animation: ANIM_MAP[el.animation] } as React.CSSProperties)
+              : { transform: `rotate(${el.rotation}deg)` };
+          const flipParts = [el.flipH && "scaleX(-1)", el.flipV && "scaleY(-1)"].filter(Boolean);
+          const flipStyle = flipParts.length ? { transform: flipParts.join(" ") } : undefined;
+          return (
+            <div
+              key={el.id}
+              style={{
+                position: "absolute",
+                left: el.x,
+                top: el.y,
+                width: el.width,
+                height: el.height,
+                opacity: el.opacity,
+                pointerEvents: "none",
+                transformOrigin: "center center",
+                ...animStyle,
+              }}
+            >
+              <div style={{ width: "100%", height: "100%", ...flipStyle }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={el.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+              </div>
+            </div>
+          );
+        })}
+
         {preview ? (
           <div className="mb-3 rounded-lg bg-amber-400/90 text-amber-950 text-sm font-semibold text-center px-3 py-2">
             Preview mode — plays don’t count and no vouchers are claimed.
           </div>
         ) : null}
         <BrandingPanel theme={theme} campaignName={campaign.name} />
-        <div className="arcade-panel p-6">
+
+        {/* Headline above game panel (default flow mode — no headlineBlock set) */}
+        {theme.headline && !theme.headlineBlock && (
+          <div className="arcade-title text-xl mb-4 leading-tight" style={{ color: "var(--brand-color)" }}>
+            {theme.headline}
+          </div>
+        )}
+
+        <div className="p-6 relative">
+
           {stage === "capture" ? (
             <PlayerCapture onSubmit={handleCapture} submitting={submitting} error={error} />
           ) : stage === "playing" || stage === "submitting" ? (
@@ -158,12 +250,14 @@ export function GameWrapper({
   );
 }
 
-function GameByType(props: {
+export function GameByType(props: {
   gameType: GameType;
   campaignId: string;
   config: Record<string, unknown>;
-  theme: { brandColor?: string; brandFg?: string };
+  theme: GameProps["theme"];
   onComplete: (r: GameResult) => void;
+  onConfigChange?: GameProps["onConfigChange"];
+  editorMode?: boolean;
   busy?: boolean;
 }) {
   if (props.busy) {
@@ -176,27 +270,27 @@ function GameByType(props: {
   }
   switch (props.gameType) {
     case "spin_wheel":
-    case "wheel_of_fortune":
       return <SpinWheel {...props} />;
+    case "wheel_of_fortune":
+      return <CupShuffle {...props} />;
     case "scratch":
       return <ScratchCard {...props} />;
     case "quiz":
-    case "trivia":
       return <Quiz {...props} />;
     case "slot_machine":
       return <SlotMachine {...props} />;
     case "lucky_dip":
       return <PickABox {...props} />;
     case "card_flip":
-      return <CardFlip {...props} />;
+      return <RingShooter {...props} />;
     case "dice_roll":
-      return <DiceRoll {...props} />;
+      return <Plinko {...props} />;
     case "pinata":
-      return <Pinata {...props} />;
+      return <PrecisionMeter {...props} />;
     case "pop_balloon":
       return <PopBalloon {...props} />;
     case "treasure_hunt":
-      return <TreasureHunt {...props} />;
+      return <AngleStop {...props} />;
     case "whack_a_mole":
       return <WhackAMole {...props} />;
     case "speed_tap":
@@ -206,11 +300,11 @@ function GameByType(props: {
     case "tap_target":
       return <TapTarget {...props} />;
     case "color_match":
-      return <ColorMatch {...props} />;
+      return <PinDrop {...props} />;
     case "memory":
       return <Memory {...props} />;
     case "claw_machine":
-      return <ClawMachine {...props} />;
+      return <CatchDrops {...props} />;
     case "stack_blocks":
       return <StackBlocks {...props} />;
     default:

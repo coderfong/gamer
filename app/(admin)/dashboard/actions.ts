@@ -146,33 +146,15 @@ export async function deleteCampaign(id: string): Promise<ActionOk | ActionError
 
     const { data: campaign, error: readErr } = await supabase
       .from("campaigns")
-      .select("id, status")
+      .select("id")
       .eq("id", id)
       .maybeSingle();
 
     if (readErr) return fail("read_failed", readErr.message);
     if (!campaign) return fail("not_found", "Campaign not found.");
 
-    if (campaign.status !== "draft") {
-      return fail(
-        "not_draft",
-        'Only draft campaigns can be deleted. End the campaign instead to keep its records.',
-      );
-    }
-
-    const { count, error: playsErr } = await supabase
-      .from("plays")
-      .select("id", { count: "exact", head: true })
-      .eq("campaign_id", id);
-
-    if (playsErr) return fail("plays_read_failed", playsErr.message);
-    if ((count ?? 0) > 0) {
-      return fail(
-        "has_plays",
-        "This campaign has recorded plays. End it instead of deleting to preserve history.",
-      );
-    }
-
+    // Child rows (prizes, plays, voucher_codes, redemptions) all have
+    // ON DELETE CASCADE, so removing the campaign removes its data too.
     const { error: deleteErr } = await supabase.from("campaigns").delete().eq("id", id);
     if (deleteErr) return fail("delete_failed", deleteErr.message);
 

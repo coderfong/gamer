@@ -4,21 +4,56 @@ import type { GameProps } from "@/lib/types/game";
 import { useArcade, useTimer, ArcadeButton, Stage, Readout } from "./arcade/Kit";
 import { lighten, darken } from "@/lib/games/colors";
 
-const GAME_MS = 5000;
+const TAP_ANIM: Record<string, string> = {
+  bump:   "", // handled inline via scale
+  pop:    "mem-pop 0.25s ease",
+  pulse:  "mem-pulse 0.3s ease",
+  wobble: "mem-wobble 0.3s ease",
+  flash:  "mem-flash 0.3s ease",
+};
 
-export function SpeedTap({ theme, onComplete }: GameProps) {
+export function SpeedTap({ config, theme, onComplete }: GameProps) {
   const pal = useArcade(theme);
   const timer = useTimer();
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+  const gameMs       = Math.max(2, Math.min(30, (config?.gameSeconds as number | undefined) ?? 5)) * 1000;
+  const buttonSize   = Math.max(120, Math.min(260, (config?.buttonSize as number | undefined) ?? 192));
+  const buttonColor  = (config?.buttonColor as string | undefined) ?? pal.brand;
+  const buttonImage  = (config?.buttonImage as string | undefined) ?? null;
+  const buttonText   = (config?.buttonText  as string | undefined) ?? "TAP!";
+  const isImgBtn = !!buttonImage;
+  const buttonTextColor = (config?.buttonTextColor as string | undefined) ?? "#ffffff";
+  const tapAnimation = (config?.tapAnimation as string | undefined) ?? "bump";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the button as fast as you can for {seconds} seconds!";
+  const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
+  const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
+  const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;
+  const tapsLabel    = (config?.tapsLabel as string | undefined) ?? "Taps";
+  const timeLabel    = (config?.timeLabel as string | undefined) ?? "Time";
+  const startLabel   = (config?.startLabel as string | undefined) ?? "START";
+
   const [phase, setPhase] = useState<"idle" | "play">("idle");
   const [taps, setTaps] = useState(0);
-  const [left, setLeft] = useState(GAME_MS);
+  const [left, setLeft] = useState(gameMs);
   const [bump, setBump] = useState(false);
+  const [tapKey, setTapKey] = useState(0);
+  const [aspect, setAspect] = useState(1); // button image width/height
+  useEffect(() => {
+    if (buttonImage) {
+      const im = new window.Image();
+      im.onload = () => { if (im.naturalHeight) setAspect(im.naturalWidth / im.naturalHeight); };
+      im.src = buttonImage;
+    } else setAspect(1);
+  }, [buttonImage]);
+  const btnW = isImgBtn ? (aspect >= 1 ? buttonSize : Math.round(buttonSize * aspect)) : buttonSize;
+  const btnH = isImgBtn ? (aspect >= 1 ? Math.round(buttonSize / aspect) : buttonSize) : buttonSize;
   const tick = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function start() {
     setPhase("play");
     setTaps(0);
-    setLeft(GAME_MS);
+    setLeft(gameMs);
     timer.reset();
     tick.current = setInterval(() => setLeft((l) => Math.max(0, l - 100)), 100);
   }
@@ -39,33 +74,71 @@ export function SpeedTap({ theme, onComplete }: GameProps) {
     if (phase !== "play") return;
     setTaps((t) => t + 1);
     setBump(true);
+    setTapKey((k) => k + 1);
     setTimeout(() => setBump(false), 70);
   }
 
+  const instruction = instructionTpl.trim()
+    ? instructionTpl.replace(/\{seconds\}/gi, String(Math.round(gameMs / 1000)))
+    : "";
+  const useBump = tapAnimation === "bump";
+
   return (
-    <Stage instruction={phase === "idle" ? "Tap the button as fast as you can for 5 seconds!" : undefined}>
+    <Stage
+      instruction={
+        phase === "idle" && instruction ? (
+          <span
+            style={{
+              color: instructionColor ?? undefined,
+              fontSize: instructionFontSize,
+              fontFamily: instructionFontFamily ?? undefined,
+            }}
+          >
+            {instruction}
+          </span>
+        ) : undefined
+      }
+    >
       {phase === "play" ? (
         <div className="flex gap-3">
-          <Readout label="Taps" value={taps} color={pal.brand} />
-          <Readout label="Time" value={`${(left / 1000).toFixed(1)}s`} />
+          <Readout label={tapsLabel} value={taps} color={pal.brand} />
+          <Readout label={timeLabel} value={`${(left / 1000).toFixed(1)}s`} />
         </div>
       ) : null}
       {phase === "play" ? (
         <button
+          key={useBump ? undefined : tapKey}
           type="button"
           onClick={tap}
-          className="flex h-48 w-48 items-center justify-center rounded-full arcade-title text-2xl text-white select-none"
+          className={`relative flex items-center justify-center arcade-title select-none ${isImgBtn ? "" : "rounded-full overflow-hidden"}`}
           style={{
-            background: `radial-gradient(circle at 40% 30%, ${lighten(pal.brand, 0.35)}, ${darken(pal.brand, 0.1)})`,
-            boxShadow: `0 14px 30px -8px ${pal.brand}, inset 0 3px 0 rgba(255,255,255,0.4)`,
-            transform: bump ? "scale(0.93)" : "scale(1)",
-            transition: "transform 0.06s",
+            height: btnH,
+            width: btnW,
+            fontSize: buttonSize * 0.13,
+            color: buttonTextColor,
+            background: isImgBtn
+              ? "transparent"
+              : `radial-gradient(circle at 40% 30%, ${lighten(buttonColor, 0.35)}, ${darken(buttonColor, 0.1)})`,
+            boxShadow: isImgBtn ? "none" : `0 14px 30px -8px ${buttonColor}, inset 0 3px 0 rgba(255,255,255,0.4)`,
+            transform: useBump ? (bump ? "scale(0.93)" : "scale(1)") : undefined,
+            transition: useBump ? "transform 0.06s" : undefined,
+            animation: !useBump && TAP_ANIM[tapAnimation] ? TAP_ANIM[tapAnimation] : undefined,
           }}
         >
-          TAP!
+          {isImgBtn ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={buttonImage!} alt="" className="w-full h-full object-contain pointer-events-none" draggable={false} />
+              {buttonText.trim() && (
+                <span className="absolute inset-0 flex items-center justify-center" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{buttonText}</span>
+              )}
+            </>
+          ) : (
+            buttonText
+          )}
         </button>
       ) : (
-        <ArcadeButton onClick={start} pulse>START</ArcadeButton>
+        <ArcadeButton onClick={start} pulse>{startLabel}</ArcadeButton>
       )}
     </Stage>
   );

@@ -4,7 +4,7 @@ import type { DrawPrizeResult } from "@/lib/types/database";
 
 // Game types that resolve a prize from a score rather than weighted chance.
 // Kept in sync with the submit route's SKILL_GAMES.
-const SKILL_GAMES = new Set(["quiz", "trivia"]);
+const SKILL_GAMES = new Set(["quiz"]);
 
 interface PreviewPrize {
   id: string;

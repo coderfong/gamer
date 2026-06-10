@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 // Game types that are skill-based (score → tier via campaign.config.win_thresholds).
 // Chance games use the weighted random draw.
-const SKILL_GAMES = new Set(["quiz", "trivia"]);
+const SKILL_GAMES = new Set(["quiz"]);
 
 export async function POST(
   req: NextRequest,

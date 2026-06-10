@@ -130,14 +130,20 @@ export function CampaignCard({ campaign }: { campaign: CampaignCardData }) {
       <div className="flex items-center gap-1 text-sm">
         <ActionLink href={`/campaigns/${campaign.id}/edit`}>Edit</ActionLink>
         <ActionLink href={`/campaigns/${campaign.id}/analytics`}>Analytics</ActionLink>
-        <ActionLink href={`/campaigns/${campaign.id}/share`}>Share</ActionLink>
-        <ActionLink href={`/campaigns/${campaign.id}/preview`}>Preview</ActionLink>
         <button
           type="button"
           onClick={copyUrl}
           className="px-2 py-1 rounded hover:bg-zinc-100 text-zinc-700"
         >
           Copy URL
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          disabled={isPending}
+          className="px-2 py-1 rounded hover:bg-red-50 text-red-600 disabled:opacity-50"
+        >
+          Delete
         </button>
 
         <div className="relative ml-auto" ref={menuRef}>
@@ -191,7 +197,8 @@ export function CampaignCard({ campaign }: { campaign: CampaignCardData }) {
           <div className="w-full max-w-sm rounded-xl bg-white p-5 space-y-3">
             <h4 className="font-semibold">Delete “{campaign.name}”?</h4>
             <p className="text-sm text-zinc-600">
-              This permanently removes the draft campaign and its prizes. This cannot be undone.
+              This permanently removes the campaign and all of its data — prizes, voucher
+              codes, and recorded plays{campaign.plays_count > 0 ? ` (${campaign.plays_count} plays)` : ""}. This cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
               <button

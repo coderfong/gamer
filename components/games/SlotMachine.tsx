@@ -1,184 +1,218 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
-import { palette, lighten, darken, mix } from "@/lib/games/colors";
+import { palette, lighten, darken } from "@/lib/games/colors";
 
-// Custom reel implementation — server decides the actual prize via
-// draw_prize_atomic; the visual reels stop on a random set of symbols (purely
-// cosmetic) inside a styled arcade cabinet.
+// "Fill the Outline" — an object oscillates left↔right; the player taps STOP to
+// lock it over a fixed outline. The horizontal overlap = fill %. Server still
+// decides the actual prize; the fill score is cosmetic / skill feedback.
 
-const DEFAULT_SYMBOLS = ["🍒", "🍋", "⭐", "🔔", "💎", "7️⃣", "🍀"];
-const REEL_LEN = 40;
-const SYMBOL_HEIGHT = 88;
+const ARENA_W = 300;
 
-interface ReelState {
-  offsetPx: number;
-  durationMs: number;
+function isImg(s: string): boolean {
+  return /^(https?:\/\/|data:|\/)/.test(s);
+}
+
+function shapeCSS(shape: string): React.CSSProperties {
+  switch (shape) {
+    case "circle":  return { borderRadius: "50%" };
+    case "square":  return { borderRadius: 6 };
+    case "diamond": return { clipPath: "polygon(50% 0%,100% 50%,50% 100%,0% 50%)" };
+    case "hexagon": return { clipPath: "polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)" };
+    case "star":    return { clipPath: "polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)" };
+    default:        return { borderRadius: 16 }; // rounded
+  }
 }
 
 export function SlotMachine({ config, theme, onComplete }: GameProps) {
-  const symbols = (config?.symbols as string[] | undefined) ?? DEFAULT_SYMBOLS;
-  const [spinning, setSpinning] = useState(false);
-  const [done, setDone] = useState(false);
-  const [win, setWin] = useState(false);
-  const startTs = useRef<number>(0);
   const pal = palette(theme.brandColor, theme.brandFg);
 
-  const [reels, setReels] = useState<ReelState[]>([
-    { offsetPx: 0, durationMs: 0 },
-    { offsetPx: 0, durationMs: 0 },
-    { offsetPx: 0, durationMs: 0 },
-  ]);
+  // ── Config ─────────────────────────────────────────────────────────────────
+  const shape       = (config?.shape as string | undefined) ?? "rounded";
+  const shapeW      = Math.max(60, Math.min(260, (config?.shapeWidth  as number | undefined) ?? 120));
+  const shapeH      = Math.max(60, Math.min(220, (config?.shapeHeight as number | undefined) ?? 120));
+  const oscSpeed    = Math.max(1, Math.min(12, (config?.oscillateSpeed as number | undefined) ?? 4));
+  const outlineColor = (config?.outlineColor as string | undefined) ?? pal.brand;
+  const fillColor    = (config?.fillColor    as string | undefined) ?? pal.accent;
+  const outlineImage = (config?.outlineImage as string | undefined) ?? null;
+  const fillImage    = (config?.fillImage    as string | undefined) ?? null;
+  const perfectThreshold = Math.max(50, Math.min(100, (config?.perfectThreshold as number | undefined) ?? 90));
+  const lockAnimation = (config?.lockAnimation as string | undefined) ?? "pulse";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the slider to fill the outline!";
+  const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
+  const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
+  const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;
+  const filledLabel  = (config?.filledLabel as string | undefined) ?? "Filled";
+  const stopLabel    = (config?.stopLabel   as string | undefined) ?? "STOP";
+  const perfectText  = (config?.perfectText as string | undefined) ?? "Perfect fit! 🎯";
+  const tryAgainText = (config?.tryAgainText as string | undefined) ?? "So close!";
 
-  const strips = useRef<string[][]>([
-    buildStrip(symbols),
-    buildStrip(symbols),
-    buildStrip(symbols),
-  ]);
+  const outlineX = (ARENA_W - shapeW) / 2; // fixed, centred
+  const maxX = ARENA_W - shapeW;
 
-  function spin() {
-    if (spinning || done) return;
-    setSpinning(true);
-    setWin(false);
-    startTs.current = performance.now();
+  const [x, setX] = useState(0);
+  const [stopped, setStopped] = useState(false);
+  const [fill, setFill] = useState(0);
+  const dir = useRef(1);
+  const raf = useRef<number | null>(null);
+  const xRef = useRef(0);
+  const startTs = useRef(performance.now());
+  const fired = useRef(false);
 
-    const stopIdxs = strips.current.map(
-      (strip) => Math.floor(Math.random() * (strip.length - 8)) + 6,
-    );
-    const next: ReelState[] = stopIdxs.map((idx, i) => ({
-      offsetPx: -idx * SYMBOL_HEIGHT,
-      durationMs: 2400 + i * 700,
-    }));
-    setReels(next);
-
-    const finalSymbols = stopIdxs.map((idx, i) => strips.current[i][idx]);
-    const matched = finalSymbols.every((s) => s === finalSymbols[0]);
-    const total = Math.max(...next.map((r) => r.durationMs)) + 250;
-
-    setTimeout(() => {
-      setSpinning(false);
-      setDone(true);
-      setWin(matched);
-      onComplete({
-        outcome: matched ? `slot_match_${finalSymbols[0]}` : `slot_${finalSymbols.join("_")}`,
-        durationMs: performance.now() - startTs.current,
-      });
-    }, total);
+  // Live fill % for the current object position.
+  function fillFor(px: number): number {
+    const left = Math.max(px, outlineX);
+    const right = Math.min(px + shapeW, outlineX + shapeW);
+    const overlap = Math.max(0, right - left);
+    return Math.round((overlap / shapeW) * 100);
   }
+
+  useEffect(() => {
+    startTs.current = performance.now();
+    function loop() {
+      let nx = xRef.current + dir.current * oscSpeed;
+      if (nx <= 0) { nx = 0; dir.current = 1; }
+      if (nx >= maxX) { nx = maxX; dir.current = -1; }
+      xRef.current = nx;
+      setX(nx);
+      setFill(fillFor(nx));
+      raf.current = requestAnimationFrame(loop);
+    }
+    raf.current = requestAnimationFrame(loop);
+    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oscSpeed, maxX, shapeW]);
+
+  function stop() {
+    if (stopped || fired.current) return;
+    if (raf.current) cancelAnimationFrame(raf.current);
+    const finalFill = fillFor(xRef.current);
+    setFill(finalFill);
+    setStopped(true);
+    fired.current = true;
+    setTimeout(() => {
+      onComplete({
+        score: finalFill,
+        outcome: `fill_${finalFill}`,
+        durationMs: Math.round(performance.now() - startTs.current),
+      });
+    }, 1200);
+  }
+
+  const isPerfect = stopped && fill >= perfectThreshold;
+  const lockAnim =
+    !stopped ? undefined
+    : lockAnimation === "pulse" ? "mem-pulse 0.5s ease"
+    : lockAnimation === "pop"   ? "mem-pop 0.4s ease"
+    : lockAnimation === "flash" ? "mem-flash 0.5s ease"
+    : lockAnimation === "tada"  ? "mem-tada 0.6s ease"
+    : undefined;
+
+  const instruction = instructionTpl.trim() ? (
+    <span
+      style={{
+        color: instructionColor ?? undefined,
+        fontSize: instructionFontSize,
+        fontFamily: instructionFontFamily ?? undefined,
+      }}
+    >
+      {instructionTpl}
+    </span>
+  ) : null;
+
+  const shapeStyle = shapeCSS(shape);
 
   return (
-    <div className="flex flex-col items-center gap-6 py-2">
-      {/* Cabinet */}
-      <div
-        className="relative rounded-3xl p-5 pt-6"
-        style={{
-          background: `linear-gradient(160deg, ${lighten(pal.brand, 0.18)}, ${darken(pal.brand, 0.28)})`,
-          boxShadow: `0 22px 48px -16px ${mix(pal.dark, "#000", 0.4)}, inset 0 2px 4px rgba(255,255,255,0.3)`,
-          border: `2px solid ${lighten(pal.brand, 0.45)}`,
-        }}
-      >
-        {/* Marquee */}
+    <div className="flex flex-col items-center gap-5 py-2">
+      {instruction}
+
+      {/* Fill percentage readout */}
+      <div className="flex flex-col items-center gap-1">
         <div
-          className="mb-4 text-center font-extrabold tracking-[0.2em] text-sm rounded-lg py-1.5"
-          style={{
-            color: pal.fg,
-            background: `linear-gradient(90deg, ${darken(pal.brand, 0.15)}, ${pal.brand}, ${darken(pal.brand, 0.15)})`,
-            textShadow: "0 1px 2px rgba(0,0,0,0.4)",
-            boxShadow: "inset 0 1px 3px rgba(0,0,0,0.3)",
-          }}
+          className="arcade-display text-4xl leading-none tabular-nums"
+          style={{ color: isPerfect ? fillColor : "var(--ink)" }}
         >
-          ✦ JACKPOT ✦
+          {fill}%
         </div>
-
-        {/* Reel window */}
-        <div
-          className="relative flex gap-2.5 p-3 rounded-xl"
-          style={{
-            background: "linear-gradient(180deg, #0b0b12, #1b1b26)",
-            boxShadow: "inset 0 4px 12px rgba(0,0,0,0.7)",
-          }}
-        >
-          {strips.current.map((strip, i) => (
-            <div
-              key={i}
-              className="relative overflow-hidden rounded-lg"
-              style={{
-                width: SYMBOL_HEIGHT,
-                height: SYMBOL_HEIGHT,
-                background: "linear-gradient(180deg, #ffffff, #e9e9f0)",
-                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.25)",
-              }}
-            >
-              <div
-                className="will-change-transform"
-                style={{
-                  transform: `translateY(${reels[i].offsetPx}px)`,
-                  transition: reels[i].durationMs
-                    ? `transform ${reels[i].durationMs}ms cubic-bezier(0.12, 0.7, 0.2, 1)`
-                    : "none",
-                  filter: spinning ? "blur(1px)" : "none",
-                }}
-              >
-                {strip.map((sym, j) => (
-                  <div
-                    key={j}
-                    className="flex items-center justify-center text-4xl"
-                    style={{ height: SYMBOL_HEIGHT }}
-                  >
-                    {sym}
-                  </div>
-                ))}
-              </div>
-              {/* glass gloss */}
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,0.55), transparent 30%, transparent 70%, rgba(0,0,0,0.15))",
-                }}
-              />
-            </div>
-          ))}
-
-          {/* Payline */}
-          <div
-            className="pointer-events-none absolute left-1.5 right-1.5 top-1/2 -translate-y-1/2 h-[3px] rounded-full"
-            style={{
-              background: win ? lighten(pal.accent, 0.2) : "rgba(255,255,255,0.25)",
-              boxShadow: win ? `0 0 12px 2px ${pal.accent}` : "none",
-              transition: "all 0.3s",
-            }}
-          />
-        </div>
-
-        {win ? (
-          <div
-            className="mt-3 text-center font-bold text-sm animate-[pop-in_0.4s_ease-out]"
-            style={{ color: lighten(pal.accent, 0.35) }}
-          >
-            🎉 MATCH! 🎉
-          </div>
-        ) : (
-          <div className="mt-3 h-5" />
-        )}
+        <div className="text-[10px] uppercase tracking-widest arcade-muted">{filledLabel}</div>
       </div>
 
-      <button
-        onClick={spin}
-        disabled={spinning || done}
-        className="btn-arcade"
-        style={!spinning && !done ? { animation: "pulse-glow 2.2s ease-in-out infinite" } : undefined}
+      {/* Arena */}
+      <div
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          width: ARENA_W,
+          height: shapeH + 40,
+          background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.25))",
+          boxShadow: "inset 0 2px 10px rgba(0,0,0,0.4)",
+        }}
       >
-        {spinning ? "Spinning…" : done ? "Done" : "PULL THE LEVER"}
-      </button>
+        {/* Outline (fixed target) */}
+        <div
+          className="absolute"
+          style={{
+            left: outlineX,
+            top: 20,
+            width: shapeW,
+            height: shapeH,
+            ...shapeStyle,
+            ...(outlineImage
+              ? {}
+              : { border: `3px dashed ${outlineColor}`, background: lighten(outlineColor, 0.55) + "55" }),
+          }}
+        >
+          {outlineImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={outlineImage}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.35, ...shapeStyle }}
+            />
+          )}
+        </div>
+
+        {/* Oscillating object */}
+        <div
+          className="absolute"
+          style={{
+            left: x,
+            top: 20,
+            width: shapeW,
+            height: shapeH,
+            ...shapeStyle,
+            ...(fillImage
+              ? {}
+              : {
+                  background: `linear-gradient(160deg, ${lighten(fillColor, 0.25)}, ${darken(fillColor, 0.15)})`,
+                  boxShadow: `0 0 16px 2px ${fillColor}99`,
+                  opacity: 0.92,
+                }),
+            animation: lockAnim,
+          }}
+        >
+          {fillImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={fillImage}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "contain", ...shapeStyle }}
+            />
+          )}
+        </div>
+      </div>
+
+      {stopped ? (
+        <div
+          className="rounded-xl px-5 py-2.5 text-center text-sm font-bold"
+          style={{ background: isPerfect ? fillColor : lighten(pal.dark, 0.55), color: isPerfect ? pal.fg : "#444" }}
+        >
+          {isPerfect ? perfectText : tryAgainText} · {fill}%
+        </div>
+      ) : (
+        <button onClick={stop} className="btn-arcade" style={{ animation: "pulse-glow 2.2s ease-in-out infinite" }}>
+          {stopLabel}
+        </button>
+      )}
     </div>
   );
-}
-
-function buildStrip(symbols: string[]): string[] {
-  const strip: string[] = [];
-  for (let i = 0; i < REEL_LEN; i++) {
-    strip.push(symbols[Math.floor(Math.random() * symbols.length)]);
-  }
-  return strip;
 }

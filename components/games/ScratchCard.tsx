@@ -1,169 +1,402 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
-import { palette, lighten, darken, mix, readableText } from "@/lib/games/colors";
+import { palette, lighten, darken } from "@/lib/games/colors";
 
-// Lazy-load scratchcard-js on the client only; it touches window/document.
-type SCM = typeof import("scratchcard-js");
+const DEFAULT_WIN_SYM = "⭐";
+const DEFAULT_OTHERS  = ["🍋", "🔔", "🍒", "💎"];
 
-const CARD = 320;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+// A "symbol" is either emoji/text or an image URL. Detect the latter.
+function isImg(s: string): boolean {
+  return /^(https?:\/\/|data:|\/)/.test(s);
+}
+
+function SymbolView({ symbol, size }: { symbol: string; size: number }) {
+  if (isImg(symbol)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={symbol}
+        alt=""
+        style={{ width: size, height: size, objectFit: "contain", display: "inline-block", verticalAlign: "middle" }}
+      />
+    );
+  }
+  return <span style={{ fontSize: size, lineHeight: 1 }}>{symbol}</span>;
+}
+
+function parseSymbols(raw: unknown, fallback: string[]): string[] {
+  if (Array.isArray(raw))
+    return (raw as string[]).filter((s) => typeof s === "string" && s.trim());
+  if (typeof raw === "string" && raw.trim())
+    return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  return fallback;
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateSymbols(total: number, winCount: number, winSym: string, others: string[]): string[] {
+  const pool = others.length ? others : ["💎"];
+  // 45 % chance of a cosmetic visual win; real prize always comes from backend
+  const visualWin = Math.random() < 0.45;
+  const wins = visualWin ? winCount : Math.max(0, winCount - 1);
+  const arr: string[] = [
+    ...Array(Math.min(wins, total)).fill(winSym),
+    ...Array(Math.max(0, total - wins))
+      .fill(null)
+      .map(() => pool[Math.floor(Math.random() * pool.length)]),
+  ];
+  return shuffle(arr);
+}
+
+// ── Canvas cover drawing ─────────────────────────────────────────────────────
+
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  color: string,
+  fg: string,
+  text: string,
+) {
+  const g = ctx.createLinearGradient(0, 0, size, size);
+  g.addColorStop(0, lighten(color, 0.22));
+  g.addColorStop(1, darken(color, 0.22));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+
+  // diagonal sheen band
+  ctx.save();
+  ctx.translate(size / 2, size / 2);
+  ctx.rotate(-0.4);
+  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  ctx.fillRect(-size, -size * 0.12, size * 2, size * 0.24);
+  ctx.restore();
+
+  // dot grid
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  for (let y = 8; y < size; y += 16)
+    for (let x = 8; x < size; x += 16) {
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+  // cover text
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = fg;
+  ctx.font = `900 ${Math.round(size * 0.38)}px system-ui,sans-serif`;
+  ctx.fillText(text.slice(0, 4), size / 2, size / 2);
+}
+
+// ── Container CSS shape ──────────────────────────────────────────────────────
+
+function shapeCSS(shape: string): React.CSSProperties {
+  switch (shape) {
+    case "circle":  return { borderRadius: "50%", overflow: "hidden" };
+    case "square":  return { borderRadius: 5,     overflow: "hidden" };
+    case "diamond": return { clipPath: "polygon(50% 0%,100% 50%,50% 100%,0% 50%)" };
+    case "hexagon": return { clipPath: "polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)" };
+    default:        return { borderRadius: 18,    overflow: "hidden" }; // "rounded"
+  }
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 
 export function ScratchCard({ config, theme, onComplete }: GameProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const fired = useRef(false);
-  const startTs = useRef<number>(0);
-  const [scratched, setScratched] = useState(false);
   const pal = palette(theme.brandColor, theme.brandFg);
 
-  const percentToReveal =
-    Math.max(10, Math.min(90, (config?.percentToReveal as number | undefined) ?? 50));
-  const coverImage = (config?.coverImage as string | undefined) ?? null;
-  const resultImage = (config?.resultImage as string | undefined) ?? null;
+  const cols         = Math.max(1, Math.min(3, (config.gridCols       as number | undefined) ?? 3));
+  const rows         = Math.max(1, Math.min(3, (config.gridRows       as number | undefined) ?? 1));
+  const total        = cols * rows;
+  const shape        = (config.scratchShape   as string | undefined) ?? "rounded";
+  const boxSize      = Math.max(60, Math.min(150, (config.boxSize     as number | undefined) ?? 100));
+  const brushRadius  = Math.max(10, Math.min(60,  (config.brushRadius as number | undefined) ?? 28));
+  const pctThreshold = Math.max(20, Math.min(90,  (config.percentToReveal as number | undefined) ?? 55));
+  const winSymbol    = (config.winSymbol      as string | undefined) ?? DEFAULT_WIN_SYM;
+  const otherSymbols = parseSymbols(config.otherSymbols, DEFAULT_OTHERS);
+  const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? Math.ceil(total / 2)));
+  const coverImage   = (config.coverImage     as string | undefined) ?? null;
+  const coverText    = (config.coverText      as string | undefined) ?? "?";
+  const instructionTpl = (config.instructionText as string | undefined) ?? "Match {count}× {symbol} to win!";
+  const instructionColor      = (config.instructionColor      as string | undefined) ?? null;
+  const instructionFontSize   = (config.instructionFontSize   as number | undefined) ?? 14;
+  const instructionFontFamily = (config.instructionFontFamily as string | undefined) ?? null;
 
-  useEffect(() => {
-    let scInstance: { destroy?: () => void } | null = null;
-    let cancelled = false;
-    startTs.current = performance.now();
+  // Build instruction nodes so {symbol} can render an image inline.
+  const instructionNodes = (() => {
+    const withCount = instructionTpl.replace(/\{count\}/gi, String(winCount));
+    const parts = withCount.split(/\{symbol\}/i);
+    const sz = instructionFontSize * 1.2;
+    return parts.flatMap((part, i) =>
+      i === 0
+        ? [<span key={`t${i}`}>{part}</span>]
+        : [<SymbolView key={`s${i}`} symbol={winSymbol} size={sz} />, <span key={`t${i}`}>{part}</span>],
+    );
+  })();
+  const hasInstruction = instructionTpl.replace(/\{count\}|\{symbol\}/gi, "").trim().length > 0 || isImg(winSymbol);
 
-    (async () => {
-      const mod: SCM = await import("scratchcard-js");
-      if (cancelled || !containerRef.current) return;
-      const { ScratchCard: SC, SCRATCH_TYPE } = mod as unknown as {
-        ScratchCard: new (sel: string, opts: Record<string, unknown>) => {
-          init: () => Promise<void>;
-          canvas: HTMLCanvasElement;
-          addFinishCallback: (cb: () => void) => void;
-          destroy?: () => void;
-        };
-        SCRATCH_TYPE: { SPRAY: string; LINE: string; CIRCLE: string };
-      };
-
-      const sc = new SC(`#${containerRef.current.id}`, {
-        scratchType: SCRATCH_TYPE.SPRAY,
-        containerWidth: CARD,
-        containerHeight: CARD,
-        imageForwardSrc: coverImage ?? makeCoverDataUrl(pal.brand, pal.fg),
-        imageBackgroundSrc: resultImage ?? makeBackgroundDataUrl(pal.accent, pal.light),
-        htmlBackground: "",
-        clearZoneRadius: 32,
-        percentToFinish: percentToReveal,
-        nPoints: 30,
-        pointSize: 4,
-        callback: () => {
-          if (fired.current) return;
-          fired.current = true;
-          setScratched(true);
-          onComplete({
-            outcome: "scratched",
-            durationMs: performance.now() - startTs.current,
-          });
-        },
-      });
-      try {
-        await sc.init();
-      } catch {
-        if (!fired.current) {
-          fired.current = true;
-          onComplete({ outcome: "scratch_init_failed" });
-        }
-      }
-      scInstance = sc;
-    })();
-
-    return () => {
-      cancelled = true;
-      if (scInstance?.destroy) scInstance.destroy();
-    };
+  // Regenerate symbols when grid/win config changes; stable during a live session.
+  // First render is DETERMINISTIC (ordered) so SSR and client match; we shuffle
+  // after mount to avoid a hydration mismatch.
+  const symbolKey = `${total}-${winCount}-${winSymbol}`;
+  const orderedSymbols = useMemo(() => {
+    const pool = otherSymbols.length ? otherSymbols : ["💎"];
+    return Array.from({ length: total }, (_, i) => (i < winCount ? winSymbol : pool[i % pool.length]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coverImage, resultImage, percentToReveal, pal.brand, pal.accent]);
+  }, [symbolKey]);
+  const [symbols, setSymbols] = useState<string[]>(orderedSymbols);
+  useEffect(() => {
+    setSymbols(generateSymbols(total, winCount, winSymbol, otherSymbols));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbolKey]);
+
+  const [revealedBoxes, setRevealedBoxes] = useState<boolean[]>(() => Array(total).fill(false));
+  const startTs  = useRef(performance.now());
+  const firedRef = useRef(false);
+
+  // Reset when grid or symbols change (editor preview updates)
+  useEffect(() => {
+    setRevealedBoxes(Array(total).fill(false));
+    firedRef.current = false;
+    startTs.current  = performance.now();
+  }, [total, symbolKey]);
+
+  const revealedCount = revealedBoxes.filter(Boolean).length;
+  const allRevealed   = revealedCount === total;
+  const matchCount    = revealedBoxes.reduce((n, v, i) => n + (v && symbols[i] === winSymbol ? 1 : 0), 0);
+  const visuallyWon   = allRevealed && matchCount >= winCount;
+
+  const handleBoxRevealed = useCallback(
+    (idx: number) => {
+      setRevealedBoxes((prev) => {
+        const next = [...prev];
+        next[idx] = true;
+        if (next.every(Boolean) && !firedRef.current) {
+          firedRef.current = true;
+          setTimeout(
+            () =>
+              onComplete({
+                outcome: "scratched",
+                durationMs: Math.round(performance.now() - startTs.current),
+              }),
+            800,
+          );
+        }
+        return next;
+      });
+    },
+    [onComplete],
+  );
+
+  const gap = Math.max(6, Math.round(boxSize * 0.1));
 
   return (
-    <div className="flex flex-col items-center gap-5 py-2">
-      <p className="arcade-muted text-base font-semibold flex items-center gap-2">
-        <span className="text-xl">🪙</span> Scratch the panel to reveal
-      </p>
+    <div className="flex flex-col items-center gap-4 py-2">
+      {hasInstruction && (
+        <p
+          className="arcade-muted font-semibold text-center flex items-center justify-center gap-1 flex-wrap"
+          style={{
+            color: instructionColor ?? undefined,
+            fontSize: instructionFontSize,
+            fontFamily: instructionFontFamily ?? undefined,
+          }}
+        >
+          {instructionNodes}
+        </p>
+      )}
+
       <div
-        className="relative rounded-3xl p-3"
         style={{
-          background: `linear-gradient(150deg, ${lighten(pal.brand, 0.25)}, ${darken(pal.brand, 0.2)})`,
-          boxShadow: `0 20px 44px -16px ${mix(pal.dark, "#000", 0.35)}, inset 0 2px 4px rgba(255,255,255,0.3)`,
+          display: "grid",
+          gridTemplateColumns: `repeat(${cols}, ${boxSize}px)`,
+          gap,
         }}
       >
-        <div
-          id="scratchcard-container"
-          ref={containerRef}
-          className="relative rounded-2xl overflow-hidden touch-none select-none"
-          style={{
-            width: CARD,
-            height: CARD,
-            boxShadow: "inset 0 2px 8px rgba(0,0,0,0.25)",
-          }}
-        />
-        {/* sheen sweep over the foil while unscratched */}
-        {!scratched ? (
-          <div
-            className="pointer-events-none absolute inset-3 rounded-2xl overflow-hidden"
-            style={{ mixBlendMode: "overlay" }}
-          >
-            <div
-              className="absolute inset-y-0 -inset-x-1/2"
-              style={{
-                background:
-                  "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.6) 50%, transparent 65%)",
-                backgroundSize: "200% 100%",
-                animation: "shimmer 2.8s linear infinite",
-              }}
-            />
-          </div>
-        ) : null}
+        {symbols.map((symbol, i) => (
+          <ScratchBox
+            key={`${symbolKey}-${i}`}
+            symbol={symbol}
+            isWinSymbol={symbol === winSymbol}
+            shape={shape}
+            size={boxSize}
+            brushRadius={brushRadius}
+            pctThreshold={pctThreshold}
+            coverImage={coverImage}
+            coverText={coverText}
+            coverColor={pal.brand}
+            coverFg={pal.fg}
+            accentLight={pal.light}
+            onRevealed={() => handleBoxRevealed(i)}
+          />
+        ))}
       </div>
+
+      {allRevealed ? (
+        <div
+          className="rounded-xl px-5 py-2.5 text-center text-sm font-bold"
+          style={{
+            background: visuallyWon ? pal.brand : lighten(pal.dark, 0.55),
+            color: visuallyWon ? pal.fg : "#444",
+          }}
+        >
+          <span className="inline-flex items-center justify-center gap-1 flex-wrap">
+            {visuallyWon ? "🎉 " : ""}
+            {matchCount}× <SymbolView symbol={winSymbol} size={instructionFontSize * 1.2} />
+            {visuallyWon ? " — revealing your prize…" : " — better luck next time!"}
+          </span>
+        </div>
+      ) : (
+        <p className="text-xs text-zinc-500 text-center">
+          {revealedCount === 0
+            ? "Scratch each panel to reveal"
+            : `${revealedCount} of ${total} revealed — keep going!`}
+        </p>
+      )}
     </div>
   );
 }
 
-function makeCoverDataUrl(brand: string, fg: string): string {
-  const c0 = lighten(brand, 0.2);
-  const c1 = darken(brand, 0.18);
-  const sheen = lighten(brand, 0.55);
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='${CARD}' height='${CARD}'>` +
-    `<defs>` +
-    `<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>` +
-    `<stop offset='0%' stop-color='${c0}'/><stop offset='100%' stop-color='${c1}'/>` +
-    `</linearGradient>` +
-    `<pattern id='hatch' width='14' height='14' patternTransform='rotate(45)' patternUnits='userSpaceOnUse'>` +
-    `<rect width='14' height='14' fill='none'/>` +
-    `<line x1='0' y1='0' x2='0' y2='14' stroke='${sheen}' stroke-opacity='0.18' stroke-width='6'/>` +
-    `</pattern>` +
-    `</defs>` +
-    `<rect width='${CARD}' height='${CARD}' fill='url(#g)'/>` +
-    `<rect width='${CARD}' height='${CARD}' fill='url(#hatch)'/>` +
-    `<rect x='10' y='10' width='${CARD - 20}' height='${CARD - 20}' rx='16' fill='none' ` +
-    `stroke='${sheen}' stroke-opacity='0.5' stroke-width='2' stroke-dasharray='6 8'/>` +
-    `<text x='50%' y='46%' dominant-baseline='middle' text-anchor='middle' ` +
-    `fill='${fg}' font-size='30' font-weight='800' font-family='system-ui,sans-serif' ` +
-    `letter-spacing='3'>SCRATCH</text>` +
-    `<text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' ` +
-    `fill='${fg}' fill-opacity='0.8' font-size='15' font-family='system-ui,sans-serif' ` +
-    `letter-spacing='4'>HERE TO WIN</text>` +
-    `</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+// ── Per-panel scratch box ────────────────────────────────────────────────────
+
+interface BoxProps {
+  symbol: string;
+  isWinSymbol: boolean;
+  shape: string;
+  size: number;
+  brushRadius: number;
+  pctThreshold: number;
+  coverImage: string | null;
+  coverText: string;
+  coverColor: string;
+  coverFg: string;
+  accentLight: string;
+  onRevealed: () => void;
 }
 
-function makeBackgroundDataUrl(accent: string, light: string): string {
-  const fg = readableText(light);
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='${CARD}' height='${CARD}'>` +
-    `<defs>` +
-    `<radialGradient id='bg' cx='50%' cy='42%' r='70%'>` +
-    `<stop offset='0%' stop-color='${lighten(accent, 0.45)}'/>` +
-    `<stop offset='100%' stop-color='${light}'/>` +
-    `</radialGradient>` +
-    `</defs>` +
-    `<rect width='${CARD}' height='${CARD}' fill='url(#bg)'/>` +
-    `<text x='50%' y='40%' dominant-baseline='middle' text-anchor='middle' font-size='84'>🎉</text>` +
-    `<text x='50%' y='68%' dominant-baseline='middle' text-anchor='middle' ` +
-    `fill='${fg}' font-size='24' font-weight='800' font-family='system-ui,sans-serif'>You did it!</text>` +
-    `</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+function ScratchBox({
+  symbol, isWinSymbol, shape, size, brushRadius, pctThreshold,
+  coverImage, coverText, coverColor, coverFg, accentLight, onRevealed,
+}: BoxProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [revealed, setRevealed] = useState(false);
+  const drawing  = useRef(false);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = size * dpr;
+    canvas.height = size * dpr;
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+
+    if (coverImage) {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload  = () => { ctx.drawImage(img, 0, 0, size, size); };
+      img.onerror = () => drawCover(ctx, size, coverColor, coverFg, coverText);
+      img.src = coverImage;
+    } else {
+      drawCover(ctx, size, coverColor, coverFg, coverText);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size, coverColor, coverFg, coverText, coverImage]);
+
+  function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (size / rect.width),
+      y: (e.clientY - rect.top)  * (size / rect.height),
+    };
+  }
+
+  function scratch(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (revealed || !drawing.current || firedRef.current) return;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const { x, y } = getPos(e);
+
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+
+    // Sample every 5th pixel's alpha (step 20 = 5 RGBA × 4 bytes)
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let transparent = 0, sampled = 0;
+    for (let i = 3; i < data.length; i += 20) {
+      sampled++;
+      if (data[i] < 128) transparent++;
+    }
+    if (sampled > 0 && transparent / sampled >= pctThreshold / 100) {
+      firedRef.current = true;
+      setRevealed(true);
+      onRevealed();
+    }
+  }
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, ...shapeCSS(shape) }}>
+      {/* Symbol shown beneath canvas */}
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexDirection: "column", gap: 2,
+          background:
+            isWinSymbol && revealed
+              ? `linear-gradient(135deg, ${lighten(accentLight, 0.1)}, ${accentLight})`
+              : `linear-gradient(135deg, #fff8, ${lighten(accentLight, 0.55)})`,
+        }}
+      >
+        <SymbolView symbol={symbol} size={size * (isImg(symbol) ? 0.6 : 0.42)} />
+        {revealed && isWinSymbol && (
+          <span
+            style={{
+              fontSize: Math.max(9, size * 0.14),
+              fontWeight: 900,
+              letterSpacing: 1,
+              color: darken(accentLight, 0.5),
+              textTransform: "uppercase",
+            }}
+          >
+            WIN
+          </span>
+        )}
+      </div>
+
+      {/* Scratch canvas — unmounts when revealed so no dangling refs */}
+      {!revealed && (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute", inset: 0,
+            width: size, height: size,
+            touchAction: "none", cursor: "crosshair", display: "block",
+          }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            drawing.current = true;
+            scratch(e);
+          }}
+          onPointerMove={scratch}
+          onPointerUp={() => { drawing.current = false; }}
+          onPointerCancel={() => { drawing.current = false; }}
+        />
+      )}
+    </div>
+  );
 }

@@ -5,10 +5,44 @@ import { useArcade, ArcadeButton, Stage } from "./arcade/Kit";
 
 type Phase = "idle" | "waiting" | "go" | "done" | "early";
 
-// Wait for green, then tap as fast as possible. Score = 1000 - reactionMs
-// (clamped), so faster = higher score.
-export function Reaction({ theme, onComplete }: GameProps) {
+function isImg(s: string): boolean {
+  return /^(https?:\/\/|data:|\/)/.test(s);
+}
+
+function Icon({ value, size }: { value: string; size: number }) {
+  if (!value) return null;
+  if (isImg(value)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={value} alt="" style={{ width: size, height: size, objectFit: "contain" }} />;
+  }
+  return <span style={{ fontSize: size, lineHeight: 1 }}>{value}</span>;
+}
+
+// Wait for the "go" colour, then tap as fast as possible.
+export function Reaction({ config, theme, onComplete }: GameProps) {
   const pal = useArcade(theme);
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+  const minWait     = Math.max(0.3, Math.min(6, (config?.minWait as number | undefined) ?? 1.2)) * 1000;
+  const maxWait     = Math.max(minWait / 1000, Math.min(10, (config?.maxWait as number | undefined) ?? 3.8)) * 1000;
+  const waitColor   = (config?.waitColor as string | undefined) ?? "#b91c1c";
+  const goColor     = (config?.goColor as string | undefined) ?? "#16a34a";
+  const earlyColor  = (config?.earlyColor as string | undefined) ?? "#7f1d1d";
+  const idleColor   = (config?.idleColor as string | undefined) ?? "rgba(0,0,0,0.25)";
+  const goSymbol    = (config?.goSymbol as string | undefined) ?? "";
+  const panelHeight = Math.max(140, Math.min(320, (config?.panelHeight as number | undefined) ?? 224));
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the instant the panel turns green";
+  const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
+  const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
+  const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;
+  const readyText   = (config?.readyText as string | undefined) ?? "Ready?";
+  const waitText    = (config?.waitText  as string | undefined) ?? "Wait for it…";
+  const goText      = (config?.goText    as string | undefined) ?? "TAP NOW!";
+  const earlyText   = (config?.earlyText as string | undefined) ?? "Too early! Try again";
+  const startLabel  = (config?.startLabel as string | undefined) ?? "START";
+  const retryLabel  = (config?.retryLabel as string | undefined) ?? "RETRY";
+  const resultTpl   = (config?.resultText as string | undefined) ?? "Nice reflexes!";
+
   const [phase, setPhase] = useState<Phase>("idle");
   const [ms, setMs] = useState(0);
   const goAt = useRef(0);
@@ -16,7 +50,7 @@ export function Reaction({ theme, onComplete }: GameProps) {
 
   function arm() {
     setPhase("waiting");
-    const delay = 1200 + Math.random() * 2600;
+    const delay = minWait + Math.random() * Math.max(0, maxWait - minWait);
     to.current = setTimeout(() => {
       goAt.current = performance.now();
       setPhase("go");
@@ -41,28 +75,35 @@ export function Reaction({ theme, onComplete }: GameProps) {
   }
 
   const bg =
-    phase === "go" ? "#16a34a" : phase === "waiting" ? "#b91c1c" : phase === "early" ? "#7f1d1d" : "rgba(0,0,0,0.25)";
+    phase === "go" ? goColor : phase === "waiting" ? waitColor : phase === "early" ? earlyColor : idleColor;
   const label =
-    phase === "idle" ? "Ready?" :
-    phase === "waiting" ? "Wait for GREEN…" :
-    phase === "go" ? "TAP NOW!" :
-    phase === "early" ? "Too early! Try again" :
+    phase === "idle" ? readyText :
+    phase === "waiting" ? waitText :
+    phase === "go" ? goText :
+    phase === "early" ? earlyText :
     `${ms} ms`;
 
+  const instruction = instructionTpl.trim() ? (
+    <span style={{ color: instructionColor ?? undefined, fontSize: instructionFontSize, fontFamily: instructionFontFamily ?? undefined }}>
+      {instructionTpl}
+    </span>
+  ) : undefined;
+
   return (
-    <Stage instruction="Tap the instant the panel turns green">
+    <Stage instruction={instruction}>
       <button
         type="button"
         onClick={click}
         disabled={phase === "idle" || phase === "done"}
-        className="flex h-56 w-full max-w-xs items-center justify-center rounded-2xl arcade-title text-3xl text-white select-none transition-colors"
-        style={{ background: bg, boxShadow: phase === "go" ? "0 0 40px 4px #16a34a" : "inset 0 2px 8px rgba(0,0,0,0.4)" }}
+        className="flex w-full max-w-xs items-center justify-center gap-3 rounded-2xl arcade-title text-3xl text-white select-none transition-colors"
+        style={{ height: panelHeight, background: bg, boxShadow: phase === "go" ? `0 0 40px 4px ${goColor}` : "inset 0 2px 8px rgba(0,0,0,0.4)" }}
       >
-        {label}
+        {phase === "go" && goSymbol ? <Icon value={goSymbol} size={panelHeight * 0.32} /> : null}
+        <span>{label}</span>
       </button>
-      {phase === "idle" ? <ArcadeButton onClick={arm} pulse>START</ArcadeButton> : null}
-      {phase === "early" ? <ArcadeButton onClick={arm}>RETRY</ArcadeButton> : null}
-      {phase === "done" ? <div className="arcade-display text-xl" style={{ color: pal.brand }}>Nice reflexes!</div> : null}
+      {phase === "idle" ? <ArcadeButton onClick={arm} pulse>{startLabel}</ArcadeButton> : null}
+      {phase === "early" ? <ArcadeButton onClick={arm}>{retryLabel}</ArcadeButton> : null}
+      {phase === "done" ? <div className="arcade-display text-xl" style={{ color: pal.brand }}>{resultTpl.replace(/\{ms\}/gi, String(ms))}</div> : null}
     </Stage>
   );
 }

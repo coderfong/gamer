@@ -60,6 +60,28 @@ export function ReviewStep({
     setLaunching(true);
     setError(null);
     try {
+      // Auto-save current state so the launch check sees up-to-date values,
+      // even if the user navigated here without hitting "Save & continue".
+      // Also normalise visual defaults (brandColor picker shows #6d28d9 even when
+      // the field is undefined in state — write the real value so launch passes).
+      if (campaign.id) {
+        const normalizedTheme = {
+          ...campaign.theme,
+          brandColor: campaign.theme.brandColor ?? "#6d28d9",
+          brandFg: campaign.theme.brandFg ?? "#ffffff",
+        };
+        const saveRes = await fetch(`/api/admin/campaigns/${campaign.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: campaign.name, theme: normalizedTheme }),
+        });
+        if (!saveRes.ok) {
+          const j = await saveRes.json().catch(() => null);
+          setError(j?.error?.message ?? "Could not save campaign before launching.");
+          return;
+        }
+      }
+
       const res = await fetch(`/api/admin/campaigns/${campaign.id}/launch`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) {

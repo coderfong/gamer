@@ -10,16 +10,41 @@ export const createCampaignSchema = z.object({
 });
 export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
 
+const freeTextBlockSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  fontSize: z.number(),
+  align: z.enum(["left", "center"]).optional(),
+});
+
+const overlayElementSchema = z.object({
+  id:        z.string().max(64),
+  imageUrl:  z.string().url().max(1000),
+  x:         z.number(),
+  y:         z.number(),
+  width:     z.number().min(1),
+  height:    z.number().min(1),
+  rotation:  z.number(),
+  animation: z.enum(["none", "float", "spin", "pulse", "bounce", "shake", "wiggle", "swing", "rubber-band", "heartbeat", "jello", "tada"]),
+  opacity:   z.number().min(0).max(1),
+  flipH:     z.boolean().optional(),
+  flipV:     z.boolean().optional(),
+});
+
 const themeSchema = z
   .object({
-    brandColor: z.string().max(32).optional(),
-    brandFg: z.string().max(32).optional(),
-    bgColor: z.string().max(32).optional(),
-    logoUrl: z.string().url().max(1000).nullable().optional(),
-    headline: z.string().max(200).optional(),
-    fontFamily: z.string().max(120).optional(),
+    brandColor:      z.string().max(32).optional(),
+    brandFg:         z.string().max(32).optional(),
+    bgColor:         z.string().max(32).optional(),
+    bgImageUrl:      z.string().url().max(1000).nullable().optional(),
+    logoUrl:         z.string().url().max(1000).nullable().optional(),
+    headline:        z.string().max(200).optional(),
+    fontFamily:      z.string().max(120).optional(),
+    nameBlock:       freeTextBlockSchema.optional(),
+    headlineBlock:   freeTextBlockSchema.optional(),
+    overlayElements: z.array(overlayElementSchema).max(20).optional(),
   })
-  .strict();
+  .passthrough(); // allow future theme keys without breaking saves
 
 // All fields optional — PATCH is partial. Empty object is a no-op.
 export const updateCampaignSchema = z
