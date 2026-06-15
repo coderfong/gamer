@@ -39,6 +39,15 @@ export interface StudioGameAssets {
   // Vertical padding (px) that pushes the game's content down — e.g. to make
   // room for a headline above it.
   padTop?: number;
+  // Fill Outline (slot_machine): scale (%) of the uploaded outline image.
+  outlineScale?: number;
+  // Plinko (dice_roll): board background image size (% of board), tuned independently.
+  boardImageW?: number;
+  boardImageH?: number;
+  // Plinko (dice_roll): the winning slot the ball must land in (1-based).
+  goalSlot?: number;
+  // Spin Wheel: flip the uploaded pointer image vertically (for art that points up).
+  pointerFlipY?: boolean;
 }
 
 export interface BrandStudioTheme {

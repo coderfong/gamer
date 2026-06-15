@@ -52,8 +52,8 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
   const hitTolerance = Math.max(4, Math.min(45, (config?.hitTolerance as number | undefined) ?? 11)); // degrees
   const bullets     = Math.max(1, Math.min(40, (config?.bullets as number | undefined) ?? count + 2));
   const targets     = parseTargets(config?.targetSymbols);
-  const targetSize  = Math.max(28, Math.min(64, (config?.targetSize as number | undefined) ?? 44));
-  const ringRadius  = Math.max(70, Math.min(130, (config?.ringRadius as number | undefined) ?? 100));
+  const targetSize  = Math.max(28, Math.min(96, (config?.targetSize as number | undefined) ?? 72));
+  const ringRadius  = Math.max(70, Math.min(130, (config?.ringRadius as number | undefined) ?? 90));
   const timeLimit   = Math.max(0, Math.min(60, (config?.timeLimit as number | undefined) ?? 0)); // 0 = unlimited
   const hitAnimation = (config?.hitAnimation as string | undefined) ?? "pop";
   const ringColor   = (config?.ringColor as string | undefined) ?? pal.brand;
@@ -72,7 +72,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
   const arena = (ringRadius + targetSize) * 2 + 8;
   const cx = arena / 2;
   const cy = arena / 2;
-  const crossSize = targetSize * 1.45;
+  const crossSize = targetSize * 1.7;
 
   const [phase, setPhase] = useState<"idle" | "play" | "done">("idle");
   const [alive, setAlive] = useState<boolean[]>(() => Array(count).fill(true));
@@ -241,6 +241,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
                 opacity: dead ? 0 : 1,
                 transition: "transform 0.3s ease, opacity 0.3s ease",
                 animation: dead ? (HIT_ANIM[hitAnimation] || undefined) : undefined,
+                zIndex: 2, // targets pass in front of the crosshair
               }}
             >
               {!dead && <Face value={sym} size={isImage ? targetSize : targetSize * 0.62} />}

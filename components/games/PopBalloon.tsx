@@ -13,6 +13,9 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
   // ── Config ─────────────────────────────────────────────────────────────────
   const target       = Math.max(2, Math.min(30, (config?.targetSeconds   as number | undefined) ?? 10));
   const perfectWindowMs = Math.max(30, Math.min(2000, (config?.perfectWindowMs as number | undefined) ?? 120));
+  // How long before the target the fill + timer start blinking so players can't
+  // simply watch the line reach the marker. Larger = harder.
+  const blinkLeadMs  = Math.max(300, Math.min(8000, (config?.blinkLeadMs as number | undefined) ?? 2500));
   const fillStyle    = (config?.fillStyle    as string | undefined) ?? "vertical"; // vertical | bar | circle
   const fillColor    = (config?.fillColor    as string | undefined) ?? pal.brand;
   const trackColor   = (config?.trackColor   as string | undefined) ?? lighten(pal.dark, 0.6);
@@ -77,6 +80,11 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
   const accuracy = Math.max(0, Math.round(100 - (diff * 1000) / 12));
   const isPerfect = phase === "done" && diff * 1000 <= perfectWindowMs;
 
+  // Once the running timer gets within blinkLeadMs of the target, the fill and
+  // the live readout blink rapidly so the line/marker can't be used to cheat.
+  const nearTarget = phase === "run" && (target - elapsed) * 1000 <= blinkLeadMs;
+  const blinkAnim = nearTarget ? "timer-blink 0.4s ease-in-out infinite" : undefined;
+
   const lockAnim =
     phase !== "done" ? undefined
     : lockAnimation === "pulse" ? "mem-pulse 0.5s ease"
@@ -109,12 +117,12 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
         >
           {phase === "done"
             ? `${accuracy}%`
-            : showTimer
-            ? `${Math.floor(elapsed)}s`
-            : "—"}
+            : phase === "run" && showTimer
+            ? `${elapsed.toFixed(2)} s`
+            : `${target.toFixed(2)} s`}
         </div>
         <div className="text-[10px] uppercase tracking-widest arcade-muted">
-          {phase === "done" ? accuracyLabel : showTimer ? "Time" : `Target ${target}s`}
+          {phase === "done" ? accuracyLabel : `Target ${target.toFixed(2)}s`}
         </div>
       </div>
 
@@ -127,6 +135,7 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
         trackColor={trackColor}
         fillImage={fillImage}
         lockAnim={lockAnim}
+        blinkAnim={blinkAnim}
         accentDark={darken(fillColor, 0.2)}
       />
 
@@ -156,7 +165,7 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
 }
 
 function FillVisual({
-  style, frac, markerFrac, fillColor, trackColor, fillImage, lockAnim, accentDark,
+  style, frac, markerFrac, fillColor, trackColor, fillImage, lockAnim, blinkAnim, accentDark,
 }: {
   style: string;
   frac: number;
@@ -165,6 +174,7 @@ function FillVisual({
   trackColor: string;
   fillImage: string | null;
   lockAnim: string | undefined;
+  blinkAnim: string | undefined;
   accentDark: string;
 }) {
   const [aspect, setAspect] = useState<number | null>(null); // width / height
@@ -184,7 +194,7 @@ function FillVisual({
         style={{
           width: 180, height: 180,
           background: `conic-gradient(${fillColor} ${deg}deg, ${trackColor} ${deg}deg)`,
-          animation: lockAnim,
+          animation: lockAnim ?? blinkAnim,
         }}
       >
         <div className="absolute inset-[18px] rounded-full" style={{ background: "var(--cream, #fff)" }} />
@@ -212,7 +222,7 @@ function FillVisual({
         background: fillImage ? "transparent" : trackColor,
         borderRadius: fillImage ? 0 : 16,
         boxShadow: fillImage ? "none" : "inset 0 2px 8px rgba(0,0,0,0.25)",
-        animation: lockAnim,
+        animation: lockAnim ?? blinkAnim,
       }}
     >
       {/* faint ghost of the fill image so the empty outline is visible */}

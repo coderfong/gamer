@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameByType } from "@/components/games/GameWrapper";
+import { getGameMeta } from "@/lib/games/gameMeta";
 import type { GameType } from "@/lib/types/game";
 import type { BrandStudioTheme, BrandStudioText, StudioGameAssets } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
@@ -115,6 +116,14 @@ export function MiniGamePreview({
         <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: topPad }}>
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
+              {/* Big main header above the game — uses the headline (display)
+                  text settings via the .arcade-display class. */}
+              <div
+                className="arcade-display text-center leading-none"
+                style={{ fontSize: text?.display.size ?? 30, color: "var(--brand-color)", marginBottom: gameType === "spin_wheel" ? 64 : 32, letterSpacing: "0.12em" }}
+              >
+                {getGameMeta(gameType).headline}
+              </div>
               {padTop > 0 && <div style={{ height: padTop }} />}
               <GameByType
                 key={key}

@@ -36,7 +36,14 @@ function parseList(raw: unknown, fallback: string[]): string[] {
   return fallback;
 }
 
-interface Drop { id: number; x: number; y: number; vy: number; bad: boolean; sym: string; }
+interface Drop {
+  id: number; x: number; y: number; vy: number; bad: boolean; sym: string;
+  baseX: number;   // anchor for the horizontal sway
+  rot: number;     // current rotation (deg)
+  vr: number;      // rotation speed (deg/s)
+  sway: number;    // sway amplitude (px)
+  phase: number;   // sway phase offset
+}
 interface Effect { id: number; x: number; y: number; text: string; color: string; }
 
 export function CatchDrops({ config, theme, onComplete }: GameProps) {
@@ -50,9 +57,9 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
   const lives0      = Math.max(1, Math.min(9, (config?.lives as number | undefined) ?? 3));
   const goodSyms    = parseList(config?.goodSymbols, DEFAULT_GOOD);
   const badSyms     = parseList(config?.badSymbols, DEFAULT_BAD);
-  const objSize     = Math.max(24, Math.min(56, (config?.objectSize as number | undefined) ?? 36));
+  const objSize     = Math.max(24, Math.min(80, (config?.objectSize as number | undefined) ?? 52));
   const catcherSym  = (config?.catcherSymbol as string | undefined) ?? "🧺";
-  const catcherW    = Math.max(48, Math.min(140, (config?.catcherSize as number | undefined) ?? 76));
+  const catcherW    = Math.max(48, Math.min(180, (config?.catcherSize as number | undefined) ?? 104));
   const lifeIcon    = (config?.lifeIcon as string | undefined) ?? "❤️";
   const bgColor     = (config?.bgColor as string | undefined) ?? null;
   const bgImage     = (config?.bgImage as string | undefined) ?? null;
@@ -132,11 +139,17 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
         spawnAcc.current = 0;
         const bad = Math.random() < badChance;
         const pool = bad ? badSyms : goodSyms;
+        const spawnX = objSize / 2 + Math.random() * (ARENA_W - objSize);
         dropsRef.current.push({
           id: idRef.current++,
-          x: objSize / 2 + Math.random() * (ARENA_W - objSize),
+          x: spawnX,
+          baseX: spawnX,
           y: -objSize,
           vy: fallSpeed * (0.85 + Math.random() * 0.4),
+          rot: Math.random() * 360,
+          vr: (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 200), // deg/s spin
+          sway: 6 + Math.random() * 14,
+          phase: Math.random() * Math.PI * 2,
           bad,
           sym: pool[Math.floor(Math.random() * pool.length)] ?? (bad ? "💣" : "⭐"),
         });
@@ -144,26 +157,30 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
 
       // move + catch
       const cx = catcherXRef.current;
+      const elapsed = (performance.now() - startTs.current) / 1000;
       const next: Drop[] = [];
       for (const d of dropsRef.current) {
         const y = d.y + d.vy * dt;
+        const rot = d.rot + d.vr * dt;
+        // gentle horizontal sway around the spawn column as it tumbles down
+        const x = Math.max(objSize / 2, Math.min(ARENA_W - objSize / 2, d.baseX + Math.sin(elapsed * 2 + d.phase) * d.sway));
         const inBandY = y + objSize / 2 >= catcherY && y <= catcherY + catcherH;
-        const inBandX = Math.abs(d.x - cx) <= (catcherW + objSize) / 2 - 6;
+        const inBandX = Math.abs(x - cx) <= (catcherW + objSize) / 2 - 6;
         if (inBandY && inBandX) {
           if (d.bad) {
             livesRef.current -= 1;
             setLives(livesRef.current);
-            addEffect(d.x, catcherY, "✗", "#ef4444");
+            addEffect(x, catcherY, "✗", "#ef4444");
           } else {
             scoreRef.current += 1;
             setScore(scoreRef.current);
-            addEffect(d.x, catcherY, "+1", "#22c55e");
+            addEffect(x, catcherY, "+1", "#22c55e");
           }
           setCatchTick((n) => n + 1);
           continue; // consumed
         }
         if (y > ARENA_H + objSize) continue; // off-screen, drop it
-        next.push({ ...d, y });
+        next.push({ ...d, x, y, rot });
       }
       dropsRef.current = next;
       setDrops([...next]);
@@ -241,7 +258,7 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
         {/* drops */}
         {drops.map((d) => (
           <div key={d.id} className="absolute flex items-center justify-center"
-            style={{ left: d.x - objSize / 2, top: d.y - objSize / 2, width: objSize, height: objSize }}>
+            style={{ left: d.x - objSize / 2, top: d.y - objSize / 2, width: objSize, height: objSize, transform: `rotate(${d.rot}deg)`, willChange: "transform" }}>
             <Icon value={d.sym} size={objSize} />
           </div>
         ))}

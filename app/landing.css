@@ -121,6 +121,60 @@
 .lp .tier .btn { width: 100%; justify-content: center; margin-top: auto; }
 @media (max-width: 860px) { .lp .tiers { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; } }
 
+/* Hero live preview (replaces the iframe) */
+.lp .hero-preview { display: flex; justify-content: center; }
+
+/* Brands strip dots */
+.lp .trust .chip .chip-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px rgba(0,0,0,.06); }
+
+/* ── Portfolio carousel ── */
+.lp .pf { position: relative; }
+.lp .pf-stage { display: grid; grid-template-columns: 1fr auto; gap: 44px; align-items: center; background: var(--cream); border: 1px solid var(--line); border-radius: 28px; padding: 38px 44px; }
+.lp .pf-info { min-width: 0; }
+.lp .pf-logo { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; background: #fff; border: 1px solid var(--line); display: block; }
+.lp .pf-logo-fallback { display: grid; place-items: center; color: #fff; font-family: "Luckiest Guy", cursive; font-size: 30px; }
+.lp .pf-info h3 { font-size: clamp(26px, 3.4vw, 36px); margin-top: 18px; }
+.lp .pf-count { color: var(--muted); font-weight: 600; margin-top: 8px; font-size: 14.5px; }
+.lp .pf-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px; }
+.lp .pf-chip { font-size: 13px; font-weight: 700; color: var(--ink2); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.lp .pf-draft { font-size: 13px; font-weight: 700; color: var(--muted); }
+.lp .pf-phone { justify-self: center; }
+.lp .pf-controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 26px; }
+.lp .pf-controls > button { width: 44px; height: 44px; border-radius: 999px; border: 2px solid var(--line); background: #fff; font-size: 22px; line-height: 1; color: var(--ink2); cursor: pointer; display: grid; place-items: center; transition: border-color .12s, color .12s; }
+.lp .pf-controls > button:hover { border-color: var(--grape); color: var(--grape-d); }
+.lp .pf-dots { display: flex; gap: 9px; align-items: center; }
+.lp .pf-dots button { width: 10px; height: 10px; border-radius: 999px; border: 0; background: #D9D2E0; cursor: pointer; padding: 0; transition: width .18s, background .18s; }
+.lp .pf-dots button.on { background: var(--grape); width: 26px; }
+.lp .pf-empty { text-align: center; color: var(--muted); padding: 52px 24px; background: var(--cream); border-radius: 24px; border: 1px dashed var(--line); }
+
+/* Intro "all games" grid slide */
+.lp .pf-intro { display: block; }
+.lp .pf-intro-head { text-align: center; margin-bottom: 26px; }
+.lp .pf-intro-head h3 { font-size: clamp(24px, 3.2vw, 34px); }
+.lp .pf-intro-head p { color: var(--muted); margin-top: 8px; font-weight: 600; }
+.lp .pf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px 24px; justify-items: center; }
+.lp .pf-grid-cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lp .pf-grid-hub { text-decoration: none; transition: opacity .12s ease; }
+.lp .pf-grid-hub:hover { opacity: 1 !important; text-decoration: underline; }
+.lp .pf-slide-in { animation: pf-slide-in .5s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes pf-slide-in { from { transform: translateX(-56px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.lp .pf-mini-dots { display: flex; gap: 6px; margin-top: 2px; }
+.lp .pf-mini-dots span { width: 6px; height: 6px; border-radius: 999px; background: #D9D2E0; transition: width .18s, background .18s; }
+.lp .pf-mini-dots span.on { width: 18px; }
+.lp .pf-grid-label { font-size: 14px; font-weight: 800; color: var(--ink); text-align: center; }
+.lp .pf-grid-brand { font-size: 12.5px; font-weight: 600; color: var(--muted); text-align: center; }
+@media (max-width: 980px) { .lp .pf-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 660px) { .lp .pf-grid { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .lp .pf-stage { grid-template-columns: 1fr; text-align: center; } .lp .pf-chips { justify-content: center; } .lp .pf-logo { margin: 0 auto; } }
+
+/* ── Game formats grid ── */
+.lp .formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.lp .fmt { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; font-weight: 700; color: var(--ink2); }
+.lp .fmt-ico { font-size: 26px; line-height: 1; }
+.lp .fmt-label { font-size: 15px; }
+.lp .fmt-more { justify-content: center; color: var(--grape-d); border-style: dashed; }
+@media (max-width: 860px) { .lp .formats { grid-template-columns: 1fr 1fr; } }
+
 .lp .cta-band { text-align: center; }
 .lp .cta-card { background: radial-gradient(120% 120% at 50% -20%, #3A2350, var(--plum)); color: #fff; border-radius: 32px; padding: 64px 40px; position: relative; overflow: hidden; }
 .lp .cta-card::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 2px, transparent 2px); background-size: 22px 22px; }

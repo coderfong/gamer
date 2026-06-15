@@ -33,14 +33,21 @@ export async function signupAction(formData: FormData) {
   // dormant until they confirm + log in.)
   if (data.user) {
     const admin = createAdminClient();
-    await admin.from("brands").upsert(
-      {
+    // owner_id is no longer unique (an account can own many brands), so insert
+    // the starter brand only when the account doesn't have one yet — keeps
+    // signup idempotent if the action runs twice.
+    const { data: existing } = await admin
+      .from("brands")
+      .select("id")
+      .eq("owner_id", data.user.id)
+      .limit(1);
+    if (!existing || existing.length === 0) {
+      await admin.from("brands").insert({
         owner_id: data.user.id,
         name: brandName,
         contact_email: email,
-      },
-      { onConflict: "owner_id" },
-    );
+      });
+    }
     // Welcome email (fire-and-forget — failure shouldn't block signup).
     sendWelcomeEmail({ to: email, brandName }).catch((e) =>
       console.error("[welcome email failed]", e),

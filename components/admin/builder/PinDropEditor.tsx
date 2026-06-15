@@ -27,11 +27,12 @@ export function PinDropEditor({ campaign, setCampaign }: Props) {
   const startingPins = Math.max(0, Math.min(8, (config.startingPins as number | undefined) ?? 1));
   const tolerance   = Math.max(6, Math.min(40, (config.tolerance as number | undefined) ?? 15));
   const lives       = Math.max(1, Math.min(9, (config.lives as number | undefined) ?? 3));
-  const coreSize    = Math.max(36, Math.min(90, (config.coreSize as number | undefined) ?? 56));
+  const coreSize    = Math.max(36, Math.min(100, (config.coreSize as number | undefined) ?? 72));
   const coreColor   = (config.coreColor as string | undefined) ?? "#6d28d9";
   const coreSymbol  = (config.coreSymbol as string | undefined) ?? "";
   const pinColor    = (config.pinColor as string | undefined) ?? "#c4b5fd";
   const pinThickness = Math.max(2, Math.min(8, (config.pinThickness as number | undefined) ?? 4));
+  const pinHeadSize = Math.max(8, Math.min(80, (config.pinHeadSize as number | undefined) ?? 28));
   const pinHead     = (config.pinHead as string | undefined) ?? "";
   const bgColor     = (config.bgColor as string | undefined) ?? "#1a1320";
   const useBgColor  = (config.bgColor as string | undefined) != null;
@@ -107,7 +108,7 @@ export function PinDropEditor({ campaign, setCampaign }: Props) {
       <Section title="Core" defaultOpen>
         <div className="space-y-3">
           <Field label={`Core size · ${coreSize}px`}>
-            <input type="range" min={36} max={90} step={2} value={coreSize}
+            <input type="range" min={36} max={100} step={2} value={coreSize}
               onChange={(e) => patch({ coreSize: Number(e.target.value) })} className="w-full" />
           </Field>
           <Field label="Core colour">
@@ -131,6 +132,10 @@ export function PinDropEditor({ campaign, setCampaign }: Props) {
           <Field label={`Pin thickness · ${pinThickness}px`}>
             <input type="range" min={2} max={8} step={1} value={pinThickness}
               onChange={(e) => patch({ pinThickness: Number(e.target.value) })} className="w-full" />
+          </Field>
+          <Field label={`Pin head size · ${pinHeadSize}px`}>
+            <input type="range" min={8} max={80} step={2} value={pinHeadSize}
+              onChange={(e) => patch({ pinHeadSize: Number(e.target.value) })} className="w-full" />
           </Field>
           <Field label="Pin head (optional emoji/image at the tip)">
             <SymbolEditor value={pinHead} uploading={uploading}

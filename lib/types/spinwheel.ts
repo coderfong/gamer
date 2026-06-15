@@ -22,6 +22,7 @@ export interface SpinWheelConfig {
   pegColor: string;
   pointerColor: string;
   pointerImage?: string;                // custom pointer image (overrides the drawn one)
+  pointerFlipY: boolean;                // flip a custom pointer image vertically
   hubColor: string;
   hubLogoUrl?: string;                  // brand logo shown in center hub
   hubLogoScale: number;                 // 0.3–1.0 fraction of hub radius, default 0.75
@@ -68,6 +69,7 @@ export function readSpinWheelConfig(raw: Record<string, unknown>): SpinWheelConf
     pegColor:          (raw.pegColor as string) ?? "#FFC23C",
     pointerColor:      (raw.pointerColor as string) ?? "#FF5A4D",
     pointerImage:      (raw.pointerImage as string) || undefined,
+    pointerFlipY:      Boolean(raw.pointerFlipY),
     hubColor:          (raw.hubColor as string) ?? "#FFFCF4",
     hubLogoUrl:        (raw.hubLogoUrl as string) || undefined,
     hubLogoScale:      Math.max(0.3, Math.min(1.0, Number(raw.hubLogoScale) || 0.75)),

@@ -25,6 +25,8 @@ export default async function DashboardPage({
     .from("brands")
     .select("name, subscription_tier, contact_email")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   const { cards, createdAtById, error } = await loadCampaignCards(supabase);

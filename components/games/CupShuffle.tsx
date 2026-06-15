@@ -7,7 +7,7 @@ import { palette, lighten, darken } from "@/lib/games/colors";
 // the cups shuffle around, then the player picks. Server still decides the
 // actual prize; the pick is cosmetic skill feedback.
 
-const MAX_ARENA_W = 300;
+const MAX_ARENA_W = 340;
 
 function isImg(s: string): boolean {
   return /^(https?:\/\/|data:|\/)/.test(s);
@@ -28,9 +28,9 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
 
   // ── Config ─────────────────────────────────────────────────────────────────
   const cupCount     = Math.max(3, Math.min(8, (config?.cupCount as number | undefined) ?? 5));
-  const shuffleCount = Math.max(3, Math.min(30, (config?.shuffleCount as number | undefined) ?? 12));
-  const shuffleSpeed = Math.max(120, Math.min(800, (config?.shuffleSpeed as number | undefined) ?? 320));
-  const cupSizeCfg   = Math.max(50, Math.min(120, (config?.cupSize as number | undefined) ?? 80));
+  const shuffleCount = Math.max(3, Math.min(30, (config?.shuffleCount as number | undefined) ?? 20));
+  const shuffleSpeed = Math.max(120, Math.min(800, (config?.shuffleSpeed as number | undefined) ?? 200));
+  const cupSizeCfg   = Math.max(50, Math.min(140, (config?.cupSize as number | undefined) ?? 96));
   const cupColor     = (config?.cupColor as string | undefined) ?? pal.brand;
   const cupImage     = (config?.cupImage as string | undefined) ?? null;
   const object       = (config?.objectSymbol as string | undefined) ?? "⭐";
@@ -44,14 +44,23 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
   const winText      = (config?.winText    as string | undefined) ?? "You found it! 🎉";
   const loseText     = (config?.loseText   as string | undefined) ?? "Not there — so close!";
 
-  // Fit the row inside the phone width — shrink cups as the count grows.
-  const idealStep = cupSizeCfg * 1.25;
-  const step = Math.min(idealStep, MAX_ARENA_W / cupCount);
-  const cupW = Math.round(step * 0.8);
+  // Lay the cups out around a circle so they shuffle in a ring, not a line.
+  // Cups shrink as the count grows so they never overlap on the ring.
+  const arenaSize  = MAX_ARENA_W;
+  const center     = arenaSize / 2;
+  const ringRadius = arenaSize * 0.33;
+  const chord      = 2 * ringRadius * Math.sin(Math.PI / cupCount); // gap between neighbours
+  const cupW = Math.round(Math.min(cupSizeCfg, chord * 0.92, arenaSize - 2 * ringRadius));
   const cupH = Math.round(cupW * 0.82);          // ellipse — top-down rim
-  const arenaW = (cupCount - 1) * step + cupW;
-  const arenaH = cupH + 36;                       // headroom for the hop
-  const cupTop = 24;
+
+  // Top-left position of the cup occupying a given ring slot (slot 0 at top).
+  function slotPos(slot: number) {
+    const angle = (slot / cupCount) * Math.PI * 2 - Math.PI / 2;
+    return {
+      left: center + ringRadius * Math.cos(angle) - cupW / 2,
+      top:  center + ringRadius * Math.sin(angle) - cupH / 2,
+    };
+  }
 
   const ids = useRef<number[]>(Array.from({ length: cupCount }, (_, i) => i));
   const [order, setOrder] = useState<number[]>(ids.current);    // slot → cupId
@@ -146,26 +155,29 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
         {instructionText}
       </p>
 
-      <div className="relative" style={{ width: arenaW, height: arenaH }}>
-        {/* ground shadows mark the fixed slots */}
-        {Array.from({ length: cupCount }).map((_, slot) => (
-          <div
-            key={`sh-${slot}`}
-            className="absolute rounded-[50%]"
-            style={{
-              left: slot * step + (cupW - cupW * 0.82) / 2,
-              top: cupTop + cupH * 0.62,
-              width: cupW * 0.82,
-              height: cupH * 0.3,
-              background: "rgba(0,0,0,0.18)",
-              filter: "blur(2px)",
-            }}
-          />
-        ))}
+      <div className="relative" style={{ width: arenaSize, height: arenaSize }}>
+        {/* ground shadows mark the fixed ring slots */}
+        {Array.from({ length: cupCount }).map((_, slot) => {
+          const p = slotPos(slot);
+          return (
+            <div
+              key={`sh-${slot}`}
+              className="absolute rounded-[50%]"
+              style={{
+                left: p.left + (cupW - cupW * 0.82) / 2,
+                top: p.top + cupH * 0.62,
+                width: cupW * 0.82,
+                height: cupH * 0.3,
+                background: "rgba(0,0,0,0.18)",
+                filter: "blur(2px)",
+              }}
+            />
+          );
+        })}
 
         {ids.current.map((id) => {
           const slot = order.indexOf(id);
-          const left = slot * step;
+          const p = slotPos(slot);
           const lifted = isLifted(id);
           const clickable = phase === "pick";
           const isBall = id === ballId;
@@ -176,11 +188,11 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
               key={id}
               className="absolute"
               style={{
-                left,
-                top: cupTop,
+                left: p.left,
+                top: p.top,
                 width: cupW,
                 height: cupH,
-                transition: `left ${shuffleSpeed}ms ease-in-out`,
+                transition: `left ${shuffleSpeed}ms ease-in-out, top ${shuffleSpeed}ms ease-in-out`,
                 animation: isMoving ? `${arcName} ${shuffleSpeed}ms ease` : undefined,
               }}
             >
@@ -188,9 +200,9 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
               {isBall && (
                 <div
                   className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
-                  style={{ width: cupW * 0.6, height: cupW * 0.6, opacity: lifted ? 1 : 0, transition: "opacity 0.2s" }}
+                  style={{ width: cupW * 0.72, height: cupW * 0.72, opacity: lifted ? 1 : 0, transition: "opacity 0.2s" }}
                 >
-                  <Face value={object} size={cupW * 0.52} />
+                  <Face value={object} size={cupW * 0.64} />
                 </div>
               )}
 

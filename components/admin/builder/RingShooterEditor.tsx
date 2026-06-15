@@ -28,7 +28,7 @@ export function RingShooterEditor({ campaign, setCampaign }: Props) {
   const bullets     = Math.max(1, Math.min(40, (config.bullets as number | undefined) ?? targetCount + 2));
   const spinClockwise = (config.spinClockwise as boolean | undefined) ?? true;
   const targets     = toSymbolArray(config.targetSymbols, DEFAULT_TARGETS);
-  const targetSize  = Math.max(28, Math.min(64, (config.targetSize as number | undefined) ?? 44));
+  const targetSize  = Math.max(28, Math.min(80, (config.targetSize as number | undefined) ?? 56));
   const ringRadius  = Math.max(70, Math.min(130, (config.ringRadius as number | undefined) ?? 100));
   const ringColor   = (config.ringColor as string | undefined) ?? "#6d28d9";
   const hitTolerance = Math.max(4, Math.min(45, (config.hitTolerance as number | undefined) ?? 11));
@@ -171,7 +171,7 @@ export function RingShooterEditor({ campaign, setCampaign }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label={`Target size · ${targetSize}px`}>
-              <input type="range" min={28} max={64} step={2}
+              <input type="range" min={28} max={80} step={2}
                 value={targetSize}
                 onChange={(e) => patch({ targetSize: Number(e.target.value) })}
                 className="w-full" />

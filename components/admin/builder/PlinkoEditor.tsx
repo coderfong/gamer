@@ -27,11 +27,14 @@ export function PlinkoEditor({ campaign, setCampaign }: Props) {
   const pegColor    = (config.pegColor   as string | undefined) ?? "#c4b5fd";
   const boardColor  = (config.boardColor as string | undefined) ?? "#1a1320";
   const boardImage  = (config.boardImage as string | undefined) ?? null;
+  const boardImageW = Math.max(20, Math.min(300, (config.boardImageW as number | undefined) ?? 100));
+  const boardImageH = Math.max(20, Math.min(300, (config.boardImageH as number | undefined) ?? 100));
   const ballColor   = (config.ballColor  as string | undefined) ?? "#f59e0b";
   const ballImage   = (config.ballImage  as string | undefined) ?? null;
   const ballSize    = Math.max(14, Math.min(34, (config.ballSize as number | undefined) ?? 22));
   const slotColorMode = (config.slotColorMode as string | undefined) ?? "rainbow";
   const slotColor   = (config.slotColor  as string | undefined) ?? "#6d28d9";
+  const goalSlot    = Math.max(1, Math.min(rows + 1, (config.goalSlot as number | undefined) ?? Math.ceil((rows + 1) / 2)));
   const slotLabels  = typeof config.slotLabels === "string"
     ? (config.slotLabels as string)
     : Array.isArray(config.slotLabels) ? (config.slotLabels as string[]).join(", ") : "";
@@ -109,8 +112,29 @@ export function PlinkoEditor({ campaign, setCampaign }: Props) {
               )}
             </div>
             {boardImage && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={boardImage} alt="" className="w-full h-20 object-cover rounded-lg border" />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={boardImage} alt="" className="w-full h-20 object-cover rounded-lg border" />
+                <Field label={`Background width · ${boardImageW}%`}>
+                  <input type="range" min={20} max={300} step={5}
+                    value={boardImageW}
+                    onChange={(e) => patch({ boardImageW: Number(e.target.value) })}
+                    className="w-full" />
+                </Field>
+                <Field label={`Background height · ${boardImageH}%`}>
+                  <input type="range" min={20} max={300} step={5}
+                    value={boardImageH}
+                    onChange={(e) => patch({ boardImageH: Number(e.target.value) })}
+                    className="w-full" />
+                </Field>
+                <button
+                  type="button"
+                  onClick={() => patch({ boardImageW: 100, boardImageH: 100 })}
+                  className="text-xs text-zinc-500 hover:text-zinc-800 underline"
+                >
+                  Reset to fill (100% × 100%)
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -215,6 +239,13 @@ export function PlinkoEditor({ campaign, setCampaign }: Props) {
               placeholder="e.g. 10%, 20%, JACKPOT, 20%, 10%"
             />
             <span className="text-xs text-zinc-400">{rows + 1} slots. Leave blank to number them 1–{rows + 1}.</span>
+          </Field>
+          <Field label={`Winning slot · #${goalSlot} of ${rows + 1}`}>
+            <input type="range" min={1} max={rows + 1} step={1}
+              value={goalSlot}
+              onChange={(e) => patch({ goalSlot: Number(e.target.value) })}
+              className="w-full" />
+            <span className="text-xs text-zinc-400">The ball must land here (🎯) for the player to win.</span>
           </Field>
         </div>
       </Section>

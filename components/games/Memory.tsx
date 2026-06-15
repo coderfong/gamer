@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
 import { useArcade, useTimer, Stage, Readout } from "./arcade/Kit";
 import { lighten, darken } from "@/lib/games/colors";
@@ -84,6 +84,11 @@ export function Memory({ config, theme, onComplete }: GameProps) {
   const matchAnimation = (config?.matchAnimation  as string | undefined) ?? "pop";
   const cardEntrance   = (config?.cardEntrance    as string | undefined) ?? "none";
 
+  // Countdown: player must match every pair before the clock hits 0, else they lose.
+  const timeLimit      = Math.max(5, Math.min(300, (config?.timeLimit  as number | undefined) ?? 15));
+  const timeLabel      = (config?.timeLabel   as string | undefined) ?? "Time";
+  const timeUpText     = (config?.timeUpText  as string | undefined) ?? "⏰ Time's up!";
+
   // Cards are square unless the back image is portrait/landscape — then they
   // adopt its aspect ratio so the image fits without cropping.
   const [aspect, setAspect] = useState(1); // width / height
@@ -119,9 +124,42 @@ export function Memory({ config, theme, onComplete }: GameProps) {
   const [moves, setMoves] = useState(0);
   const [lock, setLock] = useState(false);
 
+  // ── Countdown timer ─────────────────────────────────────────────────────────
+  const [started, setStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [outOfTime, setOutOfTime] = useState(false);
+  const doneRef = useRef(false); // guards against win + timeout both firing
+
+  // Reset the round whenever the deck config changes (e.g. editor preview).
+  useEffect(() => {
+    setStarted(false);
+    setTimeLeft(timeLimit);
+    setOutOfTime(false);
+    doneRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deckKey, timeLimit]);
+
+  // Tick once per second while the round is running.
+  useEffect(() => {
+    if (!started || doneRef.current || timeLeft <= 0) return;
+    const id = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [started, timeLeft]);
+
+  // Out of time → lock the board and report a loss.
+  useEffect(() => {
+    if (!started || timeLeft > 0 || doneRef.current) return;
+    doneRef.current = true;
+    setOutOfTime(true);
+    setLock(true);
+    onComplete({ score: 0, outcome: "memory_timeout", durationMs: timer.elapsed() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started, timeLeft]);
+
   function flip(i: number) {
-    if (lock || flipped.includes(i) || matched.has(i)) return;
+    if (lock || outOfTime || doneRef.current || flipped.includes(i) || matched.has(i)) return;
     timer.begin();
+    setStarted(true);
     const next = [...flipped, i];
     setFlipped(next);
     if (next.length === 2) {
@@ -134,7 +172,8 @@ export function Memory({ config, theme, onComplete }: GameProps) {
           const nm = new Set(matched);
           nm.add(a); nm.add(b);
           setMatched(nm);
-          if (nm.size === deck.length) {
+          if (nm.size === deck.length && !doneRef.current) {
+            doneRef.current = true;
             const moveCount = moves + 1;
             const score = Math.max(0, pairs * 25 - (moveCount - pairs) * 5);
             onComplete({ score, outcome: `memory_${moveCount}moves`, durationMs: timer.elapsed() });
@@ -162,7 +201,22 @@ export function Memory({ config, theme, onComplete }: GameProps) {
 
   return (
     <Stage instruction={instruction}>
-      {showMoves && <Readout label={movesLabel} value={moves} color={pal.brand} />}
+      <div className="flex items-center gap-3">
+        {showMoves && <Readout label={movesLabel} value={moves} color={pal.brand} />}
+        <Readout
+          label={timeLabel}
+          value={`${timeLeft}s`}
+          color={timeLeft <= 5 ? "#e11d48" : pal.brand}
+        />
+      </div>
+      {outOfTime && (
+        <div
+          className="rounded-xl px-5 py-2.5 text-center text-sm font-bold"
+          style={{ background: "#fee2e2", color: "#b91c1c" }}
+        >
+          {timeUpText}
+        </div>
+      )}
       <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, ${cardW}px)` }}>
         {deck.map((card, i) => {
           const isUp = flipped.includes(i) || matched.has(i);

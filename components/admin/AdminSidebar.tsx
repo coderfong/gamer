@@ -33,7 +33,8 @@ const ICON = {
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: ICON.grid },
   { href: "/campaigns", label: "Campaigns", icon: ICON.rocket },
-  { href: "/brand", label: "Brand", icon: ICON.palette },
+  // matchPrefix lets the single-brand editor (/brand/<id>) keep this item active.
+  { href: "/brands", label: "Brands", icon: ICON.palette, matchPrefix: "/brand" },
   { href: "/billing", label: "Billing", icon: ICON.card },
 ];
 
@@ -68,7 +69,8 @@ export function AdminSidebar({ brandName, tier }: { brandName: string; tier?: st
 
       <nav className="flex flex-col gap-0.5">
         {NAV.map((n) => {
-          const on = pathname === n.href || pathname.startsWith(n.href + "/");
+          const prefix = n.matchPrefix ?? n.href;
+          const on = pathname === n.href || pathname.startsWith(prefix + "/") || pathname === prefix;
           return (
             <Link key={n.href} href={n.href} className={`ad-nav${on ? " on" : ""}`}>
               <Ic d={n.icon} />

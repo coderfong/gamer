@@ -31,12 +31,13 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
   const shape       = (config?.shape as string | undefined) ?? "rounded";
   const shapeW      = Math.max(60, Math.min(260, (config?.shapeWidth  as number | undefined) ?? 120));
   const shapeH      = Math.max(60, Math.min(220, (config?.shapeHeight as number | undefined) ?? 120));
-  const oscSpeed    = Math.max(1, Math.min(12, (config?.oscillateSpeed as number | undefined) ?? 4));
+  const oscSpeed    = Math.max(1, Math.min(12, (config?.oscillateSpeed as number | undefined) ?? 7));
   const outlineColor = (config?.outlineColor as string | undefined) ?? pal.brand;
+  const outlineScale = Math.max(30, Math.min(200, (config?.outlineScale as number | undefined) ?? 100));
   const fillColor    = (config?.fillColor    as string | undefined) ?? pal.accent;
   const outlineImage = (config?.outlineImage as string | undefined) ?? null;
   const fillImage    = (config?.fillImage    as string | undefined) ?? null;
-  const perfectThreshold = Math.max(50, Math.min(100, (config?.perfectThreshold as number | undefined) ?? 90));
+  const perfectThreshold = Math.max(50, Math.min(100, (config?.perfectThreshold as number | undefined) ?? 96));
   const lockAnimation = (config?.lockAnimation as string | undefined) ?? "pulse";
   const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the slider to fill the outline!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
@@ -166,7 +167,11 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
             <img
               src={outlineImage}
               alt=""
-              style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.35, ...shapeStyle }}
+              style={{
+                width: "100%", height: "100%", objectFit: "contain", opacity: 0.35,
+                transform: `scale(${outlineScale / 100})`,
+                ...shapeStyle,
+              }}
             />
           )}
         </div>

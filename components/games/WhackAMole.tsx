@@ -32,7 +32,7 @@ function parseSymbols(raw: unknown, fallback: string[]): string[] {
 }
 
 const MOLE_ANIM: Record<string, string> = {
-  popup:  "mole-up 0.15s ease-out",
+  popup:  "mole-up 0.28s ease-out",
   pop:    "mem-pop 0.4s ease",
   bounce: "el-bounce 0.6s ease",
   tada:   "mem-tada 0.6s ease",

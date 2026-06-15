@@ -7,8 +7,6 @@ import { palette, lighten, darken } from "@/lib/games/colors";
 // bottom-facing angle; if it lands too close to an existing pin you lose a life.
 // Place the target number of pins to win. Server still decides the prize.
 
-const ARENA_W = 300;
-
 function isImg(s: string): boolean {
   return /^(https?:\/\/|data:|\/)/.test(s);
 }
@@ -37,12 +35,14 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
   const startPins   = Math.max(0, Math.min(8, (config?.startingPins as number | undefined) ?? 1));
   const tolerance   = Math.max(6, Math.min(40, (config?.tolerance as number | undefined) ?? 15)); // degrees
   const lives0      = Math.max(1, Math.min(9, (config?.lives as number | undefined) ?? 3));
-  const coreSize    = Math.max(36, Math.min(90, (config?.coreSize as number | undefined) ?? 56)); // radius
+  const coreSize    = Math.max(36, Math.min(100, (config?.coreSize as number | undefined) ?? 72)); // radius
   const coreColor   = (config?.coreColor as string | undefined) ?? pal.brand;
   const coreSymbol  = (config?.coreSymbol as string | undefined) ?? "";
   const pinColor    = (config?.pinColor as string | undefined) ?? lighten(pal.dark, 0.4);
   const pinThick    = Math.max(2, Math.min(8, (config?.pinThickness as number | undefined) ?? 4));
   const pinHead     = (config?.pinHead as string | undefined) ?? "";
+  const pinHeadSize = Math.max(8, Math.min(80, (config?.pinHeadSize as number | undefined) ?? 28)); // head diameter px
+  const pinHeadIsImg = isImg(pinHead);
   const bgColor     = (config?.bgColor as string | undefined) ?? null;
   const lifeIcon    = (config?.lifeIcon as string | undefined) ?? "❤️";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
@@ -53,9 +53,23 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
   const winText     = (config?.winText  as string | undefined) ?? "All pinned! 🎯";
   const loseText    = (config?.loseText as string | undefined) ?? "Crash! Out of lives.";
 
-  const needleLen = coreSize + 30;
-  const cx = ARENA_W / 2;
-  const cy = ARENA_W / 2;
+  // Keep a constant length of stem visible between the core edge and the head,
+  // whatever the head size, so the head always reads as fixed to the pin body.
+  const STEM_GAP = 34;
+  const needleLen = coreSize + STEM_GAP + Math.round(pinHeadSize / 2);
+  // Extra room below the core so the waiting pin launches from a distance.
+  const LAUNCH_GAP = 130;
+  // Size the arena to the full reach (needle tip + the half-head beyond it) so a
+  // large head never clips the edge, plus the launch gap for the shooting room.
+  const arenaW = Math.round((needleLen + pinHeadSize / 2) * 2 + 24 + LAUNCH_GAP);
+  const cx = arenaW / 2;
+  const cy = arenaW / 2;
+
+  // A pin head subtends this many degrees at the ring where heads sit. Folding
+  // it into the collision threshold means two heads can never visually overlap,
+  // and the game gets harder as the head grows (wider forbidden gap per pin).
+  const headAngle = (pinHeadSize / needleLen) * (180 / Math.PI);
+  const effTol = Math.max(tolerance, headAngle);
 
   const [phase, setPhase] = useState<"idle" | "play" | "done">("idle");
   const [rot, setRot] = useState(0);
@@ -65,6 +79,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
   const [flying, setFlying] = useState(false);
   const [shake, setShake] = useState(0);
   const [wonState, setWonState] = useState(false);
+  const [popping, setPopping] = useState(false);
 
   const phaseRef = useRef(phase);
   const rotRef = useRef(0);
@@ -87,7 +102,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
     while (arr.length < startPins && guard < 200) {
       guard++;
       const a = Math.random() * 360;
-      if (arr.every((p) => angDist(p, a) > tolerance * 1.5)) arr.push(a);
+      if (arr.every((p) => angDist(p, a) > effTol * 1.5)) arr.push(a);
     }
     return arr;
   }
@@ -128,12 +143,15 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
     if (phase !== "play" || busy.current) return;
     busy.current = true;
     setFlying(true);
-    // Attach angle (local frame) currently at the bottom of the core.
-    const local = (((90 - rotRef.current) % 360) + 360) % 360;
-    const collide = pinsRef.current.some((p) => angDist(p, local) <= tolerance);
 
+    // Resolve the hit at the moment of IMPACT, not button-press: the pin enters
+    // from the bottom of the arena (6 o'clock) and sticks to the core wherever
+    // its bottom edge has rotated to when the pin arrives — a true projectile.
     setTimeout(() => {
       setFlying(false);
+      const local = (((90 - rotRef.current) % 360) + 360) % 360;
+      const collide = pinsRef.current.some((p) => angDist(p, local) <= effTol);
+
       if (collide) {
         livesRef.current -= 1;
         setLives(livesRef.current);
@@ -145,10 +163,13 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
         speedRef.current *= speedUp;
         setPins([...pinsRef.current]);
         setPlaced(placedRef.current);
+        // brief impact "thunk" on the core
+        setPopping(true);
+        setTimeout(() => setPopping(false), 150);
         if (placedRef.current >= targetPins) { finish(true); return; }
       }
       busy.current = false;
-    }, 110);
+    }, 100);
   }
 
   const instructionText =
@@ -174,8 +195,8 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
           }}
         >
           <div className="absolute flex items-center justify-center rounded-full"
-            style={{ right: -pinThick, top: "50%", transform: "translateY(-50%)", width: pinThick * 2.4, height: pinThick * 2.4, background: pinColor }}>
-            {pinHead && <Icon value={pinHead} size={pinThick * 3} />}
+            style={{ right: -pinHeadSize / 2, top: "50%", transform: "translateY(-50%)", width: pinHeadSize, height: pinHeadSize, background: pinHeadIsImg ? "transparent" : pinColor }}>
+            {pinHead && <Icon value={pinHead} size={pinHeadIsImg ? pinHeadSize : pinHeadSize * 0.92} />}
           </div>
         </div>
       </div>
@@ -209,7 +230,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
         key={`shake-${shake % 2}`}
         className="relative rounded-2xl overflow-hidden"
         style={{
-          width: ARENA_W, height: ARENA_W,
+          width: arenaW, height: arenaW,
           background: bgColor ?? "radial-gradient(circle at 50% 45%, rgba(255,255,255,0.05), rgba(0,0,0,0.25))",
           animation: shake ? "el-shake 0.3s ease" : undefined,
         }}
@@ -226,21 +247,25 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
               background: isImg(coreSymbol) ? "transparent" : `radial-gradient(circle at 38% 32%, ${lighten(coreColor, 0.4)}, ${coreColor} 60%, ${darken(coreColor, 0.2)})`,
               boxShadow: isImg(coreSymbol) ? "none" : `0 4px 14px -4px ${darken(coreColor, 0.3)}, inset 0 2px 4px rgba(255,255,255,0.3)`,
               zIndex: 3,
+              transform: popping ? "scale(1.07)" : "scale(1)",
+              transition: "transform 0.16s ease-out",
             }}
           >
             {coreSymbol && <Icon value={coreSymbol} size={isImg(coreSymbol) ? coreSize * 2 : coreSize * 1.1} />}
           </div>
         </div>
 
-        {/* launcher / flying pin at the bottom */}
+        {/* launcher / flying pin at the bottom — stem points UP toward the core,
+            head sits at the BOTTOM (away from the core), so on impact the needle
+            enters the core and the head ends up on the outside, like placed pins. */}
         <div
           className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center"
-          style={{ bottom: 8, transition: "transform 0.11s ease-out", transform: flying ? `translate(-50%, -${ARENA_W / 2 - coreSize - 14}px)` : "translate(-50%, 0)" }}
+          style={{ bottom: 8, transition: "transform 0.1s cubic-bezier(.2,.85,.25,1)", transform: flying ? `translate(-50%, -${arenaW / 2 - coreSize - pinHeadSize - 34}px)` : "translate(-50%, 0)" }}
         >
-          <div className="rounded-full" style={{ width: pinThick * 2.4, height: pinThick * 2.4, background: pinColor }}>
-            {pinHead && <span className="flex items-center justify-center w-full h-full"><Icon value={pinHead} size={pinThick * 3} /></span>}
-          </div>
           <div style={{ width: pinThick, height: 34, background: pinColor, borderRadius: pinThick }} />
+          <div className="rounded-full flex items-center justify-center" style={{ width: pinHeadSize, height: pinHeadSize, background: pinHeadIsImg ? "transparent" : pinColor }}>
+            {pinHead && <span className="flex items-center justify-center w-full h-full"><Icon value={pinHead} size={pinHeadIsImg ? pinHeadSize : pinHeadSize * 0.92} /></span>}
+          </div>
         </div>
       </div>
 

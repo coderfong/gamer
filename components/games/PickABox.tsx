@@ -114,8 +114,10 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
   );
 
   const contents = useMemo(() => {
+    const pool = decoys.length ? decoys : DEFAULT_DECOYS;
     const arr: string[] = [];
-    for (let i = 0; i < boxCount; i++) arr.push(decoys[i % decoys.length]);
+    for (let i = 0; i < boxCount; i++)
+      arr.push(pool[i % pool.length] || DEFAULT_DECOYS[i % DEFAULT_DECOYS.length]);
     return arr;
   }, [boxCount, decoys]);
 
@@ -129,7 +131,7 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
         outcome: `box_${i}`,
         durationMs: performance.now() - startTs.current,
       });
-    }, 1700);
+    }, 2800);
   }
 
   const cols = 3;
@@ -171,6 +173,11 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
                   height: boxSize,
                   width: boxSize,
                   animation: picked == null ? idleFn(i) : undefined,
+                  // Dim unpicked boxes here, NOT on the preserve-3d element below —
+                  // a `filter` on that element flattens its 3D context and breaks the flip.
+                  filter: dimmed ? "grayscale(0.25)" : "none",
+                  opacity: dimmed ? 0.9 : 1,
+                  transition: "filter 0.4s ease, opacity 0.4s ease",
                 }}
                 disabled={picked != null}
                 aria-label={`Gift ${i + 1}`}
@@ -180,8 +187,6 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
                   style={{
                     transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
                     transition: `transform ${flipSpeed}ms`,
-                    filter: dimmed ? "grayscale(0.6)" : "none",
-                    opacity: dimmed ? 0.5 : 1,
                   }}
                 >
                   {/* Front: wrapped gift (or custom image) */}
@@ -189,7 +194,7 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
                     className="absolute inset-0 rounded-2xl overflow-hidden [backface-visibility:hidden] transition-transform group-hover:scale-105"
                     style={
                       boxImage
-                        ? { background: "#fff" }
+                        ? { background: "transparent" }
                         : {
                             background: `linear-gradient(160deg, ${w.top}, ${w.bottom})`,
                             boxShadow: `0 12px 24px -8px ${darken(w.bottom, 0.3)}, inset 0 2px 4px rgba(255,255,255,0.35)`,
@@ -243,7 +248,7 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
                     }}
                   >
                     <div style={{ animation: isPicked && REVEAL[revealAnimation] ? REVEAL[revealAnimation] : undefined }}>
-                      <Face value={isPicked && winSymbol ? winSymbol : contents[i]} size={boxSize * 0.45} />
+                      <Face value={isPicked && winSymbol ? winSymbol : contents[i]} size={boxSize * 0.92} />
                     </div>
                   </div>
                 </div>

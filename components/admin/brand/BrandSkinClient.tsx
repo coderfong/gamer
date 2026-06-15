@@ -36,7 +36,7 @@ interface Theme {
 
 const STORAGE_KEY = "fizzpop-brand-defaults";
 
-export function BrandSkinClient({ initialName }: { initialName: string }) {
+export function BrandSkinClient({ brandId, initialName }: { brandId: string; initialName: string }) {
   const init = VERTICALS.Cafe;
   const [theme, setTheme] = useState<Theme>({
     name: initialName || "Glow Café",
@@ -74,7 +74,7 @@ export function BrandSkinClient({ initialName }: { initialName: string }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
     } catch {}
     startTransition(async () => {
-      await saveBrandName(theme.name);
+      await saveBrandName(brandId, theme.name);
       setSaved(true);
     });
   }

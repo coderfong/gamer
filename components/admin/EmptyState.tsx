@@ -7,10 +7,11 @@ interface EmptyStateProps {
   actionLabel?: string;
   actionHref?: string;
   icon?: ReactNode;
+  children?: ReactNode;
 }
 
 // Reusable empty-state panel for the admin area (dashboard, filtered lists, etc.).
-export function EmptyState({ title, description, actionLabel, actionHref, icon = "🎯" }: EmptyStateProps) {
+export function EmptyState({ title, description, actionLabel, actionHref, icon = "🎯", children }: EmptyStateProps) {
   return (
     <section className="rounded-xl border bg-white p-8 text-center space-y-3">
       <div className="text-5xl">{icon}</div>
@@ -23,6 +24,7 @@ export function EmptyState({ title, description, actionLabel, actionHref, icon =
           {actionLabel}
         </Link>
       ) : null}
+      {children ? <div className="flex justify-center pt-1">{children}</div> : null}
     </section>
   );
 }

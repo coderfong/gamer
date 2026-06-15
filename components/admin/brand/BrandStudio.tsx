@@ -57,7 +57,7 @@ export function BrandStudio({
   const persist = useCallback(async () => {
     setSaving(true);
     setSaveError(null);
-    const res = await saveStudio(configRef.current, nameRef.current);
+    const res = await saveStudio(brandId, configRef.current, nameRef.current);
     setSaving(false);
     if ("ok" in res) { setPublicSlug(res.publicSlug); setSaved(true); }
     else setSaveError(res.error.message);

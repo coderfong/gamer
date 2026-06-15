@@ -112,9 +112,9 @@ export function StackBlocksEditor({ campaign, setCampaign }: Props) {
       {/* ── Appearance ──────────────────────────────────────── */}
       <Section title="Appearance" defaultOpen>
         <div className="space-y-3">
-          {/* Picture mode: image sliced across the blocks */}
+          {/* Picture: shown as the arena background, behind the blocks */}
           <div className="space-y-2">
-            <span className="text-xs font-medium text-zinc-600">Picture (revealed as blocks stack)</span>
+            <span className="text-xs font-medium text-zinc-600">Picture (shown as the background)</span>
             <div className="flex items-center gap-2 flex-wrap">
               <label className="cursor-pointer">
                 <input
@@ -140,7 +140,7 @@ export function StackBlocksEditor({ campaign, setCampaign }: Props) {
               <img src={pictureImage} alt="" className="w-full h-28 object-contain rounded-lg border bg-zinc-100" />
             ) : (
               <p className="text-xs text-zinc-400">
-                Each block reveals a horizontal slice — stack to the top to complete the picture. Use a tall image; portrait works best.
+                Fills the play area as the backdrop; the solid-coloured blocks stack in front of it.
               </p>
             )}
           </div>

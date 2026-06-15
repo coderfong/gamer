@@ -47,15 +47,15 @@ export function ScratchCardEditor({ campaign, setCampaign }: Props) {
   }
 
   const cols         = Math.max(1, Math.min(3, (config.gridCols       as number | undefined) ?? 3));
-  const rows         = Math.max(1, Math.min(3, (config.gridRows       as number | undefined) ?? 1));
+  const rows         = Math.max(1, Math.min(3, (config.gridRows       as number | undefined) ?? 3));
   const total        = cols * rows;
   const shape        = (config.scratchShape   as Shape  | undefined) ?? "rounded";
-  const boxSize      = Math.max(60, Math.min(150, (config.boxSize     as number | undefined) ?? 100));
+  const boxSize      = Math.max(60, Math.min(240, (config.boxSize     as number | undefined) ?? 185));
   const brushRadius  = Math.max(10, Math.min(60,  (config.brushRadius as number | undefined) ?? 28));
   const pctThreshold = Math.max(20, Math.min(90,  (config.percentToReveal as number | undefined) ?? 55));
   const winSymbol    = (config.winSymbol      as string | undefined) ?? "⭐";
   const otherSymbols = toSymbolArray(config.otherSymbols, ["🍋", "🔔", "🍒", "💎"]);
-  const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? Math.ceil(total / 2)));
+  const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? 3));
   const coverImage   = (config.coverImage     as string | undefined) ?? null;
   const coverText    = (config.coverText      as string | undefined) ?? "?";
   const instructionText       = (config.instructionText       as string | undefined) ?? "Match {count}× {symbol} to win!";
@@ -341,7 +341,7 @@ export function ScratchCardEditor({ campaign, setCampaign }: Props) {
         <div className="space-y-4">
           <Field label={`Panel size · ${boxSize}px`}>
             <input
-              type="range" min={60} max={150} step={5}
+              type="range" min={60} max={240} step={5}
               value={boxSize}
               onChange={(e) => patch({ boxSize: Number(e.target.value) })}
               className="w-full"

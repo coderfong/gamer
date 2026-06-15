@@ -13,10 +13,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // An account can own several brands now; the shell just shows the first one
+  // (oldest) for the sidebar/topbar label.
   const { data: brand } = await supabase
     .from("brands")
     .select("name, subscription_tier")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   const brandName = brand?.name ?? "gamer";

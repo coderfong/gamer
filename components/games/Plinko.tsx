@@ -7,7 +7,7 @@ import { palette, lighten, darken, rotateHue } from "@/lib/games/colors";
 // the pegs into a slot. Server still decides the actual prize; the slot is
 // cosmetic / fun feedback.
 
-const BOARD_W = 300;
+const BOARD_W = 312;
 
 function parseLabels(raw: unknown): string[] {
   if (Array.isArray(raw)) return (raw as string[]).map((s) => String(s ?? ""));
@@ -23,10 +23,13 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
   // ── Config ─────────────────────────────────────────────────────────────────
   const rows        = Math.max(4, Math.min(9, (config?.rows as number | undefined) ?? 7));
   const hopMs       = Math.max(120, Math.min(700, (config?.dropSpeed as number | undefined) ?? 320));
-  const shooterSpd  = Math.max(40, Math.min(360, (config?.shooterSpeed as number | undefined) ?? 170));
+  const shooterSpd  = Math.max(40, Math.min(360, (config?.shooterSpeed as number | undefined) ?? 240));
   const pegColor    = (config?.pegColor   as string | undefined) ?? lighten(pal.brand, 0.3);
   const boardColor  = (config?.boardColor as string | undefined) ?? darken(pal.dark, 0.1);
   const boardImage  = (config?.boardImage as string | undefined) ?? null;
+  // Board background image size, adjustable independently (percent of board).
+  const boardImageW = Math.max(20, Math.min(300, (config?.boardImageW as number | undefined) ?? 100));
+  const boardImageH = Math.max(20, Math.min(300, (config?.boardImageH as number | undefined) ?? 100));
   const ballColor   = (config?.ballColor  as string | undefined) ?? pal.accent;
   const ballImage   = (config?.ballImage  as string | undefined) ?? null;
   const ballSize    = Math.max(14, Math.min(34, (config?.ballSize as number | undefined) ?? 22));
@@ -38,13 +41,17 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;
   const dropLabel   = (config?.dropLabel as string | undefined) ?? "DROP";
-  const resultTpl   = (config?.resultText as string | undefined) ?? "Landed on {slot}!";
+  const goalTpl     = (config?.goalText as string | undefined) ?? "Land on {goal} to win!";
+  const winText     = (config?.winText  as string | undefined) ?? "🎉 You hit the goal!";
+  const loseText    = (config?.loseText as string | undefined) ?? "So close — try again!";
 
   const slotCount = rows + 1;
+  // Goal slot the ball must land in to win (1-based; defaults to the centre).
+  const goalIndex = Math.max(0, Math.min(rows, ((config?.goalSlot as number | undefined) ?? Math.ceil((rows + 1) / 2)) - 1));
   const slotW = BOARD_W / slotCount;
-  const topY = 30;
-  const rowH = 30;
-  const slotH = 46;
+  const topY = 32;
+  const rowH = 32;
+  const slotH = 48;
   const boardH = topY + rows * rowH + slotH + 12;
   const minX = ballSize / 2 + 4;
   const maxX = BOARD_W - ballSize / 2 - 4;
@@ -95,8 +102,10 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
   function drop() {
     if (phase !== "idle") return;
     startTs.current = performance.now();
-    // Build the bounce path: entry at the launcher, ±half-slot each peg row.
-    const path: number[] = [shooterXRef.current];
+    // Build the bounce path. Entry gets a small random jitter around the launcher
+    // so a perfect aim alone can't lock in the goal slot (harder to win).
+    const entry = Math.max(minX, Math.min(maxX, shooterXRef.current + (Math.random() - 0.5) * slotW * 1.2));
+    const path: number[] = [entry];
     for (let r = 1; r <= rows; r++) {
       let x = path[r - 1] + (Math.random() < 0.5 ? -slotW / 2 : slotW / 2);
       x = Math.max(minX, Math.min(maxX, x));
@@ -136,10 +145,11 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
         setBall({ x: toX, y: toY, sx: 1, sy: 1 });
         setPhase("done");
         const slot = landed ?? 0;
+        const didWin = slot === goalIndex;
         setTimeout(() => {
           onComplete({
-            outcome: `plinko_slot_${slot}`,
-            score: slot,
+            outcome: didWin ? "plinko_win" : `plinko_miss_${slot}`,
+            score: didWin ? 1 : 0,
             durationMs: Math.round(performance.now() - startTs.current),
           });
         }, 700);
@@ -148,10 +158,11 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
   }
 
   const labelFor = (i: number) => (slotLabels.length ? slotLabels[i % slotLabels.length] || `${i + 1}` : `${i + 1}`);
+  const won = phase === "done" && landed === goalIndex;
   const instructionText =
-    phase === "idle" ? "Aim the launcher and tap DROP!"
-    : phase === "done" && landed != null ? resultTpl.replace(/\{slot\}/gi, labelFor(landed))
-    : undefined;
+    phase === "done" && landed != null ? (won ? winText : loseText)
+    // Keep the goal prompt visible while aiming AND while the ball is dropping.
+    : goalTpl.replace(/\{goal\}/gi, labelFor(goalIndex));
 
   const slotColor = (i: number) => (slotColorMode === "solid" ? slotBaseColor : rotateHue(slotBaseColor, (i * 40) % 360));
 
@@ -175,8 +186,13 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
           // the image shows (transparent areas reveal the screen background).
           background: boardImage ? "transparent" : boardColor,
           backgroundImage: boardImage ? `url(${boardImage})` : undefined,
-          backgroundSize: boardImage ? "cover" : undefined,
-          backgroundPosition: "center",
+          // Background size is driven by the editor's width/height sliders so it
+          // can be tuned independently (default 100% × 100% = fill the board).
+          backgroundSize: boardImage ? `${boardImageW}% ${boardImageH}%` : undefined,
+          // Anchor to the top so raising the BG height slider extends the image
+          // downward and never crops the top of the board art.
+          backgroundPosition: "center top",
+          backgroundRepeat: "no-repeat",
           boxShadow: boardImage ? "none" : "inset 0 2px 12px rgba(0,0,0,0.45)",
         }}
       >
@@ -214,20 +230,31 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
           {Array.from({ length: slotCount }).map((_, i) => {
             const c = slotColor(i);
             const isLanded = phase === "done" && landed === i;
+            const isGoal = i === goalIndex;
             return (
               <div
                 key={i}
-                className="flex items-end justify-center pb-1 text-center"
+                className="relative flex items-end justify-center pb-1 text-center"
                 style={{
                   width: slotW, height: "100%",
                   background: `linear-gradient(180deg, ${lighten(c, 0.1)}, ${darken(c, 0.2)})`,
                   borderLeft: i === 0 ? undefined : "1px solid rgba(0,0,0,0.25)",
-                  boxShadow: isLanded ? `inset 0 0 0 2px #fff, 0 0 14px 2px ${c}` : "inset 0 2px 4px rgba(0,0,0,0.3)",
+                  boxShadow: isLanded
+                    ? `inset 0 0 0 2px #fff, 0 0 14px 2px ${c}`
+                    : isGoal
+                    ? "inset 0 0 0 2px #fde047, 0 0 12px 1px #fde04788"
+                    : "inset 0 2px 4px rgba(0,0,0,0.3)",
                   transform: isLanded ? "translateY(-2px)" : undefined,
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
               >
-                <span style={{ fontSize: Math.min(11, slotW * 0.32), fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.5)", lineHeight: 1, whiteSpace: "nowrap" }}>
+                {/* goal marker so the player can see the target slot */}
+                {isGoal && (
+                  <span className="absolute left-1/2 -translate-x-1/2" style={{ top: -16, fontSize: 14, lineHeight: 1, filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.4))" }}>
+                    🎯
+                  </span>
+                )}
+                <span style={{ fontSize: Math.min(18, slotW * 0.44), fontWeight: 800, color: "#fff", textShadow: "0 1px 2px rgba(0,0,0,0.5)", lineHeight: 1, whiteSpace: "nowrap" }}>
                   {labelFor(i)}
                 </span>
               </div>

@@ -105,6 +105,42 @@ export function HeroStepAll({ brandId, config, patchConfig }: Props) {
                     className="flex-1" />
                   <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.padTop ?? 0}</span>
                 </label>
+                {gt === "slot_machine" && (
+                  <label className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>Outline size</span>
+                    <input type="range" min={30} max={200} step={5} value={assets?.outlineScale ?? 100}
+                      onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), outlineScale: Number(e.target.value) }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                      className="flex-1" />
+                    <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.outlineScale ?? 100}%</span>
+                  </label>
+                )}
+                {gt === "dice_roll" && (
+                  <label className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>Goal slot</span>
+                    <input type="range" min={1} max={8} step={1} value={assets?.goalSlot ?? 4}
+                      onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), goalSlot: Number(e.target.value) }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                      className="flex-1" />
+                    <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>#{assets?.goalSlot ?? 4}</span>
+                  </label>
+                )}
+                {gt === "dice_roll" && assets?.hero?.boardImage && (
+                  <>
+                    <label className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>BG width</span>
+                      <input type="range" min={20} max={300} step={5} value={assets?.boardImageW ?? 100}
+                        onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), boardImageW: Number(e.target.value) }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                        className="flex-1" />
+                      <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.boardImageW ?? 100}%</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>BG height</span>
+                      <input type="range" min={20} max={300} step={5} value={assets?.boardImageH ?? 100}
+                        onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), boardImageH: Number(e.target.value) }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                        className="flex-1" />
+                      <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.boardImageH ?? 100}%</span>
+                    </label>
+                  </>
+                )}
                 {slots.map((slot) => {
                   const id = `${gt}:${slot.key}`;
                   if (slot.multi) {
@@ -138,21 +174,34 @@ export function HeroStepAll({ brandId, config, patchConfig }: Props) {
                     );
                   }
                   const url = assets?.hero?.[slot.key];
+                  const showPointerFlip = gt === "spin_wheel" && slot.key === "pointerImage" && !!url;
                   return (
-                    <div key={slot.key} className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>{slot.label}</span>
-                      {url ? (
-                        <>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={url} alt="" className="h-8 w-8 rounded border object-contain bg-white" />
-                          <button type="button" onClick={() => setHero(gt, slot.key, null)} className="text-[11px] text-red-400 hover:text-red-600">Remove</button>
-                        </>
-                      ) : (
-                        <ImageDropClean
-                          label="Upload / drop"
-                          busy={busyKey === id}
-                          onFile={(f) => upload(gt, slot.key, f)}
-                        />
+                    <div key={slot.key} className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>{slot.label}</span>
+                        {url ? (
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" className="h-8 w-8 rounded border object-contain bg-white" style={showPointerFlip && assets?.pointerFlipY ? { transform: "scaleY(-1)" } : undefined} />
+                            <button type="button" onClick={() => setHero(gt, slot.key, null)} className="text-[11px] text-red-400 hover:text-red-600">Remove</button>
+                          </>
+                        ) : (
+                          <ImageDropClean
+                            label="Upload / drop"
+                            busy={busyKey === id}
+                            onFile={(f) => upload(gt, slot.key, f)}
+                          />
+                        )}
+                      </div>
+                      {showPointerFlip && (
+                        <label className="flex items-center gap-1.5 pl-[6.5rem] text-[11px] cursor-pointer" style={{ color: "var(--ad-muted)" }}>
+                          <input
+                            type="checkbox"
+                            checked={!!assets?.pointerFlipY}
+                            onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), pointerFlipY: e.target.checked }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                          />
+                          Flip vertically
+                        </label>
                       )}
                     </div>
                   );

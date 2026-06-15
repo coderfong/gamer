@@ -16,9 +16,9 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
 
   // ── Config ─────────────────────────────────────────────────────────────────
   const baseW       = Math.max(60, Math.min(200, (config?.baseWidth as number | undefined) ?? 120));
-  const maxStack    = Math.max(3, Math.min(20, (config?.maxStack as number | undefined) ?? 8));
-  const startSpeed  = Math.max(1, Math.min(8, (config?.startSpeed as number | undefined) ?? 3));
-  const speedStep   = Math.max(0, Math.min(1.5, (config?.speedStep as number | undefined) ?? 0.4));
+  const maxStack    = Math.max(3, Math.min(20, (config?.maxStack as number | undefined) ?? 10));
+  const startSpeed  = Math.max(1, Math.min(16, (config?.startSpeed as number | undefined) ?? 7));
+  const speedStep   = Math.max(0, Math.min(3, (config?.speedStep as number | undefined) ?? 1));
   const blockColorMode = (config?.blockColorMode as string | undefined) ?? "rainbow"; // rainbow | solid
   const blockColor  = (config?.blockColor   as string | undefined) ?? pal.brand;
   const movingColor = (config?.movingColor  as string | undefined) ?? pal.accent;
@@ -46,19 +46,9 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
   const iv = useRef<ReturnType<typeof setInterval> | null>(null);
   const fallId = useRef(0);
 
-  // Full picture spans the arena width × the full possible stack height, so
-  // every block reveals its own window into the same image (slice ~ 1/N).
-  const PH = (maxStack + 1) * BH;
-
-  function sliceStyle(i: number, x: number): React.CSSProperties | null {
-    if (!pictureImage) return null;
-    return {
-      backgroundImage: `url(${pictureImage})`,
-      backgroundSize: `${ARENA_W}px ${PH}px`,
-      backgroundPosition: `${-x}px ${(i + 1) * BH - PH}px`,
-      backgroundRepeat: "no-repeat",
-    };
-  }
+  // The picture (if set) is shown as the arena backdrop; the blocks sit in front
+  // of it as plain solid-coloured blocks. Falls back to the separate arena image.
+  const bgImg = pictureImage ?? arenaImage;
 
   function spawnFalling(pieces: Omit<FallPiece, "id">[]) {
     if (!pieces.length) return;
@@ -176,70 +166,57 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
           width: ARENA_W,
           height: (maxStack + 2) * BH,
           background: arenaColor ?? "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.35))",
-          backgroundImage: arenaImage ? `url(${arenaImage})` : undefined,
-          backgroundSize: arenaImage ? "cover" : undefined,
-          backgroundPosition: arenaImage ? "center" : undefined,
+          backgroundImage: bgImg ? `url(${bgImg})` : undefined,
+          backgroundSize: bgImg ? "cover" : undefined,
+          backgroundPosition: bgImg ? "center" : undefined,
           boxShadow: "inset 0 2px 10px rgba(0,0,0,0.5)",
         }}
       >
-        {placed.map((b, i) => {
-          const slice = sliceStyle(i, b.x);
-          return (
-            <div
-              key={i}
-              className="absolute rounded-sm"
-              style={{
-                left: b.x,
-                bottom: i * BH,
-                width: b.w,
-                height: BH - 2,
-                ...(slice ?? { background: blockBg(i) }),
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 0 1px rgba(0,0,0,0.12)",
-                animation: i === justDropped ? dropAnim : undefined,
-              }}
-            />
-          );
-        })}
+        {placed.map((b, i) => (
+          <div
+            key={i}
+            className="absolute rounded-sm"
+            style={{
+              left: b.x,
+              bottom: i * BH,
+              width: b.w,
+              height: BH - 2,
+              background: blockBg(i),
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 0 1px rgba(0,0,0,0.12)",
+              animation: i === justDropped ? dropAnim : undefined,
+            }}
+          />
+        ))}
         {phase === "play" ? (
-          (() => {
-            const slice = sliceStyle(placed.length, moving.x);
-            return (
-              <div
-                className="absolute rounded-sm"
-                style={{
-                  left: moving.x,
-                  bottom: placed.length * BH,
-                  width: moving.w,
-                  height: BH - 2,
-                  ...(slice ?? { background: `linear-gradient(180deg, ${lighten(movingColor, 0.25)}, ${movingColor})` }),
-                  boxShadow: slice
-                    ? `0 0 12px 1px ${movingColor}, inset 0 0 0 2px ${movingColor}`
-                    : `0 0 12px 1px ${movingColor}`,
-                }}
-              />
-            );
-          })()
+          <div
+            className="absolute rounded-sm"
+            style={{
+              left: moving.x,
+              bottom: placed.length * BH,
+              width: moving.w,
+              height: BH - 2,
+              background: `linear-gradient(180deg, ${lighten(movingColor, 0.25)}, ${movingColor})`,
+              boxShadow: `0 0 12px 1px ${movingColor}`,
+            }}
+          />
         ) : null}
         {/* Trimmed overhang tumbling off */}
-        {falling.map((p) => {
-          const slice = sliceStyle(p.index, p.x);
-          return (
-            <div
-              key={p.id}
-              className="absolute rounded-sm"
-              style={{
-                left: p.x,
-                bottom: p.bottom,
-                width: p.w,
-                height: BH - 2,
-                ...(slice ?? { background: blockBg(p.index) }),
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
-                animation: "block-fall 0.8s ease-in forwards",
-                ["--fall-rot" as string]: `${p.rot}deg`,
-              }}
-            />
-          );
-        })}
+        {falling.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-sm"
+            style={{
+              left: p.x,
+              bottom: p.bottom,
+              width: p.w,
+              height: BH - 2,
+              background: blockBg(p.index),
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+              animation: "block-fall 0.8s ease-in forwards",
+              ["--fall-rot" as string]: `${p.rot}deg`,
+            }}
+          />
+        ))}
       </div>
       {phase === "idle" ? <ArcadeButton onClick={start} pulse>{startLabel}</ArcadeButton> : null}
       {phase === "play" ? <ArcadeButton onClick={drop}>{dropLabel}</ArcadeButton> : null}

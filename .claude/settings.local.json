@@ -46,7 +46,31 @@
       "Bash(sed -i '' 's/bg={assets?.bg} overlays={els} text={config.text}/bg={assets?.bg} overlays={els} texts={assets?.texts} text={config.text}/' components/admin/brand/steps/OverlaysStepAll.tsx)",
       "Bash(sed -i '' 's/bg={assets?.bg} overlays={assets?.overlays} text={config.text} \\\\/>/bg={assets?.bg} overlays={assets?.overlays} texts={assets?.texts} text={config.text} \\\\/>/' components/admin/brand/steps/HeroStepAll.tsx)",
       "Bash(sed -i '' 's/texts={assets?.texts} text={config.text} \\\\/>/texts={assets?.texts} padTop={assets?.padTop ?? 0} text={config.text} \\\\/>/' components/admin/brand/steps/BackgroundsStepAll.tsx components/admin/brand/steps/OverlaysStepAll.tsx)",
-      "Bash(sed -i '' 's/texts={texts} onTextChange={\\(id, patch\\) => updateText\\(gt, id, patch\\)} text={text} \\\\/>/texts={texts} padTop={assets?.padTop ?? 0} onTextChange={\\(id, patch\\) => updateText\\(gt, id, patch\\)} text={text} \\\\/>/' components/admin/brand/steps/TextStepAll.tsx)"
+      "Bash(sed -i '' 's/texts={texts} onTextChange={\\(id, patch\\) => updateText\\(gt, id, patch\\)} text={text} \\\\/>/texts={texts} padTop={assets?.padTop ?? 0} onTextChange={\\(id, patch\\) => updateText\\(gt, id, patch\\)} text={text} \\\\/>/' components/admin/brand/steps/TextStepAll.tsx)",
+      "Bash(gh auth *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(git ls-remote *)",
+      "Bash(git fetch *)",
+      "Bash(git stash *)",
+      "Bash(git pull *)",
+      "PowerShell($ok=$false; for\\($i=0;$i -lt 30;$i++\\){ try{ $r=Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 3; \"STATUS: $\\($r.StatusCode\\)\"; $ok=$true; break }catch{ Start-Sleep -Milliseconds 1500 } }; if\\(-not $ok\\){ \"not ready yet\" })",
+      "PowerShell(foreach\\($p in @\\(\"/brands\",\"/brand\"\\)\\){ try{ $r=Invoke-WebRequest -Uri \"http://localhost:3000$p\" -UseBasicParsing -TimeoutSec 20 -MaximumRedirection 0 -ErrorAction Stop; \"$p -> $\\($r.StatusCode\\)\" }catch{ $s=$_.Exception.Response.StatusCode.value__; if\\($s\\){ \"$p -> $s \\(redirect/err\\)\" } else { \"$p -> $\\($_.Exception.Message\\)\" } } })",
+      "Bash(Start-Sleep -Seconds 5)",
+      "Bash(Get-Content \"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-user-Desktop-gamer\\\\d273bc53-8e38-48f3-9529-f9290a63ff12\\\\tasks\\\\bm4dnqx7o.output\")",
+      "PowerShell(Get-Content *)",
+      "PowerShell(npm run *)",
+      "Read(//c/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-gamer/8321a0aa-b402-4aed-abc3-de82ff78a5e7/tasks/**)",
+      "Bash(sleep 0.5)",
+      "mcp__ide__getDiagnostics",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"GAMEFIY STUDIOS\"\\) { \"wordmark: found\" } else { \"wordmark: MISSING\" }; if \\($r.Content -match \"Selected work\"\\) { \"work section: found\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/brands\" -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 60; \"brands: $\\($r.StatusCode\\)\" } catch { \"brands status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"One studio. Every kind of game\"\\) { \"intro slide: found\" } else { \"intro slide: not in SSR \\(client-rendered carousel - ok\\)\" }; if \\($r.Content -match \"Selected work\"\\) { \"work section: found\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"Every kind of game\"\\) { \"intro slide: found\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"Every kind of game\"\\) { \"grid heading: found\" }; if \\($r.Content -match \"Selected work|Branded games we\"\\) { \"OLD sections still present!\" } else { \"old sections removed: ok\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"Seed Brand\"\\) { \"SEED BRAND still present!\" } else { \"seed brand excluded: ok\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\" } catch { \"home error: $\\($_.Exception.Message\\)\" })",
+      "Bash(exit 0)"
     ]
   }
 }

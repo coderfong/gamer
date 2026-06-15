@@ -23,7 +23,7 @@ export function CupShuffleEditor({ campaign, setCampaign }: Props) {
   const cupCount     = Math.max(3, Math.min(8, (config.cupCount as number | undefined) ?? 5));
   const shuffleCount = Math.max(3, Math.min(30, (config.shuffleCount as number | undefined) ?? 12));
   const shuffleSpeed = Math.max(120, Math.min(800, (config.shuffleSpeed as number | undefined) ?? 320));
-  const cupSize      = Math.max(50, Math.min(120, (config.cupSize as number | undefined) ?? 80));
+  const cupSize      = Math.max(50, Math.min(140, (config.cupSize as number | undefined) ?? 96));
   const cupColor     = (config.cupColor as string | undefined) ?? "#6d28d9";
   const cupImage     = (config.cupImage as string | undefined) ?? null;
   const objectSymbol = (config.objectSymbol as string | undefined) ?? "⭐";
@@ -124,7 +124,7 @@ export function CupShuffleEditor({ campaign, setCampaign }: Props) {
       <Section title="Cup appearance" defaultOpen>
         <div className="space-y-3">
           <Field label={`Cup size · ${cupSize}px`}>
-            <input type="range" min={60} max={120} step={4}
+            <input type="range" min={60} max={140} step={4}
               value={cupSize}
               onChange={(e) => patch({ cupSize: Number(e.target.value) })}
               className="w-full" />

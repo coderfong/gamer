@@ -6,12 +6,14 @@ import { readSpinWheelConfig, resolveSliceFill } from "@/lib/types/spinwheel";
 const INK   = "#231B2E";
 const RING  = 22; // outer decorative ring thickness (px)
 const PTR_H = 50; // pointer SVG height
+const PTR_IMG_W = 76;  // custom pointer image width
+const PTR_IMG_H = 96;  // custom pointer image height
 
 export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: GameProps) {
   const cfg = readSpinWheelConfig(config);
   const {
     numSlices: N, segments, segmentImages, labels,
-    wheelSize, pegColor, pointerColor, pointerImage, hubColor,
+    wheelSize, pegColor, pointerColor, pointerImage, pointerFlipY, hubColor,
     hubLogoUrl, hubLogoScale,
     spinButtonText, spinningText, spinButtonFontSize,
     spinDuration, pointerAnim,
@@ -332,22 +334,31 @@ export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: Ga
         </svg>
 
         {/* ── LAYER 3: Static hub — stays centered, never rotates ─── */}
+        {/* A logo image stands on its own and gets a larger footprint than the
+            small star hub disc. */}
+        {(() => { const HALF = hubLogoUrl ? Math.round(R * 0.42) : HUB_R; return (
         <div
           style={{
             position: "absolute",
             zIndex: 3,
-            left: CX - HUB_R,
-            top:  CX - HUB_R,
-            width:  HUB_R * 2,
-            height: HUB_R * 2,
-            borderRadius: "50%",
-            background: hubColor,
-            border: `3px solid ${INK}`,
-            boxShadow: `0 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.28)`,
+            left: CX - HALF,
+            top:  CX - HALF,
+            width:  HALF * 2,
+            height: HALF * 2,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            overflow: "hidden",
+            // A logo image stands on its own — no circular cap. The default star
+            // keeps the decorative hub disc.
+            ...(hubLogoUrl
+              ? {}
+              : {
+                  borderRadius: "50%",
+                  background: hubColor,
+                  border: `3px solid ${INK}`,
+                  boxShadow: `0 3px 10px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.28)`,
+                  overflow: "hidden",
+                }),
           }}
         >
           {hubLogoUrl ? (
@@ -372,15 +383,18 @@ export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: Ga
             </svg>
           )}
         </div>
+        ); })()}
 
         {/* ── Pointer ───────────────────────────────────────────── */}
         <div
           style={{
             position: "absolute",
             zIndex: 10,
-            top: RING - PTR_H + 6,
+            // Anchor the pointer tip to the same spot whether it's the SVG or a
+            // (taller) custom image.
+            top: pointerImage ? RING + 6 - PTR_IMG_H : RING - PTR_H + 6,
             left: "50%",
-            transform: `translateX(-50%) rotate(${pointerDeg}deg)`,
+            transform: `translateX(-50%) rotate(${pointerDeg}deg)${pointerImage && pointerFlipY ? " scaleY(-1)" : ""}`,
             transition: pointerTransition,
             filter: `drop-shadow(2px -2px 0 ${INK})`,
             ...pointerBounce,
@@ -388,7 +402,7 @@ export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: Ga
         >
           {pointerImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={pointerImage} alt="" style={{ width: 44, height: PTR_H + 6, objectFit: "contain", display: "block" }} />
+            <img src={pointerImage} alt="" style={{ width: PTR_IMG_W, height: PTR_IMG_H, objectFit: "contain", display: "block" }} />
           ) : (
             <svg width="40" height={PTR_H} viewBox={`0 0 40 ${PTR_H}`}>
               <path

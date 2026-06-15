@@ -77,5 +77,19 @@ export function buildGameConfig(
   if (gameType === "spin_wheel" && Array.isArray(cfg.segmentImages) && (cfg.segmentImages as string[]).length) {
     cfg.numSlices = 8;
   }
+  // Spin Wheel: flip a custom pointer image vertically when requested.
+  if (gameType === "spin_wheel" && assets.pointerFlipY) {
+    cfg.pointerFlipY = true;
+  }
+  // Fill Outline: pass through the outline image scale.
+  if (gameType === "slot_machine" && typeof assets.outlineScale === "number") {
+    cfg.outlineScale = assets.outlineScale;
+  }
+  // Plinko: pass through the board background image size (width/height %) and goal.
+  if (gameType === "dice_roll") {
+    if (typeof assets.boardImageW === "number") cfg.boardImageW = assets.boardImageW;
+    if (typeof assets.boardImageH === "number") cfg.boardImageH = assets.boardImageH;
+    if (typeof assets.goalSlot === "number") cfg.goalSlot = assets.goalSlot;
+  }
   return cfg;
 }

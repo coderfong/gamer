@@ -103,7 +103,7 @@ function drawCover(
 function shapeCSS(shape: string): React.CSSProperties {
   switch (shape) {
     case "circle":  return { borderRadius: "50%", overflow: "hidden" };
-    case "square":  return { borderRadius: 5,     overflow: "hidden" };
+    case "square":  return { borderRadius: 0,     overflow: "hidden" };
     case "diamond": return { clipPath: "polygon(50% 0%,100% 50%,50% 100%,0% 50%)" };
     case "hexagon": return { clipPath: "polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)" };
     default:        return { borderRadius: 18,    overflow: "hidden" }; // "rounded"
@@ -116,15 +116,15 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
   const pal = palette(theme.brandColor, theme.brandFg);
 
   const cols         = Math.max(1, Math.min(3, (config.gridCols       as number | undefined) ?? 3));
-  const rows         = Math.max(1, Math.min(3, (config.gridRows       as number | undefined) ?? 1));
+  const rows         = Math.max(1, Math.min(3, (config.gridRows       as number | undefined) ?? 3));
   const total        = cols * rows;
   const shape        = (config.scratchShape   as string | undefined) ?? "rounded";
-  const boxSize      = Math.max(60, Math.min(150, (config.boxSize     as number | undefined) ?? 100));
+  const boxSize      = Math.max(60, Math.min(240, (config.boxSize     as number | undefined) ?? 185));
   const brushRadius  = Math.max(10, Math.min(60,  (config.brushRadius as number | undefined) ?? 28));
   const pctThreshold = Math.max(20, Math.min(90,  (config.percentToReveal as number | undefined) ?? 55));
   const winSymbol    = (config.winSymbol      as string | undefined) ?? DEFAULT_WIN_SYM;
   const otherSymbols = parseSymbols(config.otherSymbols, DEFAULT_OTHERS);
-  const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? Math.ceil(total / 2)));
+  const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? 3));
   const coverImage   = (config.coverImage     as string | undefined) ?? null;
   const coverText    = (config.coverText      as string | undefined) ?? "?";
   const instructionTpl = (config.instructionText as string | undefined) ?? "Match {count}× {symbol} to win!";
@@ -198,7 +198,25 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
     [onComplete],
   );
 
-  const gap = Math.max(6, Math.round(boxSize * 0.1));
+  const gap = Math.max(2, Math.round(boxSize * 0.03));
+
+  // The grid uses fixed pixel panels, so on narrow (mobile) screens the natural
+  // width can exceed the viewport. Scale the grid down to fit the available
+  // width so it never touches the sides. Pointer math is ratio-corrected, so
+  // scratching still works at any scale.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const gridW = cols * boxSize + (cols - 1) * gap;
+  const gridH = rows * boxSize + (rows - 1) * gap;
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const update = () => setScale(Math.min(1, el.clientWidth / gridW));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [gridW]);
 
   return (
     <div className="flex flex-col items-center gap-4 py-2">
@@ -215,30 +233,40 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
         </p>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${cols}, ${boxSize}px)`,
-          gap,
-        }}
-      >
-        {symbols.map((symbol, i) => (
-          <ScratchBox
-            key={`${symbolKey}-${i}`}
-            symbol={symbol}
-            isWinSymbol={symbol === winSymbol}
-            shape={shape}
-            size={boxSize}
-            brushRadius={brushRadius}
-            pctThreshold={pctThreshold}
-            coverImage={coverImage}
-            coverText={coverText}
-            coverColor={pal.brand}
-            coverFg={pal.fg}
-            accentLight={pal.light}
-            onRevealed={() => handleBoxRevealed(i)}
-          />
-        ))}
+      {/* Outer holds the side padding; the inner ref measures the available
+          content width so the grid scales to fit inside that padding. */}
+      <div className="w-full px-3 flex justify-center">
+        <div ref={gridRef} className="w-full flex justify-center">
+        <div style={{ width: gridW * scale, height: gridH * scale }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${cols}, ${boxSize}px)`,
+              gap,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            {symbols.map((symbol, i) => (
+              <ScratchBox
+                key={`${symbolKey}-${i}`}
+                symbol={symbol}
+                isWinSymbol={symbol === winSymbol}
+                shape={shape}
+                size={boxSize}
+                brushRadius={brushRadius}
+                pctThreshold={pctThreshold}
+                coverImage={coverImage}
+                coverText={coverText}
+                coverColor={pal.brand}
+                coverFg={pal.fg}
+                accentLight={pal.light}
+                onRevealed={() => handleBoxRevealed(i)}
+              />
+            ))}
+          </div>
+        </div>
+        </div>
       </div>
 
       {allRevealed ? (
@@ -347,21 +375,31 @@ function ScratchBox({
     }
   }
 
+  const symbolIsImg = isImg(symbol);
+
   return (
     <div style={{ position: "relative", width: size, height: size, ...shapeCSS(shape) }}>
-      {/* Symbol shown beneath canvas */}
+      {/* Symbol shown beneath canvas. No framing background on any panel — the
+          symbol sits directly on the card so panels never look outlined/tiled. */}
       <div
         style={{
           position: "absolute", inset: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
           flexDirection: "column", gap: 2,
-          background:
-            isWinSymbol && revealed
-              ? `linear-gradient(135deg, ${lighten(accentLight, 0.1)}, ${accentLight})`
-              : `linear-gradient(135deg, #fff8, ${lighten(accentLight, 0.55)})`,
+          overflow: "hidden",
+          background: "transparent",
         }}
       >
-        <SymbolView symbol={symbol} size={size * (isImg(symbol) ? 0.6 : 0.42)} />
+        {symbolIsImg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={symbol}
+            alt=""
+            style={{ width: size * 0.78, height: size * 0.78, objectFit: "contain", display: "block" }}
+          />
+        ) : (
+          <SymbolView symbol={symbol} size={size * 0.42} />
+        )}
         {revealed && isWinSymbol && (
           <span
             style={{

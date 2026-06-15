@@ -125,20 +125,22 @@ export function SpeedTap({ config, theme, onComplete }: GameProps) {
             animation: !useBump && TAP_ANIM[tapAnimation] ? TAP_ANIM[tapAnimation] : undefined,
           }}
         >
-          {isImgBtn ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={buttonImage!} alt="" className="w-full h-full object-contain pointer-events-none" draggable={false} />
-              {buttonText.trim() && (
-                <span className="absolute inset-0 flex items-center justify-center" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>{buttonText}</span>
-              )}
-            </>
-          ) : (
-            buttonText
+          {isImgBtn && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={buttonImage!} alt="" className="w-full h-full object-contain pointer-events-none" draggable={false} />
           )}
         </button>
       ) : (
         <ArcadeButton onClick={start} pulse>{startLabel}</ArcadeButton>
+      )}
+      {/* Tap label sits BELOW the button/game, not on it. */}
+      {phase === "play" && buttonText.trim() && (
+        <div
+          className="arcade-title select-none text-center"
+          style={{ fontSize: buttonSize * 0.16, color: buttonTextColor === "#ffffff" ? pal.brand : buttonTextColor }}
+        >
+          {buttonText}
+        </div>
       )}
     </Stage>
   );

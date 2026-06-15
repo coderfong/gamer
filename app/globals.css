@@ -81,8 +81,10 @@ body {
   75% { transform: rotate(3deg); }
 }
 @keyframes mole-up {
-  0% { transform: translateY(100%); }
-  100% { transform: translateY(8%); }
+  0%   { transform: translateY(105%) scaleY(0.9); }
+  55%  { transform: translateY(-6%)  scaleY(1.06); }
+  78%  { transform: translateY(3%)   scaleY(0.98); }
+  100% { transform: translateY(0%)   scaleY(1); }
 }
 /* Stack-blocks: trimmed overhang tumbling off the tower */
 @keyframes block-fall {
@@ -179,6 +181,8 @@ body {
 @keyframes mem-pop    { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
 @keyframes mem-pulse  { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 @keyframes mem-flash  { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.9); } }
+/* Rapid blink — used by Stop-the-Timer to obscure the fill near the target */
+@keyframes timer-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.06; } }
 @keyframes mem-wobble { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-9deg); } 60% { transform: rotate(7deg); } 80% { transform: rotate(-4deg); } }
 @keyframes mem-tada {
   0%, 100%      { transform: scale(1)   rotate(0); }
