@@ -2,8 +2,8 @@ import Link from "next/link";
 import "./landing.css";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readStudioConfig } from "@/lib/types/studio";
-import { getGameMeta } from "@/lib/games/gameMeta";
-import { BrandGamePreview, type PortfolioBrand } from "@/components/site/BrandGamePreview";
+import { type PortfolioBrand } from "@/components/site/BrandGamePreview";
+import { BrandGameCarousel } from "@/components/site/BrandGameCarousel";
 import type { GameType } from "@/lib/types/game";
 
 export const dynamic = "force-dynamic";
@@ -35,10 +35,7 @@ export default async function Home() {
     })
     .filter((b) => b.name.trim().toLowerCase() !== "seed brand");
 
-  const cells = brands.slice(0, GAME_ORDER.length).map((brand, k) => ({
-    brand,
-    gameType: GAME_ORDER[k % GAME_ORDER.length],
-  }));
+  const cells = brands.slice(0, GAME_ORDER.length);
 
   return (
     <div className="lp">
@@ -70,12 +67,10 @@ export default async function Home() {
 
           {cells.length > 0 ? (
             <div className="pf-grid">
-              {cells.map(({ brand, gameType }) => {
-                const meta = getGameMeta(gameType);
+              {cells.map((brand, k) => {
                 return (
-                  <div className="pf-grid-cell" key={brand.name + gameType}>
-                    <BrandGamePreview brand={brand} gameType={gameType} phoneWidth={300} />
-                    <span className="pf-grid-label" style={{ color: "#000" }}>{meta.icon} {meta.label}</span>
+                  <div className="pf-grid-cell" key={brand.name + k}>
+                    <BrandGameCarousel brand={brand} games={GAME_ORDER} startIndex={k} phoneWidth={300} />
                     {brand.publicSlug ? (
                       <Link className="pf-grid-brand pf-grid-hub" href={`/b/${brand.publicSlug}`} style={{ color: "#000" }}>
                         {brand.name} ↗

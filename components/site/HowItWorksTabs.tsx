@@ -4,12 +4,14 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 // ── Content ──────────────────────────────────────────────────────────────────
-const LOOP: [string, string, string][] = [
-  ["📲", "Scan", "A QR on your touchpoint opens an instant-play game — no app, no download."],
-  ["🎮", "Play", "A fully branded game loads in the phone's browser in a couple of seconds."],
-  ["✍️", "Capture", "Opt-ins, contacts and zero-party data — handed over willingly to unlock a reward."],
-  ["🎯", "Act", "CTA clicks, coupon redemptions and click-through to your store."],
-  ["📊", "Report", "Every step lands on a live dashboard you can show upward."],
+// Drop a matching file into /public/loop/ and the step renders the image instead
+// of the emoji. Missing files fall back to the emoji automatically.
+const LOOP: { ico: string; title: string; desc: string; image: string }[] = [
+  { ico: "📲", title: "Scan",    image: "/loop/scan.png",    desc: "A QR on your touchpoint opens an instant-play game — no app, no download." },
+  { ico: "🎮", title: "Play",    image: "/loop/play.png",    desc: "A fully branded game loads in the phone's browser in a couple of seconds." },
+  { ico: "✍️", title: "Capture", image: "/loop/capture.png", desc: "Opt-ins, contacts and zero-party data — handed over willingly to unlock a reward." },
+  { ico: "🎯", title: "Act",     image: "/loop/act.png",     desc: "CTA clicks, coupon redemptions and click-through to your store." },
+  { ico: "📊", title: "Report",  image: "/loop/report.png",  desc: "Every step lands on a live dashboard you can show upward." },
 ];
 
 // Drop a matching file into /public/qr/ and the card renders the photo instead of
@@ -86,7 +88,7 @@ const BENEFITS: [string, string, string][] = [
   ["🧲", "Attention that sticks", "Seconds of focused play and replays, where an ad gets a fraction of a second."],
   ["🪶", "Tiny footprint", "Nothing to install on anyone's phone — a QR or link drops straight into media you already pay for."],
   ["🎨", "Brand-aligned by design", "Every game is catered to your brand — your logo, colours, characters and tone baked in, so it never feels generic."],
-  ["🚀", "Launch for anything", "One engine, reskinned per campaign — so each activation costs far less than fresh creative from scratch."],
+  ["🚀", "Custom-built for your goal", "A game designed ground-up for each campaign — your characters, your mechanic — not a template with a logo dropped on top."],
   ["🔑", "Data you own", "Zero-party data and opt-ins customers hand over willingly — not rented from a platform."],
   ["📣", "Built to be shared", "Challenges, leaderboards and referrals turn one play into many — organic reach you don't pay for."],
   ["📈", "Provably worth it", "Every play, lead and redemption is measured, so you can show the return — not just the spend."],
@@ -94,7 +96,7 @@ const BENEFITS: [string, string, string][] = [
 
 const BENEFIT_NOTES: [string, string][] = [
   ["Tiny footprint, operationally", "Beyond “no app to install” — the code or link slots into packaging, out-of-home, receipts and social you’ve already bought, so distribution costs you nothing extra."],
-  ["One engine, a CFO-friendly line", "Because it’s a single engine reskinned per campaign, you’re not paying for ground-up creative each time — the line that makes finance comfortable, not just marketing."],
+  ["Played, not skipped", "People skip ads, but they'll play a game. That minute of attention gets you sign-ups, shares with their friends, and a brand they actually remember."],
 ];
 
 const PROVIDE: { label: string; key?: boolean }[] = [
@@ -196,9 +198,8 @@ export default function HowItWorksTabs() {
             <p>Before we&apos;ve even shown you a concept — here&apos;s why the format itself is worth it, versus another banner or social spot.</p>
           </div>
           <div className="ben-grid">
-            {BENEFITS.map(([ico, t, d]) => (
+            {BENEFITS.map(([, t, d]) => (
               <div className="ben-card" key={t}>
-                <div className="ico">{ico}</div>
                 <h4>{t}</h4>
                 <p>{d}</p>
               </div>
@@ -223,14 +224,28 @@ export default function HowItWorksTabs() {
             <p>The path from a brand touchpoint to a measurable business outcome — the full loop, end to end.</p>
           </div>
           <div className="loop">
-            {LOOP.map(([ico, t, d], i) => (
-              <div className="loop-step" key={t}>
-                <div className="loop-ico">{ico}</div>
-                <h4>{t}</h4>
-                <p>{d}</p>
-                {i < LOOP.length - 1 && <span className="loop-arrow">→</span>}
-              </div>
-            ))}
+            {LOOP.map((step, i) => {
+              const showPhoto = step.image && !failed.has(step.title);
+              return (
+                <div className="loop-step" key={step.title}>
+                  {showPhoto ? (
+                    <Image
+                      className="loop-photo"
+                      src={step.image}
+                      alt={step.title}
+                      width={160}
+                      height={160}
+                      onError={() => setFailed((f) => new Set(f).add(step.title))}
+                    />
+                  ) : (
+                    <div className="loop-ico">{step.ico}</div>
+                  )}
+                  <h4>{step.title}</h4>
+                  <p>{step.desc}</p>
+                  {i < LOOP.length - 1 && <span className="loop-arrow">→</span>}
+                </div>
+              );
+            })}
           </div>
           <p className="pitch-line">
             Every game we build starts from your KPI — and we instrument it end-to-end, so you see the{" "}

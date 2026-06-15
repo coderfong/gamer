@@ -9,5 +9,11 @@ export function createAdminClient() {
   }
   return createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
+    // Never let Next.js cache service-role reads — these power live, always-fresh
+    // server views (e.g. the landing grid), so a cached snapshot would show stale
+    // brand names/themes after a Studio edit.
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
+    },
   });
 }
