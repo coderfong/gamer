@@ -54,6 +54,9 @@
       "Bash(git fetch *)",
       "Bash(git stash *)",
       "Bash(git pull *)",
+      "Bash(echo \"git user.name:  $\\(git config user.name\\)\")",
+      "Bash(echo \"git user.email: $\\(git config user.email\\)\")",
+      "Bash(echo \"github remote:  $\\(git remote get-url origin\\)\")",
       "PowerShell($ok=$false; for\\($i=0;$i -lt 30;$i++\\){ try{ $r=Invoke-WebRequest -Uri \"http://localhost:3000\" -UseBasicParsing -TimeoutSec 3; \"STATUS: $\\($r.StatusCode\\)\"; $ok=$true; break }catch{ Start-Sleep -Milliseconds 1500 } }; if\\(-not $ok\\){ \"not ready yet\" })",
       "PowerShell(foreach\\($p in @\\(\"/brands\",\"/brand\"\\)\\){ try{ $r=Invoke-WebRequest -Uri \"http://localhost:3000$p\" -UseBasicParsing -TimeoutSec 20 -MaximumRedirection 0 -ErrorAction Stop; \"$p -> $\\($r.StatusCode\\)\" }catch{ $s=$_.Exception.Response.StatusCode.value__; if\\($s\\){ \"$p -> $s \\(redirect/err\\)\" } else { \"$p -> $\\($_.Exception.Message\\)\" } } })",
       "Bash(Start-Sleep -Seconds 5)",
@@ -70,7 +73,10 @@
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"Every kind of game\"\\) { \"grid heading: found\" }; if \\($r.Content -match \"Selected work|Branded games we\"\\) { \"OLD sections still present!\" } else { \"old sections removed: ok\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"Seed Brand\"\\) { \"SEED BRAND still present!\" } else { \"seed brand excluded: ok\" } } catch { \"home error: $\\($_.Exception.Message\\)\" })",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 120; \"home: $\\($r.StatusCode\\)\" } catch { \"home error: $\\($_.Exception.Message\\)\" })",
-      "Bash(exit 0)"
+      "Bash(exit 0)",
+      "Bash(python3 -m json.tool .claude/settings.local.json)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(xargs kill -9)"
     ]
   }
 }

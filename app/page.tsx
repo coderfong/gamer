@@ -47,9 +47,9 @@ export default async function Home() {
         <div className="wrap nav-inner">
           <div className="logo"><span className="mark">{AGENCY.mark}</span> {AGENCY.name}</div>
           <nav className="nav-links">
-            <a href="#work">Work</a>
+            <Link href="/how-it-works#dashboard">Dashboard</Link>
             <a href="#services">Services</a>
-            <a href="#process">Process</a>
+            <Link href="/how-it-works">How it works</Link>
             <a href="#contact">Contact</a>
           </nav>
           <div className="nav-cta">
@@ -72,17 +72,16 @@ export default async function Home() {
             <div className="pf-grid">
               {cells.map(({ brand, gameType }) => {
                 const meta = getGameMeta(gameType);
-                const brandColor = brand.config.theme.brandColor;
                 return (
                   <div className="pf-grid-cell" key={brand.name + gameType}>
                     <BrandGamePreview brand={brand} gameType={gameType} phoneWidth={300} />
-                    <span className="pf-grid-label" style={{ color: brandColor }}>{meta.icon} {meta.label}</span>
+                    <span className="pf-grid-label" style={{ color: "#000" }}>{meta.icon} {meta.label}</span>
                     {brand.publicSlug ? (
-                      <Link className="pf-grid-brand pf-grid-hub" href={`/b/${brand.publicSlug}`} style={{ color: brandColor, opacity: 0.78 }}>
+                      <Link className="pf-grid-brand pf-grid-hub" href={`/b/${brand.publicSlug}`} style={{ color: "#000" }}>
                         {brand.name} ↗
                       </Link>
                     ) : (
-                      <span className="pf-grid-brand" style={{ color: brandColor, opacity: 0.72 }}>{brand.name}</span>
+                      <span className="pf-grid-brand" style={{ color: "#000" }}>{brand.name}</span>
                     )}
                   </div>
                 );
@@ -218,8 +217,8 @@ export default async function Home() {
                 A branded game studio. We design and build custom games that make brands play.
               </p>
             </div>
-            <div><h4>Studio</h4><ul><li><a href="#work">Work</a></li><li><a href="#services">Services</a></li><li><a href="#process">Process</a></li></ul></div>
-            <div><h4>Explore</h4><ul><li><a href="#formats">Game formats</a></li><li><Link href="/brands">Studio login</Link></li></ul></div>
+            <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><a href="#services">Services</a></li><li><a href="#process">Process</a></li></ul></div>
+            <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><a href="#formats">Game formats</a></li><li><Link href="/brands">Studio login</Link></li></ul></div>
             <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li></ul></div>
           </div>
           <div className="foot-bottom">
