@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buildGameConfig } from "@/lib/brand/gameAssets";
 import type { BrandStudioConfig } from "@/lib/types/studio";
 import type { GameType } from "@/lib/types/game";
@@ -65,17 +65,53 @@ export function BrandGamePreview({
     [brand.config.text],
   );
 
+  // Only mount the live preview (which fetches this brand's bg/overlay images and
+  // the games bundle) once the cell is near the viewport — keeps off-screen cells
+  // from all loading their assets at once on page load.
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "400px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const placeholderH = Math.round(phoneWidth * 1.92);
+
   return (
-    <MiniGamePreview
-      gameType={gameType}
-      theme={brand.config.theme}
-      config={cfg}
-      bg={assets?.bg}
-      overlays={assets?.overlays}
-      texts={assets?.texts}
-      padTop={assets?.padTop ?? 0}
-      text={text}
-      phoneWidth={phoneWidth}
-    />
+    <div ref={ref} style={{ width: phoneWidth, margin: "0 auto" }}>
+      {inView ? (
+        <MiniGamePreview
+          gameType={gameType}
+          theme={brand.config.theme}
+          config={cfg}
+          bg={assets?.bg}
+          overlays={assets?.overlays}
+          texts={assets?.texts}
+          padTop={assets?.padTop ?? 0}
+          text={text}
+          phoneWidth={phoneWidth}
+        />
+      ) : (
+        <div
+          style={{
+            width: phoneWidth,
+            height: placeholderH,
+            borderRadius: 26,
+            background: "#15151b",
+          }}
+        />
+      )}
+    </div>
   );
 }

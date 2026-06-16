@@ -87,7 +87,9 @@
       "Bash(echo \"tsc exit: $?\")",
       "Bash(ls public/loop/)",
       "Bash(echo \"PLAY_QR_SECRET=$\\(node -e 'console.log\\(require\\(\"crypto\"\\).randomBytes\\(32\\).toString\\(\"base64url\"\\)\\)'\\)\")",
-      "Bash(echo \"CRON_SECRET=$\\(node -e 'console.log\\(require\\(\"crypto\"\\).randomBytes\\(32\\).toString\\(\"base64url\"\\)\\)'\\)\")"
+      "Bash(echo \"CRON_SECRET=$\\(node -e 'console.log\\(require\\(\"crypto\"\\).randomBytes\\(32\\).toString\\(\"base64url\"\\)\\)'\\)\")",
+      "Bash(dig +short gameablestudios.com A)",
+      "Bash(dig +short www.gameablestudios.com)"
     ]
   }
 }

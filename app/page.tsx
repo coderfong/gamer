@@ -104,27 +104,22 @@ export default async function Home() {
           </div>
           <div className="games">
             <div className="gcard" style={{ background: "var(--grape)", color: "#fff" }}>
-              <div className="ico">🎨</div>
               <h3>Custom Game Design</h3>
               <p>Bespoke mechanics and art direction matched to your brand and campaign goal.</p>
             </div>
             <div className="gcard" style={{ background: "var(--sun)" }}>
-              <div className="ico">🖌️</div>
               <h3>Full Brand Theming</h3>
               <p>Your logo, colours, fonts and assets baked into every pixel of the game.</p>
             </div>
             <div className="gcard" style={{ background: "var(--coral)", color: "#fff" }}>
-              <div className="ico">🎁</div>
               <h3>Prizes &amp; Lead Capture</h3>
               <p>Weighted prize logic, voucher codes, and name/email capture built in.</p>
             </div>
             <div className="gcard" style={{ background: "var(--aqua)" }}>
-              <div className="ico">📱</div>
               <h3>QR &amp; Link Delivery</h3>
               <p>One tap to play — a hosted hub, QR codes for the counter, or an embed.</p>
             </div>
             <div className="gcard" style={{ background: "var(--bubble)", color: "#fff" }}>
-              <div className="ico">📊</div>
               <h3>Tracking &amp; Insights</h3>
               <p>See plays, leads, and redemptions so you know exactly what worked.</p>
             </div>
