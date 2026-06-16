@@ -335,7 +335,7 @@ export default function HowItWorksTabs() {
             <div className="dash-bar">
               <div className="dash-title">
                 <strong>Summer Scratch & Win — Live campaign</strong>
-                <span>gamefiystudios.com/b/acme · 14 placements tracked</span>
+                <span>gameablestudios.com/b/acme · 14 placements tracked</span>
               </div>
               <div className="dash-tools">
                 <span className="dash-live"><span className="dot" /> Live</span>

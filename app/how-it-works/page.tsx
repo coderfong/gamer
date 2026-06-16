@@ -3,14 +3,16 @@ import "../landing.css";
 import HowItWorksTabs from "@/components/site/HowItWorksTabs";
 
 export const metadata = {
-  title: "How it works — Gamefiy Studios",
+  title: "How it works — Gameable Studios",
   description: "From one QR scan to a number on your dashboard — the full loop, what we measure, how we stay compliant, and the outcomes we move.",
 };
 
 const AGENCY = {
-  name: "GAMEFIY STUDIOS",
+  name: "GAMEABLE STUDIOS",
   mark: "G",
-  email: "hello@gamefiystudios.com",
+  email: "gameablestudiosg@gmail.com",
+  phone: "+6594799717",
+  phoneDisplay: "+65 9479 9717",
 };
 
 export default function HowItWorksPage() {
@@ -28,7 +30,7 @@ export default function HowItWorksPage() {
           </nav>
           <div className="nav-cta">
             <Link className="btn btn-ghost" href="/brands">Studio</Link>
-            <a className="btn btn-primary" href={`mailto:${AGENCY.email}`}>Book a call</a>
+            <a className="btn btn-primary" href={`tel:${AGENCY.phone}`}>Book a call</a>
           </div>
         </div>
       </header>
@@ -75,11 +77,11 @@ export default function HowItWorksPage() {
             </div>
             <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><Link href="/#services">Services</Link></li><li><Link href="/#process">Process</Link></li></ul></div>
             <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><Link href="/#formats">Game formats</Link></li><li><Link href="/brands">Studio login</Link></li></ul></div>
-            <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li></ul></div>
+            <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><a href={`tel:${AGENCY.phone}`}>{AGENCY.phoneDisplay}</a></li></ul></div>
           </div>
           <div className="foot-bottom">
             <span>© {new Date().getFullYear()} {AGENCY.name}. All rights reserved.</span>
-            <span>Made with 🎮 by Gamefiy Studios.</span>
+            <span>Made with 🎮 by Gameable Studios.</span>
           </div>
         </div>
       </footer>

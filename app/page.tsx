@@ -10,9 +10,11 @@ export const dynamic = "force-dynamic";
 
 // ── Agency identity (edit here) ──────────────────────────────────────────────
 const AGENCY = {
-  name: "GAMEFIY STUDIOS",
+  name: "GAMEABLE STUDIOS",
   mark: "G",
-  email: "hello@gamefiystudios.com",
+  email: "gameablestudiosg@gmail.com",
+  phone: "+6594799717",
+  phoneDisplay: "+65 9479 9717",
 };
 
 // One game per grid cell, in order. Brand k is paired with game k.
@@ -51,7 +53,7 @@ export default async function Home() {
           </nav>
           <div className="nav-cta">
             <Link className="btn btn-ghost" href="/brands">Studio</Link>
-            <a className="btn btn-primary" href={`mailto:${AGENCY.email}`}>Book a call</a>
+            <a className="btn btn-primary" href={`tel:${AGENCY.phone}`}>Book a call</a>
           </div>
         </div>
       </header>
@@ -60,7 +62,7 @@ export default async function Home() {
       <section id="work">
         <div className="wrap">
           <div className="sec-head">
-            <span className="eyebrow">Gamefiy Studios</span>
+            <span className="eyebrow">Gameable Studios</span>
             <h2>{cells.length || ""} brands. Every kind of game.</h2>
             <p>Custom-built, fully-branded mini-games. Each one is live — play it right here, or open its hub.</p>
           </div>
@@ -214,11 +216,11 @@ export default async function Home() {
             </div>
             <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><a href="#services">Services</a></li><li><a href="#process">Process</a></li></ul></div>
             <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><a href="#formats">Game formats</a></li><li><Link href="/brands">Studio login</Link></li></ul></div>
-            <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li></ul></div>
+            <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><a href={`tel:${AGENCY.phone}`}>{AGENCY.phoneDisplay}</a></li></ul></div>
           </div>
           <div className="foot-bottom">
             <span>© {new Date().getFullYear()} {AGENCY.name}. All rights reserved.</span>
-            <span>Made with 🎮 by Gamefiy Studios.</span>
+            <span>Made with 🎮 by Gameable Studios.</span>
           </div>
         </div>
       </footer>
