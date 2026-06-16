@@ -7,9 +7,11 @@ import type { GameType } from "@/lib/types/game";
 import type { BrandStudioTheme, BrandStudioText, StudioGameAssets } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
 import { StudioOverlays } from "./StudioOverlays";
+import { EditableOverlays } from "./EditableOverlays";
 import { StudioTexts } from "./StudioTexts";
 import { EditableTexts } from "./EditableTexts";
 import type { StudioText } from "@/lib/types/studio";
+import type { OverlayElement } from "@/lib/types/campaign";
 
 const GAME_W = 340; // natural game width
 
@@ -25,6 +27,9 @@ export function MiniGamePreview({
   texts,
   padTop = 0,
   onTextChange,
+  onOverlayChange,
+  selectedOverlayId,
+  onSelectOverlay,
   text,
   phoneWidth = 232,
 }: {
@@ -36,6 +41,9 @@ export function MiniGamePreview({
   texts?: StudioGameAssets["texts"];
   padTop?: number;
   onTextChange?: (id: string, patch: Partial<StudioText>) => void;
+  onOverlayChange?: (id: string, patch: Partial<OverlayElement>) => void;
+  selectedOverlayId?: string | null;
+  onSelectOverlay?: (id: string) => void;
   text?: BrandStudioText;
   phoneWidth?: number;
   height?: number; // ignored — kept for caller compatibility
@@ -135,7 +143,9 @@ export function MiniGamePreview({
               />
               {overlays && overlays.length > 0 && (
                 <div className="absolute inset-0 pointer-events-none">
-                  <StudioOverlays overlays={overlays} />
+                  {onOverlayChange
+                    ? <EditableOverlays overlays={overlays} scale={scale} onChange={onOverlayChange} selectedId={selectedOverlayId} onSelect={onSelectOverlay} />
+                    : <StudioOverlays overlays={overlays} />}
                 </div>
               )}
               {texts && texts.length > 0 && (
