@@ -23,6 +23,7 @@ export interface CampaignCardData {
   plays_count: number;
   win_rate: number | null; // 0..1, or null when no plays
   vouchers_remaining: number;
+  play_url: string; // QR/public play URL (carries the access token when gating is on)
 }
 
 const STATUS_BADGE: Record<CampaignStatus, { label: string; cls: string }> = {
@@ -81,8 +82,7 @@ export function CampaignCard({ campaign }: { campaign: CampaignCardData }) {
   }
 
   async function copyUrl() {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
-    const url = `${base}/play/${campaign.slug}`;
+    const url = campaign.play_url;
     try {
       await navigator.clipboard.writeText(url);
       setToast("Public URL copied");

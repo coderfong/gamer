@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBrand } from "@/lib/admin/brand";
 import { GameWrapper } from "@/components/games/GameWrapper";
+import { playUrl } from "@/lib/play/qrToken";
 import type { CampaignRow, PrizeRow } from "@/lib/types/database";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export default async function PreviewPage({ params }: { params: { id: string } }
     .order("tier", { ascending: true });
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const shareUrl = `${appUrl}/play/${(campaign as CampaignRow).slug}`;
+  const shareUrl = playUrl(appUrl, (campaign as CampaignRow).slug);
 
   return (
     <div className="space-y-3">

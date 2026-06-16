@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBrand } from "@/lib/admin/brand";
+import { playUrl } from "@/lib/play/qrToken";
 import { ShareHub } from "@/components/admin/share/ShareHub";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export default async function SharePage({ params }: { params: { id: string } }) 
 
   const theme = (campaign.theme ?? {}) as { brandColor?: string; headline?: string };
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const shareUrl = `${appUrl}/play/${campaign.slug}`;
+  const shareUrl = playUrl(appUrl, campaign.slug);
 
   return (
     <div className="space-y-4">

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentBrand } from "@/lib/admin/brand";
 import { sendCampaignLaunchedEmail } from "@/lib/messaging/resend";
 import { toDataUrl } from "@/lib/utils/qrcode";
+import { playUrl } from "@/lib/play/qrToken";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +68,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   // Campaign-launched email (fire-and-forget — failure must not block launch).
   if (brand.contact_email) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const publicUrl = `${appUrl}/play/${campaign.slug}`;
+    const publicUrl = playUrl(appUrl, campaign.slug);
     try {
       const qrDataUrl = await toDataUrl(publicUrl);
       await sendCampaignLaunchedEmail({

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CampaignCardData } from "@/components/admin/CampaignCard";
 import type { CampaignStatus } from "@/lib/types/database";
+import { playUrl } from "@/lib/play/qrToken";
 
 interface PrizeLite {
   id: string;
@@ -63,6 +64,7 @@ export async function loadCampaignCards(
     playsByCampaign.set(play.campaign_id, agg);
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const cards: CampaignCardData[] = campaigns.map((c) => {
     const agg = playsByCampaign.get(c.id) ?? { total: 0, wins: 0 };
     const vouchers = c.prizes
@@ -79,6 +81,7 @@ export async function loadCampaignCards(
       plays_count: agg.total,
       win_rate: agg.total > 0 ? agg.wins / agg.total : null,
       vouchers_remaining: vouchers,
+      play_url: playUrl(appUrl, c.slug),
     };
   });
 

@@ -59,13 +59,21 @@ export function GameWrapper({
   campaign,
   shareUrl,
   preview = false,
+  accessToken = null,
 }: {
   campaign: CampaignRow & { prizes: PrizeRow[] };
   shareUrl: string;
   preview?: boolean;
+  accessToken?: string | null;
 }) {
   const theme = readTheme(campaign);
-  const previewQuery = preview ? "?preview=1" : "";
+  const apiQuery = (() => {
+    const sp = new URLSearchParams();
+    if (preview) sp.set("preview", "1");
+    if (accessToken) sp.set("k", accessToken);
+    const s = sp.toString();
+    return s ? `?${s}` : "";
+  })();
   const [stage, setStage] = useState<Stage>(campaign.require_capture ? "capture" : "playing");
   const [playId, setPlayId] = useState<string | null>(null);
   const [result, setResult] = useState<SubmitResponse | null>(null);
@@ -76,7 +84,7 @@ export function GameWrapper({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/play/${campaign.slug}/start${previewQuery}`, {
+      const res = await fetch(`/api/play/${campaign.slug}/start${apiQuery}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
@@ -102,7 +110,7 @@ export function GameWrapper({
     }
     setStage("submitting");
     try {
-      const res = await fetch(`/api/play/${campaign.slug}/submit${previewQuery}`, {
+      const res = await fetch(`/api/play/${campaign.slug}/submit${apiQuery}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ playId, ...r }),

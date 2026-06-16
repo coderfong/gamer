@@ -5,6 +5,7 @@ import { drawPrize } from "@/lib/prizes/drawPrize";
 import { lookupAndClaim } from "@/lib/prizes/skillScoreLookup";
 import { previewDraw } from "@/lib/prizes/previewDraw";
 import { ownsCampaignBySlug } from "@/lib/admin/previewGuard";
+import { qrGatingEnabled, verifySlug } from "@/lib/play/qrToken";
 import { ipHash } from "@/lib/fraud/rateLimit";
 import { preflightCheck } from "@/lib/fraud/velocityCheck";
 
@@ -67,6 +68,11 @@ export async function POST(
       flagged: false,
       preview: true,
     });
+  }
+
+  // QR-only gate (non-preview): reject submissions without the signed QR token.
+  if (qrGatingEnabled() && !verifySlug(params.slug, req.nextUrl.searchParams.get("k"))) {
+    return NextResponse.json({ error: "qr_required" }, { status: 403 });
   }
 
   const { data: play, error } = await supabase

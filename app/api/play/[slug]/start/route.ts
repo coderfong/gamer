@@ -7,6 +7,7 @@ import { verifyTurnstileToken } from "@/lib/fraud/turnstile";
 import { preflightCheck } from "@/lib/fraud/velocityCheck";
 import { checkAllLimits } from "@/lib/fraud/upstashLimits";
 import { ownsCampaignBySlug } from "@/lib/admin/previewGuard";
+import { qrGatingEnabled, verifySlug } from "@/lib/play/qrToken";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,11 @@ export async function POST(
       gameType: campaign.game_type,
       preview: true,
     });
+  }
+
+  // QR-only gate (non-preview): reject plays without the signed token the QR carries.
+  if (qrGatingEnabled() && !verifySlug(params.slug, req.nextUrl.searchParams.get("k"))) {
+    return NextResponse.json({ error: "qr_required" }, { status: 403 });
   }
 
   if (campaign.status !== "active") {
