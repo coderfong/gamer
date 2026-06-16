@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .limit(1)
     .maybeSingle();
 
-  const brandName = brand?.name ?? "gamer";
+  const brandName = brand?.name ?? "Gameable Studios";
   const initials = (user.email ?? "G").slice(0, 2).toUpperCase();
 
   return (

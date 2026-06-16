@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "../landing.css";
 import HowItWorksTabs from "@/components/site/HowItWorksTabs";
+import { BookCallButton } from "@/components/site/BookCallButton";
 
 export const metadata = {
   title: "How it works — Gameable Studios",
@@ -29,8 +30,7 @@ export default function HowItWorksPage() {
             <Link href="/#contact">Contact</Link>
           </nav>
           <div className="nav-cta">
-            <Link className="btn btn-ghost" href="/brands">Studio</Link>
-            <a className="btn btn-primary" href={`tel:${AGENCY.phone}`}>Book a call</a>
+            <BookCallButton />
           </div>
         </div>
       </header>
@@ -76,7 +76,7 @@ export default function HowItWorksPage() {
               </p>
             </div>
             <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><Link href="/#services">Services</Link></li><li><Link href="/#process">Process</Link></li></ul></div>
-            <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><Link href="/#formats">Game formats</Link></li><li><Link href="/brands">Studio login</Link></li></ul></div>
+            <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><Link href="/#formats">Game formats</Link></li></ul></div>
             <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><a href={`tel:${AGENCY.phone}`}>{AGENCY.phoneDisplay}</a></li></ul></div>
           </div>
           <div className="foot-bottom">

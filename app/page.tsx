@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { readStudioConfig } from "@/lib/types/studio";
 import { type PortfolioBrand } from "@/components/site/BrandGamePreview";
 import { BrandGameCarousel } from "@/components/site/BrandGameCarousel";
+import { BookCallButton } from "@/components/site/BookCallButton";
 import type { GameType } from "@/lib/types/game";
 
 export const dynamic = "force-dynamic";
@@ -52,8 +53,7 @@ export default async function Home() {
             <a href="#contact">Contact</a>
           </nav>
           <div className="nav-cta">
-            <Link className="btn btn-ghost" href="/brands">Studio</Link>
-            <a className="btn btn-primary" href={`tel:${AGENCY.phone}`}>Book a call</a>
+            <BookCallButton />
           </div>
         </div>
       </header>
@@ -86,9 +86,7 @@ export default async function Home() {
             </div>
           ) : (
             <div className="pf-empty">
-              No brands yet — build one in your{" "}
-              <Link href="/brands" style={{ textDecoration: "underline" }}>Studio</Link>{" "}
-              and it appears here automatically.
+              No brands yet — new games appear here automatically once they&apos;re live.
             </div>
           )}
         </div>
@@ -210,7 +208,7 @@ export default async function Home() {
               </p>
             </div>
             <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><a href="#services">Services</a></li><li><a href="#process">Process</a></li></ul></div>
-            <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><a href="#formats">Game formats</a></li><li><Link href="/brands">Studio login</Link></li></ul></div>
+            <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><a href="#formats">Game formats</a></li></ul></div>
             <div><h4>Contact</h4><ul><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><a href={`tel:${AGENCY.phone}`}>{AGENCY.phoneDisplay}</a></li></ul></div>
           </div>
           <div className="foot-bottom">

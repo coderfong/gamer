@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
 // Protected route prefixes. Anything matched here requires an authenticated user.
-const PROTECTED_PREFIXES = ["/dashboard", "/campaigns", "/billing"];
+const PROTECTED_PREFIXES = ["/dashboard", "/campaigns", "/billing", "/leads"];
 
 // Public route prefixes. These bypass auth entirely.
 const PUBLIC_PREFIXES = [
@@ -28,6 +28,38 @@ export async function middleware(req: NextRequest) {
 
   const isProtected = PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
   const isPublic = PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+
+  // --- Hidden admin auth gate (opt-in via ADMIN_LOGIN_KEY) ---------------------
+  // When the key is set: public signup is disabled and /login is invisible (404)
+  // to the public. The operator unlocks /login once per browser by visiting
+  // /login?key=<ADMIN_LOGIN_KEY>, which sets an httpOnly gate cookie; from then on
+  // the login form renders for that browser. With the key unset (dev) auth pages
+  // behave normally.
+  const adminKey = process.env.ADMIN_LOGIN_KEY;
+  if (adminKey && !user && (path === "/login" || path === "/signup")) {
+    if (path === "/signup") {
+      return NextResponse.rewrite(new URL("/__hidden", req.url));
+    }
+    const provided = req.nextUrl.searchParams.get("key");
+    const gate = req.cookies.get("ag")?.value;
+    if (provided && provided === adminKey) {
+      const clean = req.nextUrl.clone();
+      clean.searchParams.delete("key");
+      const unlocked = NextResponse.redirect(clean);
+      unlocked.cookies.set("ag", adminKey, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+      return unlocked;
+    }
+    if (gate !== adminKey) {
+      return NextResponse.rewrite(new URL("/__hidden", req.url));
+    }
+    // gate cookie valid → fall through and let the login form render
+  }
 
   if (isProtected && !user) {
     const url = req.nextUrl.clone();

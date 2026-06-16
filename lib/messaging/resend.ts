@@ -5,7 +5,7 @@ import { Resend } from "resend";
 // without an external account.
 
 const apiKey = process.env.RESEND_API_KEY;
-const fromAddress = process.env.RESEND_FROM ?? "gamer <onboarding@resend.dev>";
+const fromAddress = process.env.RESEND_FROM ?? "Gameable Studios <onboarding@resend.dev>";
 const client = apiKey ? new Resend(apiKey) : null;
 
 export interface SendResult {
@@ -19,6 +19,7 @@ async function send(args: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
 }): Promise<SendResult> {
   if (!client) {
     console.log(`[resend stub] to=${args.to} subject="${args.subject}"`);
@@ -29,6 +30,7 @@ async function send(args: {
     to: args.to,
     subject: args.subject,
     html: args.html,
+    ...(args.replyTo ? { replyTo: args.replyTo } : {}),
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true, id: data?.id };
@@ -41,7 +43,7 @@ export async function sendWelcomeEmail(args: {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const html = `
     <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="margin:0 0 16px 0;">Welcome to gamer 🎯</h1>
+      <h1 style="margin:0 0 16px 0;">Welcome to Gameable Studios 🎯</h1>
       <p>Hi there,</p>
       <p>Your account for <strong>${escapeHtml(args.brandName)}</strong> is ready.
       You can now create branded prize-game campaigns and share them with your audience.</p>
@@ -51,12 +53,12 @@ export async function sendWelcomeEmail(args: {
           Go to your dashboard
         </a>
       </p>
-      <p style="color:#666; font-size:13px;">If you didn't sign up for gamer, you can safely ignore this email.</p>
+      <p style="color:#666; font-size:13px;">If you didn't sign up for Gameable Studios, you can safely ignore this email.</p>
     </div>
   `;
   return send({
     to: args.to,
-    subject: `Welcome to gamer, ${args.brandName}!`,
+    subject: `Welcome to Gameable Studios, ${args.brandName}!`,
     html,
   });
 }
@@ -127,6 +129,38 @@ export async function sendInvoiceRequestEmail(args: {
     to: args.to,
     subject: `Invoice request from ${args.brandName}`,
     html,
+  });
+}
+
+export async function sendBookCallEmail(args: {
+  to: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  message?: string;
+}): Promise<SendResult> {
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 14px 6px 0;color:#666;font-size:13px;vertical-align:top;">${label}</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(value)}</td></tr>`;
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+      <h1 style="margin:0 0 16px 0;">New call request 📞</h1>
+      <p style="color:#444;">Someone asked to book a call from your site.</p>
+      <table style="border-collapse:collapse;margin:14px 0;">
+        ${row("Name", args.name)}
+        ${row("Email", args.email)}
+        ${row("Phone", args.phone || "—")}
+        ${row("Company", args.company || "—")}
+      </table>
+      ${args.message ? `<p style="color:#444;"><strong>Message</strong><br/>${escapeHtml(args.message).replace(/\n/g, "<br/>")}</p>` : ""}
+      <p style="color:#666; font-size:13px;">Reply directly to this email to reach them.</p>
+    </div>
+  `;
+  return send({
+    to: args.to,
+    subject: `New call request from ${args.name}`,
+    html,
+    replyTo: args.email,
   });
 }
 

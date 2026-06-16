@@ -28,11 +28,13 @@ const ICON = {
   rocket: ["M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2", "M19 3c-4 0-7 1.5-10 5l-2 3 4 4 3-2c3.5-3 5-6 5-10z", "M12.5 8.5a1.5 1.5 0 1 0 3 0 1.5 1.5 0 0 0-3 0"],
   card: ["M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z", "M2 10h20"],
   palette: ["M12 2a10 10 0 1 0 0 20c1 0 2-1 2-2s-1-2 0-3 2 1 3 1a4 4 0 0 0 4-4c0-6-4-12-9-12z", "M7.5 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1", "M12 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1", "M16 11a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"],
+  users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
 };
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: ICON.grid },
   { href: "/campaigns", label: "Campaigns", icon: ICON.rocket },
+  { href: "/leads", label: "Leads", icon: ICON.users },
   // matchPrefix lets the single-brand editor (/brand/<id>) keep this item active.
   { href: "/brands", label: "Brands", icon: ICON.palette, matchPrefix: "/brand" },
   { href: "/billing", label: "Billing", icon: ICON.card },
@@ -60,7 +62,7 @@ export function AdminSidebar({ brandName, tier }: { brandName: string; tier?: st
           {(brandName || "F").slice(0, 1).toUpperCase()}
         </span>
         <span className="leading-tight">
-          <span className="block font-extrabold text-[15px]">{brandName || "gamer"}</span>
+          <span className="block font-extrabold text-[15px]">{brandName || "Gameable Studios"}</span>
           <span className="block text-[11px] font-semibold" style={{ color: "var(--ad-faint)" }}>
             Gamified Marketing
           </span>
