@@ -8,6 +8,7 @@ import type { OverlayElement, OverlayAnimation } from "@/lib/types/campaign";
 import type { BrandStudioConfig, StudioGameAssets } from "@/lib/types/studio";
 import { buildGameConfig } from "@/lib/brand/gameAssets";
 import { MiniGamePreview } from "../MiniGamePreview";
+import { removeWhiteBackground } from "../ImageDropClean";
 
 const ENABLED = getEnabledGames();
 
@@ -73,10 +74,12 @@ export function OverlaysStepAll({ brandId, config, patchConfig }: Props) {
     if (!brandId) { setError("Brand not loaded yet — reload the page and try again."); return; }
     setBusyKey(gt); setError(null);
     try {
+      // Strip the white background to a transparent PNG, same as hero assets.
+      const cleaned = await removeWhiteBackground(file).catch(() => file);
       const supabase = createClient();
-      const ext = file.name.split(".").pop() || "png";
+      const ext = cleaned.name.split(".").pop() || "png";
       const path = `${brandId}/studio/overlay/${gt}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("brand-assets").upload(path, file, { upsert: true });
+      const { error: upErr } = await supabase.storage.from("brand-assets").upload(path, cleaned, { upsert: true });
       if (upErr) { setError(`Upload failed: ${upErr.message}`); return; }
       const url = supabase.storage.from("brand-assets").getPublicUrl(path).data.publicUrl;
       const el: OverlayElement = { id: `el-${Date.now()}`, imageUrl: url, x: 40, y: 60, width: 80, height: 80, rotation: 0, animation: "none", animations: [], opacity: 1 };

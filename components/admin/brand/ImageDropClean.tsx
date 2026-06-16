@@ -56,7 +56,7 @@ export function ImageDropClean({
 // Loads the image onto a canvas and removes only the white BACKGROUND — the
 // near-white region connected to the image edges — via a flood fill. White that
 // is part of the subject (not connected to the border) is kept. Returns a PNG.
-async function removeWhiteBackground(file: File): Promise<File> {
+export async function removeWhiteBackground(file: File): Promise<File> {
   const url = URL.createObjectURL(file);
   try {
     const img = await loadImage(url);
