@@ -167,7 +167,14 @@ export function OverlaysStepAll({ brandId, config, patchConfig }: Props) {
                         onClick={() => setSelId(el.id)}>
                         <div className="flex items-center gap-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={el.imageUrl} alt="" className="h-6 w-6 rounded border object-contain bg-white" />
+                          <img src={el.imageUrl} alt="" className="h-6 w-6 rounded border object-contain"
+                            style={{
+                              backgroundColor: "#fff",
+                              backgroundImage:
+                                "linear-gradient(45deg,#d4d4d8 25%,transparent 25%),linear-gradient(-45deg,#d4d4d8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d4d4d8 75%),linear-gradient(-45deg,transparent 75%,#d4d4d8 75%)",
+                              backgroundSize: "8px 8px",
+                              backgroundPosition: "0 0,0 4px,4px -4px,-4px 0",
+                            }} />
                           <span className="text-[10px] font-semibold" style={{ color: "var(--ad-muted)" }}>#{i + 1}</span>
                           <button type="button" onClick={(e) => { e.stopPropagation(); removeEl(gt, el.id); }} className="ml-auto text-[11px] text-red-400 hover:text-red-600">✕</button>
                         </div>
