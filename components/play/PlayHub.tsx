@@ -16,6 +16,11 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
   const [active, setActive] = useState<GameType | null>(null);
   const theme = config.theme;
 
+  // Standardised typography for the hub chrome (header + cards): plain system
+  // font, near-black, lighter weight — kept consistent across every brand. The
+  // per-brand fonts/colours still apply inside the game phone itself.
+  const STD_FONT = "var(--font-sans)";
+
   return (
     <main
       className="studio-skin arcade-shell min-h-screen px-4 py-10"
@@ -24,59 +29,54 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
         ["--brand-fg" as string]: theme.brandFg,
         ["--font-arcade" as string]: config.text?.display.font || theme.fontFamily,
         ["--font-body" as string]: config.text?.body.font || theme.fontFamily,
-        fontFamily: config.text?.body.font || theme.fontFamily,
+        fontFamily: STD_FONT,
+        color: "#18181b",
         backgroundColor: theme.bgColor,
       }}
     >
       {config.text && <style dangerouslySetInnerHTML={{ __html: studioTextCss(config.text) }} />}
-      <div className="max-w-md mx-auto">
-        <header className="flex flex-col items-center text-center gap-4 mb-10">
-          {config.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={config.logoUrl}
-              alt=""
-              className="h-20 w-20 rounded-2xl object-contain bg-white/95 p-1.5 border-4 border-black shadow-[4px_5px_0_rgba(0,0,0,1)]"
-            />
-          ) : (
-            <div
-              className="h-20 w-20 rounded-2xl flex items-center justify-center arcade-title text-4xl border-4 border-black shadow-[4px_5px_0_rgba(0,0,0,1)]"
-              style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
-            >
-              {(brandName || "?").slice(0, 1)}
-            </div>
-          )}
-          <div>
-            <h1 className="arcade-title text-4xl leading-none" style={{ color: "var(--brand-color)" }}>
-              {brandName || "Play"}
-            </h1>
-            <p className="arcade-muted mt-3 text-lg font-semibold">
-              {active ? getGameMeta(active).label : "Pick a game and play"}
-            </p>
-          </div>
+      <div className="max-w-5xl mx-auto">
+        <header className="text-center mb-12" style={{ fontFamily: STD_FONT }}>
+          <h1 className="text-4xl sm:text-5xl tracking-tight" style={{ fontWeight: 500, color: "#18181b" }}>
+            {brandName || "Play"}
+          </h1>
+          <p className="mt-3 text-lg sm:text-xl" style={{ fontWeight: 400, color: "#3f3f46" }}>
+            {active ? getGameMeta(active).label : "Pick a game and play"}
+          </p>
         </header>
 
         {active ? (
           <div className="flex flex-col items-center">
             <button
               onClick={() => setActive(null)}
-              className="self-start mb-5 arcade-chip px-4 py-2 text-base font-bold"
+              className="self-start mb-5 rounded-full border-2 border-black/80 px-4 py-2 text-base hover:bg-black/5"
+              style={{ fontFamily: STD_FONT, fontWeight: 500, color: "#18181b" }}
             >
               ← All games
             </button>
             <GameStage gameType={active} config={config} />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
             {ENABLED.map(([gt, meta]) => (
               <button
                 key={gt}
                 onClick={() => setActive(gt as GameType)}
-                className="rounded-3xl p-5 text-left transition-transform duration-100 active:translate-y-1 active:scale-[0.97] border-4 border-black shadow-[5px_6px_0_rgba(0,0,0,1)] hover:-translate-y-0.5"
-                style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
+                className="flex flex-col rounded-2xl bg-white p-5 text-left transition-transform duration-100 active:translate-y-1 active:scale-[0.98] border-2 border-black/80 shadow-[4px_5px_0_rgba(0,0,0,0.85)] hover:-translate-y-0.5"
+                style={{ fontFamily: STD_FONT, color: "#18181b" }}
               >
-                <div className="text-5xl leading-none drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]">{meta.icon}</div>
-                <div className="mt-3 arcade-title text-xl leading-tight">{meta.label}</div>
+                <div
+                  className="grid place-items-center h-14 w-14 rounded-xl text-3xl"
+                  style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
+                >
+                  {meta.icon}
+                </div>
+                <div className="mt-4 text-xl leading-tight" style={{ fontWeight: 500 }}>
+                  {meta.label}
+                </div>
+                <div className="mt-1.5 text-sm leading-snug" style={{ fontWeight: 400, color: "#52525b" }}>
+                  {meta.useCase}
+                </div>
               </button>
             ))}
           </div>
