@@ -85,6 +85,10 @@ export function buildGameConfig(
   if (gameType === "slot_machine" && typeof assets.outlineScale === "number") {
     cfg.outlineScale = assets.outlineScale;
   }
+  // Scratch card: pass through the scratch-cover (panel) size.
+  if (gameType === "scratch" && typeof assets.boxSize === "number") {
+    cfg.boxSize = assets.boxSize;
+  }
   // Plinko: pass through the board background image size (width/height %) and goal.
   if (gameType === "dice_roll") {
     if (typeof assets.boardImageW === "number") cfg.boardImageW = assets.boardImageW;

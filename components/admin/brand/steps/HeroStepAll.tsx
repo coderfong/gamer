@@ -105,6 +105,15 @@ export function HeroStepAll({ brandId, config, patchConfig }: Props) {
                     className="flex-1" />
                   <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.padTop ?? 0}</span>
                 </label>
+                {gt === "scratch" && (
+                  <label className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>Cover size</span>
+                    <input type="range" min={60} max={240} step={5} value={assets?.boxSize ?? 185}
+                      onChange={(e) => patchConfig((c) => { const g = { ...(c.games[gt] ?? {}), boxSize: Number(e.target.value) }; return { ...c, games: { ...c.games, [gt]: g } }; })}
+                      className="flex-1" />
+                    <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--ad-faint)" }}>{assets?.boxSize ?? 185}</span>
+                  </label>
+                )}
                 {gt === "slot_machine" && (
                   <label className="flex items-center gap-2">
                     <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "var(--ad-muted)" }}>Outline size</span>
