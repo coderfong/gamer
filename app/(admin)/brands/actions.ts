@@ -3,18 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { slugify } from "@/lib/utils/slug";
+import { ensureBrandSlug, uniqueBrandSlug } from "@/lib/brand/publicSlug";
 
 // Brand management actions for the /brands dashboard. Every statement runs
 // through the RLS-enforced server client, so an owner can only ever touch their
 // own brands — the WHERE never has to spell out the ownership check.
 
 type ActionError = { error: { message: string } };
-
-function newSlug(name: string): string {
-  const base = slugify(name) || "brand";
-  return `${base}-${Math.random().toString(36).slice(2, 7)}`;
-}
 
 // Create a blank brand and jump straight into its studio. Called from a form,
 // so it redirects on success.
@@ -69,7 +64,7 @@ export async function duplicateBrand(
       name: newName,
       contact_email: user.email ?? null,
       studio: (source as { studio: unknown }).studio ?? {},
-      public_slug: newSlug(newName),
+      public_slug: await uniqueBrandSlug(supabase, newName),
     })
     .select("id")
     .single();
@@ -98,7 +93,23 @@ export async function renameBrand(
   if (!trimmed) return { error: { message: "Brand name can't be empty." } };
 
   const supabase = createClient();
-  const { error } = await supabase.from("brands").update({ name: trimmed }).eq("id", id);
+  // Keep the shareable /b/<slug> URL in step with the new name.
+  const { data: existing } = await supabase
+    .from("brands")
+    .select("public_slug")
+    .eq("id", id)
+    .maybeSingle();
+  const publicSlug = await ensureBrandSlug(
+    supabase,
+    trimmed,
+    (existing as { public_slug: string | null } | null)?.public_slug ?? null,
+    id,
+  );
+
+  const { error } = await supabase
+    .from("brands")
+    .update({ name: trimmed, public_slug: publicSlug })
+    .eq("id", id);
   if (error) return { error: { message: error.message } };
 
   revalidatePath("/brands");

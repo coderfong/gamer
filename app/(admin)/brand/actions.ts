@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { slugify } from "@/lib/utils/slug";
+import { ensureBrandSlug } from "@/lib/brand/publicSlug";
 import type { BrandStudioConfig } from "@/lib/types/studio";
 
 export async function saveBrandName(
@@ -18,8 +18,25 @@ export async function saveBrandName(
   } = await supabase.auth.getUser();
   if (!user) return { error: { message: "Not signed in." } };
 
+  // Keep the public slug in step with the brand name (regenerated only when it no
+  // longer reflects the name, so unchanged names don't churn shared links).
+  const { data: existing } = await supabase
+    .from("brands")
+    .select("public_slug")
+    .eq("id", brandId)
+    .maybeSingle();
+  const publicSlug = await ensureBrandSlug(
+    supabase,
+    trimmed,
+    (existing as { public_slug: string | null } | null)?.public_slug ?? null,
+    brandId,
+  );
+
   // RLS scopes the update to the owner, so matching on id alone is safe.
-  const { error } = await supabase.from("brands").update({ name: trimmed }).eq("id", brandId);
+  const { error } = await supabase
+    .from("brands")
+    .update({ name: trimmed, public_slug: publicSlug })
+    .eq("id", brandId);
   if (error) return { error: { message: error.message } };
 
   revalidatePath(`/brand/${brandId}`);
@@ -49,11 +66,13 @@ export async function saveStudio(
   if (readErr) return { error: { message: readErr.message } };
   if (!brand) return { error: { message: "Brand not found." } };
 
-  let publicSlug = (brand as { public_slug: string | null }).public_slug;
-  if (!publicSlug) {
-    const base = slugify(brandName || (brand as { name: string }).name || "brand") || "brand";
-    publicSlug = `${base}-${Math.random().toString(36).slice(2, 7)}`;
-  }
+  const name = (brandName && brandName.trim()) || (brand as { name: string }).name || "brand";
+  const publicSlug = await ensureBrandSlug(
+    supabase,
+    name,
+    (brand as { public_slug: string | null }).public_slug,
+    brandId,
+  );
 
   const patch: Record<string, unknown> = { studio: config, public_slug: publicSlug };
   if (brandName && brandName.trim()) patch.name = brandName.trim();
