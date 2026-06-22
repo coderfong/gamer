@@ -126,6 +126,7 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
   const otherSymbols = parseSymbols(config.otherSymbols, DEFAULT_OTHERS);
   const winCount     = Math.max(1, Math.min(total, (config.winCount   as number | undefined) ?? 3));
   const coverImage   = (config.coverImage     as string | undefined) ?? null;
+  const coverScale   = Math.max(40, Math.min(160, (config.coverScale as number | undefined) ?? 100));
   const coverText    = (config.coverText      as string | undefined) ?? "?";
   const instructionTpl = (config.instructionText as string | undefined) ?? "Match {count}× {symbol} to win!";
   const instructionColor      = (config.instructionColor      as string | undefined) ?? null;
@@ -257,6 +258,7 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
                 brushRadius={brushRadius}
                 pctThreshold={pctThreshold}
                 coverImage={coverImage}
+                coverScale={coverScale}
                 coverText={coverText}
                 coverColor={pal.brand}
                 coverFg={pal.fg}
@@ -304,6 +306,7 @@ interface BoxProps {
   brushRadius: number;
   pctThreshold: number;
   coverImage: string | null;
+  coverScale: number;
   coverText: string;
   coverColor: string;
   coverFg: string;
@@ -313,7 +316,7 @@ interface BoxProps {
 
 function ScratchBox({
   symbol, isWinSymbol, shape, size, brushRadius, pctThreshold,
-  coverImage, coverText, coverColor, coverFg, accentLight, onRevealed,
+  coverImage, coverScale, coverText, coverColor, coverFg, accentLight, onRevealed,
 }: BoxProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [revealed, setRevealed] = useState(false);
@@ -332,14 +335,21 @@ function ScratchBox({
     if (coverImage) {
       const img = new window.Image();
       img.crossOrigin = "anonymous";
-      img.onload  = () => { ctx.drawImage(img, 0, 0, size, size); };
+      img.onload  = () => {
+        const s = coverScale / 100;
+        // When the cover image is shrunk below the panel, paint a plain cover
+        // behind it so the whole panel stays fully covered (and scratchable).
+        if (s < 1) drawCover(ctx, size, coverColor, coverFg, "");
+        const w = size * s, h = size * s;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+      };
       img.onerror = () => drawCover(ctx, size, coverColor, coverFg, coverText);
       img.src = coverImage;
     } else {
       drawCover(ctx, size, coverColor, coverFg, coverText);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, coverColor, coverFg, coverText, coverImage]);
+  }, [size, coverColor, coverFg, coverText, coverImage, coverScale]);
 
   function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
     const rect = canvasRef.current!.getBoundingClientRect();

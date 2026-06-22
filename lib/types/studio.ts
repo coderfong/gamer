@@ -41,8 +41,8 @@ export interface StudioGameAssets {
   padTop?: number;
   // Fill Outline (slot_machine): scale (%) of the uploaded outline image.
   outlineScale?: number;
-  // Scratch card: size (px) of each scratch panel / cover tile.
-  boxSize?: number;
+  // Scratch card: size (%) of the cover image within each panel (100 = fill).
+  coverScale?: number;
   // Plinko (dice_roll): board background image size (% of board), tuned independently.
   boardImageW?: number;
   boardImageH?: number;
