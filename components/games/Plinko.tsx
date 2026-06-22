@@ -184,12 +184,16 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
           height: boardH,
           // With a board image the default colour/vignette are dropped so only
           // the image shows (transparent areas reveal the screen background).
-          background: boardImage ? "transparent" : boardColor,
+          // Use the backgroundColor longhand (not the `background` shorthand): the
+          // shorthand resets background-position on re-render, which left-anchored
+          // the image so the width slider only ever grew it rightward.
+          backgroundColor: boardImage ? "transparent" : boardColor,
           backgroundImage: boardImage ? `url(${boardImage})` : undefined,
           // Background size is driven by the editor's width/height sliders so it
           // can be tuned independently (default 100% × 100% = fill the board).
           backgroundSize: boardImage ? `${boardImageW}% ${boardImageH}%` : undefined,
-          // Anchor to the top so raising the BG height slider extends the image
+          // Centre horizontally so the width slider extends the image both ways
+          // from the centre; anchor to the top so the height slider extends it
           // downward and never crops the top of the board art.
           backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
