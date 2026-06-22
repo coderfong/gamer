@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { GameByType } from "@/components/games/GameWrapper";
-import { StudioOverlays } from "@/components/admin/brand/StudioOverlays";
-import { StudioTexts } from "@/components/admin/brand/StudioTexts";
-import { getEnabledGames } from "@/lib/games/gameMeta";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MiniGamePreview } from "@/components/admin/brand/MiniGamePreview";
+import { getEnabledGames, getGameMeta } from "@/lib/games/gameMeta";
 import type { GameType } from "@/lib/types/game";
 import type { BrandStudioConfig } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
@@ -20,7 +18,7 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
 
   return (
     <main
-      className="studio-skin arcade-shell min-h-screen px-4 py-8"
+      className="studio-skin arcade-shell min-h-screen px-4 py-10"
       style={{
         ["--brand-color" as string]: theme.brandColor,
         ["--brand-fg" as string]: theme.brandFg,
@@ -32,37 +30,53 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
     >
       {config.text && <style dangerouslySetInnerHTML={{ __html: studioTextCss(config.text) }} />}
       <div className="max-w-md mx-auto">
-        <header className="flex items-center gap-3 mb-6">
+        <header className="flex flex-col items-center text-center gap-4 mb-10">
           {config.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={config.logoUrl} alt="" className="h-10 w-10 rounded-lg object-contain bg-white/90 p-0.5 border" />
+            <img
+              src={config.logoUrl}
+              alt=""
+              className="h-20 w-20 rounded-2xl object-contain bg-white/95 p-1.5 border-4 border-black shadow-[4px_5px_0_rgba(0,0,0,1)]"
+            />
           ) : (
-            <div className="h-10 w-10 rounded-lg flex items-center justify-center arcade-title text-lg"
-              style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}>
+            <div
+              className="h-20 w-20 rounded-2xl flex items-center justify-center arcade-title text-4xl border-4 border-black shadow-[4px_5px_0_rgba(0,0,0,1)]"
+              style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
+            >
               {(brandName || "?").slice(0, 1)}
             </div>
           )}
-          <div className="arcade-title text-xl leading-tight">{brandName || "Play"}</div>
+          <div>
+            <h1 className="arcade-title text-4xl leading-none" style={{ color: "var(--brand-color)" }}>
+              {brandName || "Play"}
+            </h1>
+            <p className="arcade-muted mt-3 text-lg font-semibold">
+              {active ? getGameMeta(active).label : "Pick a game and play"}
+            </p>
+          </div>
         </header>
 
         {active ? (
-          <div>
-            <button onClick={() => setActive(null)} className="mb-3 text-sm font-semibold" style={{ color: "var(--brand-color)" }}>
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => setActive(null)}
+              className="self-start mb-5 arcade-chip px-4 py-2 text-base font-bold"
+            >
               ← All games
             </button>
             <GameStage gameType={active} config={config} />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {ENABLED.map(([gt, meta]) => (
               <button
                 key={gt}
                 onClick={() => setActive(gt as GameType)}
-                className="rounded-2xl p-4 text-left transition-transform active:scale-95"
-                style={{ background: "var(--brand-color)", color: "var(--brand-fg)", boxShadow: "0 6px 0 rgba(0,0,0,0.18)" }}
+                className="rounded-3xl p-5 text-left transition-transform duration-100 active:translate-y-1 active:scale-[0.97] border-4 border-black shadow-[5px_6px_0_rgba(0,0,0,1)] hover:-translate-y-0.5"
+                style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
               >
-                <div className="text-3xl">{meta.icon}</div>
-                <div className="mt-2 arcade-title text-base leading-tight">{meta.label}</div>
+                <div className="text-5xl leading-none drop-shadow-[2px_2px_0_rgba(0,0,0,0.25)]">{meta.icon}</div>
+                <div className="mt-3 arcade-title text-xl leading-tight">{meta.label}</div>
               </button>
             ))}
           </div>
@@ -72,47 +86,45 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
   );
 }
 
+// Renders the selected game in a full phone mockup that scales the whole game to
+// fit (no cropping) — reuses the Brand Studio's live preview frame.
 function GameStage({ gameType, config }: { gameType: GameType; config: BrandStudioConfig }) {
   const assets = config.games[gameType];
-  const bg = assets?.bg;
-  const overlays = assets?.overlays;
-  const [key, setKey] = useState(0); // replay
+  const cfg = useMemo(() => buildGameConfig(gameType, assets, config.text), [gameType, assets, config.text]);
+
+  // Clear the display-text colour override so the game's headline falls back to
+  // the brand colour (matches the landing-page previews).
+  const text = useMemo(
+    () => ({ ...config.text, display: { ...config.text.display, color: "" } }),
+    [config.text],
+  );
+
+  // Size the phone to the available width so it never overflows the screen.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [phoneWidth, setPhoneWidth] = useState(320);
+  useEffect(() => {
+    const measure = () => {
+      const avail = wrapRef.current?.clientWidth ?? 360;
+      setPhoneWidth(Math.max(240, Math.min(360, avail)));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-3xl p-5"
-      style={{
-        background: bg?.url ? undefined : "rgba(255,255,255,0.04)",
-        boxShadow: "inset 0 2px 10px rgba(0,0,0,0.15)",
-        minHeight: 420,
-      }}
-    >
-      {bg?.url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={bg.url} alt="" className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ objectFit: "cover", opacity: bg.opacity ?? 1, transform: `translate(${bg.x ?? 0}%, ${bg.y ?? 0}%) scale(${bg.scale ?? 1})` }} />
-      )}
-      <div className="relative">
-        {assets?.padTop ? <div style={{ height: assets.padTop }} /> : null}
-        <GameByType
-          key={key}
-          gameType={gameType}
-          campaignId="hub"
-          config={buildGameConfig(gameType, assets, config.text)}
-          theme={{ brandColor: config.theme.brandColor, brandFg: config.theme.brandFg }}
-          onComplete={() => setTimeout(() => setKey((k) => k + 1), 2600)}
-        />
-      </div>
-      {overlays && overlays.length > 0 && (
-        <div className="absolute inset-0 pointer-events-none">
-          <StudioOverlays overlays={overlays} />
-        </div>
-      )}
-      {assets?.texts && assets.texts.length > 0 && (
-        <div className="absolute inset-0 pointer-events-none">
-          <StudioTexts texts={assets.texts} />
-        </div>
-      )}
+    <div ref={wrapRef} className="w-full">
+      <MiniGamePreview
+        gameType={gameType}
+        theme={config.theme}
+        config={cfg}
+        bg={assets?.bg}
+        overlays={assets?.overlays}
+        texts={assets?.texts}
+        padTop={assets?.padTop ?? 0}
+        text={text}
+        phoneWidth={phoneWidth}
+      />
     </div>
   );
 }
