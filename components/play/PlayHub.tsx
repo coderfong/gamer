@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MiniGamePreview } from "@/components/admin/brand/MiniGamePreview";
-import { getEnabledGames, getGameMeta } from "@/lib/games/gameMeta";
+import { getEnabledGames } from "@/lib/games/gameMeta";
+import type { GameMeta } from "@/lib/games/gameMeta";
 import type { GameType } from "@/lib/types/game";
 import type { BrandStudioConfig } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
@@ -18,7 +19,6 @@ const STD_FONT = "var(--font-sans)";
 // Public, just-for-fun hub: pick any of the brand's games and play it, themed and
 // asset-dressed per the Brand Studio config. No prizes / rewards.
 export function PlayHub({ brandName, config }: { brandName: string; config: BrandStudioConfig }) {
-  const [active, setActive] = useState<GameType | null>(null);
   const theme = config.theme;
 
   return (
@@ -65,71 +65,87 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
             {brandName || "Play"}
           </h1>
           <p className="mt-3 text-lg sm:text-xl" style={{ fontWeight: 400, color: "#3f3f46" }}>
-            {active ? getGameMeta(active).label : "Pick a game and play"}
+            Every game — play any of them right here
           </p>
         </header>
 
-        {active ? (
-          <div className="flex flex-col items-center">
-            <button
-              onClick={() => setActive(null)}
-              className="self-start mb-5 rounded-full border-2 border-black/80 px-4 py-2 text-base transition-colors hover:bg-black/5"
-              style={{ fontFamily: STD_FONT, fontWeight: 500, color: "#18181b" }}
-            >
-              ← All games
-            </button>
-            <GameStage gameType={active} config={config} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
-            {ENABLED.map(([gt, meta]) => (
-              <button
-                key={gt}
-                onClick={() => setActive(gt as GameType)}
-                className="group relative flex flex-col overflow-hidden rounded-2xl p-5 text-left transition-all duration-150 active:translate-y-1 active:scale-[0.98] border-2 border-black/80 shadow-[4px_5px_0_rgba(0,0,0,0.85)] hover:-translate-y-1 hover:shadow-[6px_8px_0_rgba(0,0,0,0.85)]"
-                style={{
-                  fontFamily: STD_FONT,
-                  color: "#18181b",
-                  background: "linear-gradient(180deg, color-mix(in srgb, var(--brand-color) 7%, white), #ffffff 60%)",
-                }}
-              >
-                {/* top accent bar */}
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 top-0 h-1.5"
-                  style={{ background: "var(--brand-color)" }}
-                />
-                <div
-                  className="grid place-items-center h-14 w-14 rounded-2xl text-3xl transition-transform duration-150 group-hover:-rotate-6 group-hover:scale-105"
-                  style={{
-                    background: "linear-gradient(150deg, color-mix(in srgb, var(--brand-color) 80%, white), var(--brand-color))",
-                    color: "var(--brand-fg)",
-                    boxShadow: "0 8px 18px -8px var(--brand-color)",
-                  }}
-                >
-                  {meta.icon}
-                </div>
-                <div className="mt-4 text-xl leading-tight" style={{ fontWeight: 600 }}>
-                  {meta.label}
-                </div>
-                <div className="mt-1.5 text-sm leading-snug" style={{ fontWeight: 400, color: "#52525b" }}>
-                  {meta.useCase}
-                </div>
-                <span
-                  className="mt-4 inline-flex items-center gap-1 text-sm opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-                  style={{ fontWeight: 600, color: "var(--brand-color)" }}
-                >
-                  Play <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                </span>
-              </button>
-            ))}
+        {/* All games shown as live, playable previews in a single grid. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+          {ENABLED.map(([gt, meta]) => (
+            <GamePreviewCard key={gt} gameType={gt as GameType} meta={meta} config={config} />
+          ))}
+        </div>
 
-            {/* Custom-game CTA — distinct, brand-filled card at the end */}
-            <CustomGameCard brandName={brandName} />
-          </div>
-        )}
+        {/* Custom-game CTA — distinct, brand-filled card below the previews */}
+        <div className="mt-14 max-w-md mx-auto">
+          <CustomGameCard brandName={brandName} />
+        </div>
       </div>
     </main>
+  );
+}
+
+// One live, playable game preview in the hub grid, with its label/use-case
+// underneath. The heavy game only mounts once it scrolls near the viewport, so
+// opening the page doesn't spin up every game at once.
+function GamePreviewCard({
+  gameType,
+  meta,
+  config,
+}: {
+  gameType: GameType;
+  meta: GameMeta;
+  config: BrandStudioConfig;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="flex flex-col items-center">
+      {inView ? (
+        <GameStage gameType={gameType} config={config} />
+      ) : (
+        <PhonePlaceholder />
+      )}
+      <div className="mt-4 text-center" style={{ fontFamily: STD_FONT }}>
+        <div className="text-lg leading-tight" style={{ fontWeight: 600, color: "#18181b" }}>
+          {meta.label}
+        </div>
+        <div className="mt-1 text-sm leading-snug" style={{ fontWeight: 400, color: "#52525b" }}>
+          {meta.useCase}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Phone-shaped skeleton shown before a preview mounts — keeps the grid from
+// jumping as games lazily come into view.
+function PhonePlaceholder() {
+  return (
+    <div
+      className="mx-auto w-full animate-pulse"
+      style={{ maxWidth: 320, aspectRatio: "1 / 1.92", borderRadius: 26, background: "#e4e4e7" }}
+    />
   );
 }
 
