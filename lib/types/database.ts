@@ -85,6 +85,19 @@ export interface PlayRow {
   completed_at: string | null;
 }
 
+export interface BroadcastRow {
+  id: string;
+  owner_id: string;
+  campaign_id: string | null;
+  subject: string;
+  body: string;
+  segment: string;
+  recipients: number;
+  sent: number;
+  failed: number;
+  created_at: string;
+}
+
 export interface DrawPrizeResult {
   prize_id: string | null;
   voucher_code_id: string | null;

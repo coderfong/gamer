@@ -164,6 +164,38 @@ export async function sendBookCallEmail(args: {
   });
 }
 
+export async function sendBroadcastEmail(args: {
+  to: string;
+  subject: string;
+  message: string;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  unsubscribeUrl: string;
+}): Promise<SendResult> {
+  const body = escapeHtml(args.message).replace(/\n/g, "<br/>");
+  const cta =
+    args.ctaUrl && args.ctaLabel
+      ? `<p style="margin: 24px 0;">
+           <a href="${args.ctaUrl}"
+              style="display:inline-block; padding:11px 20px; background:#6d28d9; color:white; text-decoration:none; border-radius:8px; font-weight:600;">
+             ${escapeHtml(args.ctaLabel)}
+           </a>
+         </p>`
+      : "";
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+      <div style="font-size:15px; line-height:1.5; color:#222;">${body}</div>
+      ${cta}
+      <hr style="border:none; border-top:1px solid #eee; margin:28px 0 12px;" />
+      <p style="color:#999; font-size:12px; margin:0;">
+        You're receiving this because you opted in to updates.
+        <a href="${args.unsubscribeUrl}" style="color:#999;">Unsubscribe</a>.
+      </p>
+    </div>
+  `;
+  return send({ to: args.to, subject: args.subject, html });
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({
     "&": "&amp;",

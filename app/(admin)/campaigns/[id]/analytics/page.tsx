@@ -52,6 +52,14 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
     };
   });
 
+  // Re-engagement: broadcasts that promoted this campaign (Phase 3).
+  const { data: broadcastRows } = await supabase
+    .from("broadcasts")
+    .select("sent")
+    .eq("campaign_id", params.id);
+  const broadcastCount = broadcastRows?.length ?? 0;
+  const broadcastEmailsSent = (broadcastRows ?? []).reduce((sum, b) => sum + (b.sent ?? 0), 0);
+
   const vouchersRemaining = (prizes ?? [])
     .filter((p) => !p.is_loss && p.stock_remaining !== null)
     .reduce((sum, p) => sum + (p.stock_remaining ?? 0), 0);
@@ -71,6 +79,16 @@ export default async function AnalyticsPage({ params }: { params: { id: string }
           ← Dashboard
         </Link>
       </header>
+
+      {broadcastCount > 0 ? (
+        <div
+          className="rounded-lg px-4 py-3 text-sm font-semibold"
+          style={{ background: "var(--ad-accent-soft, #f5f3ff)", color: "var(--ad-accent-ink, #5b21b6)" }}
+        >
+          📣 Re-engagement: {broadcastCount} broadcast{broadcastCount === 1 ? "" : "s"} · {broadcastEmailsSent} email
+          {broadcastEmailsSent === 1 ? "" : "s"} sent promoting this campaign.
+        </div>
+      ) : null}
 
       <AnalyticsClient
         plays={plays}
