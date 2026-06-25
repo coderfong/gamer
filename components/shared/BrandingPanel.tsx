@@ -1,4 +1,5 @@
 import type { Theme } from "@/lib/types/campaign";
+import { optimizedImage } from "@/lib/brand/imageOpt";
 
 export function BrandingPanel({ theme, campaignName }: { theme: Theme; campaignName: string }) {
   const freeMode = !!theme.nameBlock;
@@ -6,9 +7,10 @@ export function BrandingPanel({ theme, campaignName }: { theme: Theme; campaignN
   return (
     <header className="flex items-center gap-3 mb-4">
       {theme.logoUrl ? (
+        // Rendered at 48px (h-12 w-12); a 96px optimized copy covers 2x screens.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={theme.logoUrl}
+          src={optimizedImage(theme.logoUrl, 96) ?? theme.logoUrl}
           alt=""
           className="h-12 w-12 rounded-xl object-contain bg-white/90 border-2 border-white/30 p-1"
         />

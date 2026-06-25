@@ -42,6 +42,30 @@ export function heroSlotsFor(gameType: string): HeroSlot[] {
   return HERO_SLOTS[gameType] ?? [];
 }
 
+// Hero images on the live play surface render inside the ~448px (max-w-md) game
+// panel, so a 750px optimized copy stays crisp at 2x without shipping the raw
+// multi-MB upload.
+const PLAY_HERO_WIDTH = 750;
+
+// Optimize the hero-image keys in a REAL campaign's stored game config (raw
+// Supabase URLs straight from the builder) for the live /play/[slug] surface,
+// reusing the same slot registry the studio previews use. Returns a shallow
+// clone; any key that isn't a hero slot is left untouched. String values are
+// wrapped individually; array values (multi / asArray slots) element-wise.
+export function optimizeHeroConfig(
+  gameType: string,
+  config: Record<string, unknown> | null | undefined,
+  width = PLAY_HERO_WIDTH,
+): Record<string, unknown> {
+  const cfg: Record<string, unknown> = { ...(config ?? {}) };
+  for (const slot of heroSlotsFor(gameType)) {
+    const cur = cfg[slot.key];
+    if (Array.isArray(cur)) cfg[slot.key] = optimizedImageList(cur, width);
+    else if (typeof cur === "string") cfg[slot.key] = optimizedImage(cur, width);
+  }
+  return cfg;
+}
+
 // Build a game config that injects the studio's hero images (and, later,
 // background/overlay-derived keys) so previews and the play hub reflect them.
 export function buildGameConfig(

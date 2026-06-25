@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CampaignRow, PrizeRow } from "@/lib/types/database";
 import { readTheme } from "@/lib/types/campaign";
+import { optimizedImage } from "@/lib/brand/imageOpt";
+import { optimizeHeroConfig } from "@/lib/brand/gameAssets";
 
 const ANIM_MAP: Record<string, string> = {
   float:         "el-float 2.4s ease-in-out infinite",
@@ -67,6 +69,14 @@ export function GameWrapper({
   accessToken?: string | null;
 }) {
   const theme = readTheme(campaign);
+  // Full-bleed background — wrapped at 1200px (covers desktop) via the optimizer.
+  const bgImage = optimizedImage(theme.bgImageUrl, 1200);
+  // Hero images live in the stored config as raw upload URLs; optimize them
+  // before handing the config to the game component (matches the studio path).
+  const playConfig = useMemo(
+    () => optimizeHeroConfig(campaign.game_type, campaign.config),
+    [campaign.game_type, campaign.config],
+  );
   const apiQuery = (() => {
     const sp = new URLSearchParams();
     if (preview) sp.set("preview", "1");
@@ -139,10 +149,10 @@ export function GameWrapper({
           fontFamily: theme.fontFamily ?? "inherit",
           backgroundColor: theme.bgColor ?? undefined,
           // Setting backgroundImage inline overrides arcade-shell's halftone dots
-          backgroundImage: theme.bgImageUrl ? `url(${theme.bgImageUrl})` : undefined,
-          backgroundSize: theme.bgImageUrl ? "cover" : undefined,
-          backgroundPosition: theme.bgImageUrl ? "center" : undefined,
-          backgroundRepeat: theme.bgImageUrl ? "no-repeat" : undefined,
+          backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+          backgroundSize: bgImage ? "cover" : undefined,
+          backgroundPosition: bgImage ? "center" : undefined,
+          backgroundRepeat: bgImage ? "no-repeat" : undefined,
         } as React.CSSProperties
       }
     >
@@ -202,7 +212,7 @@ export function GameWrapper({
             >
               <div style={{ width: "100%", height: "100%", ...flipStyle }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={el.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+                <img src={optimizedImage(el.imageUrl, Math.ceil(Math.max(el.width, el.height) * 2))} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
               </div>
             </div>
           );
@@ -236,7 +246,7 @@ export function GameWrapper({
               <GameByType
                 gameType={campaign.game_type as GameType}
                 campaignId={campaign.id}
-                config={campaign.config}
+                config={playConfig}
                 theme={theme}
                 onComplete={handleGameComplete}
                 busy={stage === "submitting"}
