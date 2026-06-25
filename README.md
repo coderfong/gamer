@@ -1,74 +1,113 @@
-# gamer — branded prize-game platform
+# Gameable Studios — branded prize-game platform
+
+A personal agency portfolio site: I build branded, single-play prize games (spin-the-wheel,
+scratch cards, skill games, …) for clients, and run them from a full admin. **Not** a public
+SaaS — there's no public signup; the admin is reached via a hidden gate (`ADMIN_LOGIN_KEY`),
+and billing is handled manually (clients pay via PayNow).
+
+> The working brief / phase plan lives in [`PROJECT_BRIEF.md`](./PROJECT_BRIEF.md).
 
 ## Stack
-- Next.js 14 (App Router) + TypeScript + Tailwind
-- Supabase (Postgres + RPCs `draw_prize_atomic`, `claim_prize_by_tier`)
-- Cloudflare Turnstile (server-verified)
-- Upstash Ratelimit (3-layer sliding-window: per-IP, global, per-contact)
-- Custom velocity heuristics (preflight at `/start` + soft at `/submit` + sweep cron)
+- Next.js 14 (App Router) + TypeScript (strict) + Tailwind
+- Supabase (Postgres + RLS; SECURITY DEFINER RPCs `draw_prize_atomic`, `claim_prize_by_tier`)
+- Cloudflare Turnstile (server-verified) — no-op without keys
+- Upstash Ratelimit (3-layer sliding window: per-IP, global, per-contact) — no-op without keys
+- Resend (transactional + lifecycle emails) — falls back to a console stub without a key
+- Custom velocity heuristics (preflight at `/start`, soft check at `/submit`, sweep cron)
+- Vitest for the money/fraud-critical paths
 
 ## Setup
 1. `npm install`
-2. Copy `.env.example` to `.env.local`; fill at minimum Supabase. Turnstile + Upstash are optional in dev (they become no-ops when env vars are unset).
-3. Apply migrations in order:
-   - `supabase/migrations/0001_initial_schema.sql`
-   - `supabase/migrations/0002_draw_prize_function.sql` *(Phase 1)*
-   - `supabase/migrations/0003_phase2_hardening.sql` *(Phase 2 — replaces draw_prize with draw_prize_atomic + adds claim_prize_by_tier + cooldown_hours)*
-4. Seed test campaigns: `supabase/seed.sql`
+2. Copy `.env.example` to `.env.local`; fill at minimum Supabase. Turnstile / Upstash / Resend
+   are optional in dev (they become no-ops when their env vars are unset).
+3. Apply migrations in order (`supabase/migrations/0001` … `0010`). **Migrations are manual** —
+   the Supabase CLI isn't linked, so paste each file's SQL into the Supabase dashboard.
+4. Seed test campaigns + the demo brand: `supabase/seed.sql`
 5. `npm run dev`
 
-## Play these
-- `/play/test-spinwheel` — weighted-random chance game
-- `/play/test-scratch` — scratch-to-reveal
-- `/play/test-quiz` — **skill** game; score determines prize tier
-- `/play/test-slot` — slot machine
-- `/play/test-pickbox` — pick-a-box (3D flip)
+## Scripts
+- `npm run dev` / `npm run build` / `npm run start`
+- `npm run typecheck` — `tsc --noEmit`
+- `npm run lint`
+- `npm test` — Vitest (money/fraud paths); `npm run test:watch` for watch mode
 
-## Security pipeline at `/api/play/:slug/start`
+## Surfaces
+- **Public play** — `/play/[slug]`: a single campaign's game (capture → play → result/voucher).
+- **Brand hub** — `/b/[slug]`: a brand's public landing with all its games (the Studio output).
+- **Admin** (hidden gate) — fully built:
+  - `/dashboard` — campaign grid with filters, sort, search, and row actions
+  - `/campaigns/new` + `/campaigns/[id]/edit` — 5-step campaign builder
+  - `/campaigns/[id]/analytics` — recharts stats + CSV export (PDPA: brand owns the data)
+  - `/campaigns/[id]/redemptions` — voucher search + QR scan + mark-redeemed
+  - `/campaigns/[id]/preview` — owner dry-run; plays don't count, no vouchers claimed
+  - `/campaigns/[id]/share` — public URL + QR
+  - `/brands`, `/brand/[id]` — Brand Studio (visual builder for a brand's game hub)
+  - `/leads` — book-a-call leads; `/billing` — manual PayNow + invoice request
+
+## Security pipeline at `/api/play/[slug]/start`
 ```
 1. Validate body (zod)
 2. Turnstile siteverify       → 403 on fail (no-op if no secret key)
 3. Upstash checkAllLimits     → 429 on global / IP / contact bucket exhaustion
 4. Velocity preflight (DB)    → 429 on IP / fingerprint / email clusters in last 5 min
-5. Insert player + play
+5. Insert player + play       → 429 max_plays_reached if contact is at max_plays_per_player
 ```
-At `/api/play/:slug/submit`: soft velocity preflight repeats. If it trips, the play is **flagged** — `draw_prize_atomic` is called with `p_flagged=true`, which picks a prize but skips voucher claim and stock decrement. The result screen shows the prize visual but withholds the code and renders "Voucher pending verification — we'll contact you within 24 hours."
+At `/api/play/[slug]/submit`: a soft velocity preflight repeats. If it trips, the play is
+**flagged** — `draw_prize_atomic` is called with `p_flagged=true`, which picks a prize but skips
+the stock decrement and voucher claim, and the route also withholds the code. The result screen
+shows the prize visual with "Voucher pending verification — we'll contact you within 24 hours."
 
-Cron sweep (`GET /api/cron/velocity-check`, Bearer `CRON_SECRET`) flags older accumulated suspicious plays.
+Cron sweep (`GET /api/cron/velocity-check`, Bearer `CRON_SECRET`) flags older accumulated
+suspicious plays via the same thresholds.
+
+Preview mode (`?preview=1`, owner-gated) and QR gating (`ADMIN_LOGIN_KEY`-signed token) wrap the
+same routes; both degrade safely.
+
+## Image optimization
+Uploaded brand assets are raw, full-res PNGs in Supabase storage. Both the Studio previews and
+the live play surface route them through Next's optimizer via `lib/brand/imageOpt.ts`
+(`optimizedImage` / `optimizedImageList`); `optimizeHeroConfig` applies it to a campaign's stored
+game config using the `HERO_SLOTS` registry in `lib/brand/gameAssets.ts`.
+
+## Tests
+`tests/` covers only the paths that must never silently break (run with `npm test`):
+- velocity **preflight** + **sweep** thresholds (`tests/velocityCheck.test.ts`)
+- `drawPrize` RPC contract — flagged passthrough, result mapping (`tests/drawPrize.test.ts`)
+- route enforcement — `max_plays_per_player` and flagged-plays-never-leak-a-voucher
+  (`tests/playRoutes.test.ts`)
+
+They mock the Supabase admin client (`tests/helpers/mockSupabase.ts`) — no live DB required.
 
 ## Layout
 ```
 app/
-  api/play/[slug]/{start,submit}/route.ts
-  api/cron/velocity-check/route.ts
-  play/[slug]/page.tsx
-  admin/                                       — placeholder (Phase 3)
+  play/[slug]/page.tsx                         — public single-campaign game
+  b/[slug]/page.tsx                            — public brand hub
+  (admin)/                                     — fully built brand admin
+    dashboard, campaigns/{new,[id]/edit,[id]/{analytics,redemptions,preview,share}}
+    brands, brand/[id], leads, billing
+  api/play/[slug]/{start,submit}/route.ts      — public play flow (service-role, RLS-bypassing)
+  api/admin/...                                — auth'd, RLS-enforced admin routes
+  api/cron/velocity-check/route.ts             — fraud sweep
 components/
-  games/{GameWrapper,PlayerCapture,SpinWheel,ScratchCard,Quiz,SlotMachine,PickABox}.tsx
+  games/                                       — ~25 game components + GameWrapper (GameByType switch)
   shared/{ResultScreen,PrizeDisplay,VoucherCodeDisplay,ShareButton,BrandingPanel}.tsx
+  admin/  play/                                — admin UI + public play hub
 lib/
   supabase/{client,server,admin}.ts
-  prizes/{drawPrize,skillScoreLookup}.ts
+  prizes/{drawPrize,skillScoreLookup,previewDraw}.ts
   fraud/{upstashLimits,turnstile,fingerprint,velocityCheck,rateLimit}.ts
-  types/{database,campaign,game}.ts
-  utils/{slug,validation,qrcode,cn}.ts
+  brand/{imageOpt,gameAssets}.ts               — asset optimization + hero-slot registry
+  types/{database,campaign,game,studio}.ts
 supabase/
-  migrations/0001_initial_schema.sql
-  migrations/0002_draw_prize_function.sql
-  migrations/0003_phase2_hardening.sql
+  migrations/0001 … 0010 .sql
   seed.sql
-types/shims.d.ts                                — module declarations
+tests/                                         — Vitest (money/fraud paths)
 ```
-
-## Manual verification checklist (Phase 2)
-- [ ] All 5 test slugs render and complete on desktop
-- [ ] Test on mobile at 375px width — touch interactions work
-- [ ] Without Upstash env: every play succeeds (no-op fallback)
-- [ ] With Upstash env set + cooldown_hours=24: second play from same email returns 429 `rate_limited:contact`
-- [ ] With sweep manually triggered, a flagged play shows the prize but the voucher area is replaced by "pending verification"
 
 ## Tags
 - `phase-1-complete` — playable e2e, single game
-- `phase-2-complete` — security stack + 4 more games + skill scoring
-- `phase-3-step-1-complete` — supabase auth + middleware
-- `phase-3-step-2-complete` — admin shell + dashboard + welcome email
+- `phase-2-complete` — security stack + more games + skill scoring
+- `phase-3-complete` — full brand admin: builder, analytics, redemption, preview, billing
+- (later) brand studio, multi-brand, leads, and the customer-database / re-engagement work
+  tracked in [`PROJECT_BRIEF.md`](./PROJECT_BRIEF.md)
