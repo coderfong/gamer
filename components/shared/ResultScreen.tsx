@@ -15,13 +15,15 @@ export interface ResultScreenProps {
   } | null;
   voucherCode: string | null;
   flagged?: boolean;
+  /** Set when this play landed on a return-visit milestone reward. */
+  returnReward?: { visitNumber: number; target: number } | null;
   shareUrl: string;
   campaignName: string;
   brandColor?: string;
   homeUrl?: string;
 }
 
-export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignName, brandColor, homeUrl = "/" }: ResultScreenProps) {
+export function ResultScreen({ prize, voucherCode, flagged, returnReward, shareUrl, campaignName, brandColor, homeUrl = "/" }: ResultScreenProps) {
   // Flagged plays: show the prize visual but withhold the code.
   const showVoucher = !!voucherCode && !flagged;
   const showPending = !!prize && !prize.is_loss && (flagged || (!voucherCode && !flagged && !prize.is_loss));
@@ -36,6 +38,13 @@ export function ResultScreen({ prize, voucherCode, flagged, shareUrl, campaignNa
 
   return (
     <section className="space-y-6 animate-[result-in_0.5s_ease-out]">
+      {returnReward && isWin ? (
+        <div className="border rounded-xl p-3 text-center" style={{ background: "color-mix(in srgb, var(--brand-color, #6d28d9) 12%, white)", color: "var(--brand-color, #6d28d9)" }}>
+          <div className="text-sm font-extrabold">🎁 Return reward unlocked!</div>
+          <p className="text-xs mt-0.5">Thanks for coming back — this is your visit #{returnReward.visitNumber} bonus.</p>
+        </div>
+      ) : null}
+
       {prize ? (
         <PrizeDisplay
           name={prize.name}

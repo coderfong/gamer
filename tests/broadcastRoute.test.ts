@@ -10,7 +10,7 @@ let adminMock: ReturnType<typeof createMockClient>;
 const h = vi.hoisted(() => ({
   getUser: vi.fn(async () => ({ data: { user: { id: "u1" } }, error: null })),
   loadCustomers: vi.fn(),
-  sendBroadcastEmail: vi.fn(async () => ({ ok: true })),
+  sendBroadcastEmail: vi.fn(async (_args: { to: string }) => ({ ok: true })),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: () => ({ auth: { getUser: h.getUser } }) }));

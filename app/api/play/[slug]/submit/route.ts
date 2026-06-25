@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { submitPlaySchema } from "@/lib/utils/validation";
 import { drawPrize } from "@/lib/prizes/drawPrize";
 import { lookupAndClaim } from "@/lib/prizes/skillScoreLookup";
+import { maybeClaimReturnReward } from "@/lib/prizes/returnReward";
 import { previewDraw } from "@/lib/prizes/previewDraw";
 import { ownsCampaignBySlug } from "@/lib/admin/previewGuard";
 import { qrGatingEnabled, verifySlug } from "@/lib/play/qrToken";
@@ -77,14 +78,14 @@ export async function POST(
 
   const { data: play, error } = await supabase
     .from("plays")
-    .select("id, campaign_id, status, player_id, campaigns!inner(slug, status, game_type)")
+    .select("id, campaign_id, status, player_id, campaigns!inner(slug, status, game_type, config)")
     .eq("id", parsed.data.playId)
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!play) return NextResponse.json({ error: "play_not_found" }, { status: 404 });
   const campaign = (Array.isArray((play as any).campaigns)
     ? (play as any).campaigns[0]
-    : (play as any).campaigns) as { slug: string; status: string; game_type: string };
+    : (play as any).campaigns) as { slug: string; status: string; game_type: string; config: Record<string, unknown> };
   if (campaign.slug !== params.slug) {
     return NextResponse.json({ error: "slug_mismatch" }, { status: 400 });
   }
@@ -139,21 +140,38 @@ export async function POST(
 
   const isSkill = SKILL_GAMES.has(campaign.game_type);
   let result;
+  let returnReward: { visitNumber: number; target: number } | null = null;
   try {
-    result =
-      isSkill && typeof parsed.data.score === "number"
-        ? await lookupAndClaim({
-            campaignId: play.campaign_id,
-            playId: play.id,
-            score: parsed.data.score,
-            flagged,
-          })
-        : await drawPrize({
-            campaignId: play.campaign_id,
-            playId: play.id,
-            score: parsed.data.score,
-            flagged,
-          });
+    // Return-visit reward takes precedence on a milestone visit; otherwise the
+    // normal chance/skill draw runs. A milestone with no reward stock falls back
+    // to claim_prize_by_tier's loss prize, so the play always resolves.
+    const reward = await maybeClaimReturnReward({
+      campaignId: play.campaign_id,
+      playId: play.id,
+      config: campaign.config,
+      email: playerEmail,
+      fingerprint: playerFingerprint,
+      flagged,
+    });
+    if (reward) {
+      result = reward.result;
+      returnReward = { visitNumber: reward.visitNumber, target: reward.target };
+    } else {
+      result =
+        isSkill && typeof parsed.data.score === "number"
+          ? await lookupAndClaim({
+              campaignId: play.campaign_id,
+              playId: play.id,
+              score: parsed.data.score,
+              flagged,
+            })
+          : await drawPrize({
+              campaignId: play.campaign_id,
+              playId: play.id,
+              score: parsed.data.score,
+              flagged,
+            });
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: "draw_failed", message }, { status: 500 });
@@ -176,5 +194,6 @@ export async function POST(
     prize,
     voucherCode: flagged ? null : result.code,
     flagged,
+    returnReward,
   });
 }

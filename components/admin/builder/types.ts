@@ -21,6 +21,9 @@ export interface BuilderSettings {
   requireEmail?: boolean;
   redemptionInstructions?: string;
   prizeValidity?: string;
+  // Return-visit reward (collect-and-win): award a reserved prize tier on every
+  // Nth completed play by the same contact. Needs max plays per contact >= target.
+  returnReward?: { enabled?: boolean; target?: number; tier?: number };
 }
 
 export interface PrizeDraft {

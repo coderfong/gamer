@@ -32,9 +32,17 @@ export function SettingsStep({
   const [error, setError] = useState<string | null>(null);
 
   const settings = (campaign.config ?? {}) as BuilderSettings & Record<string, unknown>;
+  const rr = settings.returnReward ?? {};
 
   function setConfig(patch: Partial<BuilderSettings>) {
     setCampaign((c) => ({ ...c, config: { ...c.config, ...patch } }));
+  }
+
+  function setReturnReward(patch: Partial<NonNullable<BuilderSettings["returnReward"]>>) {
+    setCampaign((c) => ({
+      ...c,
+      config: { ...c.config, returnReward: { ...(c.config?.returnReward as object), ...patch } },
+    }));
   }
 
   async function saveAndNext() {
@@ -59,6 +67,11 @@ export function SettingsStep({
             requireEmail,
             redemptionInstructions: settings.redemptionInstructions ?? "",
             prizeValidity: settings.prizeValidity ?? "",
+            returnReward: {
+              enabled: Boolean(rr.enabled),
+              target: Number(rr.target) || 3,
+              tier: Number(rr.tier) || 1,
+            },
           },
         }),
       });
@@ -158,6 +171,41 @@ export function SettingsStep({
           placeholder="Valid until 31 Dec 2026"
         />
       </Field>
+
+      <div className="rounded-xl border p-4 space-y-3">
+        <Toggle
+          label="Return-visit reward (collect-and-win)"
+          checked={Boolean(rr.enabled)}
+          onChange={(v) => setReturnReward({ enabled: v })}
+        />
+        <p className="text-xs text-zinc-500">
+          Award a reserved prize on every Nth visit by the same contact, to drive repeat plays.
+          Set the reward prize at the chosen tier with <strong>weight 0</strong> (so it only appears
+          on milestone visits), and make sure “Max plays per contact” is at least the target.
+        </p>
+        {rr.enabled ? (
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Award every N visits">
+              <input
+                type="number"
+                min={2}
+                value={rr.target ?? 3}
+                onChange={(e) => setReturnReward({ target: Number(e.target.value) })}
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label="Reward prize tier">
+              <input
+                type="number"
+                min={1}
+                value={rr.tier ?? 1}
+                onChange={(e) => setReturnReward({ tier: Number(e.target.value) })}
+                className="w-full rounded-lg border px-3 py-2 text-sm"
+              />
+            </Field>
+          </div>
+        ) : null}
+      </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 

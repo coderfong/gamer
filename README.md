@@ -58,6 +58,14 @@ and billing is handled manually (clients pay via PayNow).
 4. Velocity preflight (DB)    → 429 on IP / fingerprint / email clusters in last 5 min
 5. Insert player + play       → 429 max_plays_reached if contact is at max_plays_per_player
 ```
+**Return-visit rewards (collect-and-win):** when a campaign sets
+`config.returnReward = { enabled, target, tier }` and allows repeat plays, every
+`target`-th completed play by the same contact awards the prize at `tier`
+(reserve it with weight 0 so it's never randomly drawn) via the atomic
+`claim_prize_by_tier` RPC — falling back to the normal draw on non-milestone
+visits and to the loss prize if the reward is out of stock. Configured in the
+builder's Settings step; the result screen celebrates the milestone.
+
 At `/api/play/[slug]/submit`: a soft velocity preflight repeats. If it trips, the play is
 **flagged** — `draw_prize_atomic` is called with `p_flagged=true`, which picks a prize but skips
 the stock decrement and voucher claim, and the route also withholds the code. The result screen

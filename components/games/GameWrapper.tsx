@@ -55,6 +55,7 @@ interface SubmitResponse {
   } | null;
   voucherCode: string | null;
   flagged?: boolean;
+  returnReward?: { visitNumber: number; target: number } | null;
 }
 
 export function GameWrapper({
@@ -257,6 +258,7 @@ export function GameWrapper({
               prize={result?.prize ?? null}
               voucherCode={result?.voucherCode ?? null}
               flagged={result?.flagged}
+              returnReward={result?.returnReward ?? null}
               shareUrl={shareUrl}
               campaignName={campaign.name}
               brandColor={theme.brandColor}
