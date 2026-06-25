@@ -1,4 +1,9 @@
 import type { StudioGameAssets, BrandStudioText } from "@/lib/types/studio";
+import { optimizedImage, optimizedImageList } from "@/lib/brand/imageOpt";
+
+// Hero images render inside the 340px-wide game, scaled down to fit the phone
+// preview — so a 384px-wide optimized copy is plenty and keeps downloads tiny.
+const HERO_PREVIEW_WIDTH = 384;
 
 // Which config keys each game exposes as an uploadable "hero" image, and how to
 // inject the value (some game configs expect an array of symbols).
@@ -59,9 +64,9 @@ export function buildGameConfig(
   for (const slot of slots) {
     if (slot.multi) {
       const list = assets.heroList?.[slot.key];
-      if (list && list.length) cfg[slot.key] = list;
+      if (list && list.length) cfg[slot.key] = optimizedImageList(list, HERO_PREVIEW_WIDTH);
     } else {
-      const url = assets.hero?.[slot.key];
+      const url = optimizedImage(assets.hero?.[slot.key], HERO_PREVIEW_WIDTH);
       if (url) cfg[slot.key] = slot.asArray ? [url] : url;
     }
   }

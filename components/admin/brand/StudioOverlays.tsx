@@ -1,6 +1,7 @@
 "use client";
 
 import type { OverlayElement, OverlayAnimation } from "@/lib/types/campaign";
+import { optimizedImage } from "@/lib/brand/imageOpt";
 
 const ANIM_MAP: Record<string, string> = {
   float:         "el-float 2.4s ease-in-out infinite",
@@ -42,7 +43,7 @@ export function OverlayInner({ el }: { el: OverlayElement }) {
   let node: React.ReactNode = (
     <div style={{ width: "100%", height: "100%", ...flipStyle }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={el.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+      <img src={optimizedImage(el.imageUrl, Math.ceil(Math.max(el.width, el.height) * 2))} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
     </div>
   );
 

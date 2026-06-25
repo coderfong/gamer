@@ -6,6 +6,7 @@ import { getGameMeta } from "@/lib/games/gameMeta";
 import type { GameType } from "@/lib/types/game";
 import type { BrandStudioTheme, BrandStudioText, StudioGameAssets } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
+import { optimizedImage } from "@/lib/brand/imageOpt";
 import { StudioOverlays } from "./StudioOverlays";
 import { EditableOverlays } from "./EditableOverlays";
 import { StudioTexts } from "./StudioTexts";
@@ -99,7 +100,7 @@ export function MiniGamePreview({
         {bg?.url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={bg.url}
+            src={optimizedImage(bg.url, Math.ceil(phoneWidth * 2))}
             alt=""
             className="absolute inset-0 w-full h-full pointer-events-none"
             style={{ objectFit: "cover", opacity: bg.opacity ?? 1, transform: `translate(${bg.x ?? 0}%, ${bg.y ?? 0}%) scale(${bg.scale ?? 1})` }}
