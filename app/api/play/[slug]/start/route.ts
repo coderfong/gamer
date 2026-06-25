@@ -132,6 +132,8 @@ export async function POST(
         phone: parsed.data.phone ?? null,
         fingerprint: parsed.data.fingerprint ?? null,
         ip_hash: ipH,
+        marketing_consent: parsed.data.marketingConsent,
+        marketing_consent_at: parsed.data.marketingConsent ? new Date().toISOString() : null,
       })
       .select("id")
       .single();

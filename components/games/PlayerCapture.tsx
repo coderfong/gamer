@@ -8,6 +8,7 @@ export interface CaptureSubmit {
   phone: string;
   fingerprint: string;
   turnstileToken: string | null;
+  marketingConsent: boolean;
 }
 
 export interface PlayerCaptureProps {
@@ -30,6 +31,7 @@ declare global {
 
 export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProps) {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [fp, setFp] = useState("");
   const [tsToken, setTsToken] = useState<string | null>(null);
   const widgetRef = useRef<HTMLDivElement | null>(null);
@@ -76,7 +78,7 @@ export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProp
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        await onSubmit({ ...form, fingerprint: fp, turnstileToken: tsToken });
+        await onSubmit({ ...form, fingerprint: fp, turnstileToken: tsToken, marketingConsent });
       }}
       className="space-y-4"
     >
@@ -110,6 +112,17 @@ export function PlayerCapture({ onSubmit, submitting, error }: PlayerCaptureProp
           placeholder="+1 555 ..."
         />
       </div>
+      {/* Separate, optional marketing opt-in — unchecked by default and never
+          required to play (PDPA). Distinct from the transactional capture above. */}
+      <label className="flex items-start gap-2 text-xs text-[var(--ink)] cursor-pointer select-none">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={marketingConsent}
+          onChange={(e) => setMarketingConsent(e.target.checked)}
+        />
+        <span>Keep me updated with news, new games and offers (optional).</span>
+      </label>
       {captchaRequired ? <div ref={widgetRef} className="flex justify-center" /> : null}
       {error ? <p className="text-red-600 text-sm font-semibold">{error}</p> : null}
       <button type="submit" className="btn-arcade w-full" disabled={!canSubmit}>

@@ -53,6 +53,21 @@ export interface PlayerRow {
   phone: string | null;
   fingerprint: string | null;
   ip_hash: string | null;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
+  created_at: string;
+}
+
+export interface LeadRow {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  message: string | null;
+  source: string;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
   created_at: string;
 }
 

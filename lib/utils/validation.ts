@@ -11,6 +11,9 @@ export const playerCaptureSchema = z.object({
   phone: z.preprocess(blankToUndef, z.string().trim().min(5).max(40).optional()),
   fingerprint: z.preprocess(blankToUndef, z.string().max(200).optional()),
   turnstileToken: z.preprocess(blankToUndef, z.string().max(4096).optional()),
+  // Separate, optional marketing opt-in (PDPA): defaults false, never implied by
+  // playing. Coerce any missing/blank value to false.
+  marketingConsent: z.preprocess((v) => v === true, z.boolean()),
 });
 
 export type PlayerCaptureInput = z.infer<typeof playerCaptureSchema>;
