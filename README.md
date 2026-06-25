@@ -20,7 +20,7 @@ and billing is handled manually (clients pay via PayNow).
 1. `npm install`
 2. Copy `.env.example` to `.env.local`; fill at minimum Supabase. Turnstile / Upstash / Resend
    are optional in dev (they become no-ops when their env vars are unset).
-3. Apply migrations in order (`supabase/migrations/0001` … `0010`). **Migrations are manual** —
+3. Apply migrations in order (`supabase/migrations/0001` … `0011`). **Migrations are manual** —
    the Supabase CLI isn't linked, so paste each file's SQL into the Supabase dashboard.
 4. Seed test campaigns + the demo brand: `supabase/seed.sql`
 5. `npm run dev`
@@ -41,6 +41,9 @@ and billing is handled manually (clients pay via PayNow).
   - `/campaigns/[id]/redemptions` — voucher search + QR scan + mark-redeemed
   - `/campaigns/[id]/preview` — owner dry-run; plays don't count, no vouchers claimed
   - `/campaigns/[id]/share` — public URL + QR
+  - `/customers` — **unified customer database**: deduped players + leads with
+    engagement history (plays/wins/redemptions/last-seen), segmentable (winners,
+    repeat, lapsed, marketing-consented) and CSV-exportable
   - `/brands`, `/brand/[id]` — Brand Studio (visual builder for a brand's game hub)
   - `/leads` — book-a-call leads; `/billing` — manual PayNow + invoice request
 
@@ -98,9 +101,10 @@ lib/
   prizes/{drawPrize,skillScoreLookup,previewDraw}.ts
   fraud/{upstashLimits,turnstile,fingerprint,velocityCheck,rateLimit}.ts
   brand/{imageOpt,gameAssets}.ts               — asset optimization + hero-slot registry
+  admin/{loadCampaignCards,loadCustomers}.ts   — dashboard + customer-database aggregation
   types/{database,campaign,game,studio}.ts
 supabase/
-  migrations/0001 … 0010 .sql
+  migrations/0001 … 0011 .sql
   seed.sql
 tests/                                         — Vitest (money/fraud paths)
 ```
