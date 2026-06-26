@@ -21,6 +21,7 @@ export function SpeedTapEditor({ campaign, setCampaign }: Props) {
   }
 
   const gameSeconds  = Math.max(2, Math.min(30, (config.gameSeconds as number | undefined) ?? 5));
+  const winScore     = Math.max(1, (config.winScore as number | undefined) ?? 20);
   const buttonSize   = Math.max(120, Math.min(260, (config.buttonSize as number | undefined) ?? 192));
   const buttonColor  = (config.buttonColor as string | undefined) ?? "#6d28d9";
   const buttonImage  = (config.buttonImage as string | undefined) ?? null;
@@ -68,6 +69,15 @@ export function SpeedTapEditor({ campaign, setCampaign }: Props) {
               onChange={(e) => patch({ gameSeconds: Number(e.target.value) })}
               className="w-full"
             />
+          </Field>
+          <Field label={`Win at · ${winScore} taps`}>
+            <input
+              type="range" min={1} max={80} step={1}
+              value={winScore}
+              onChange={(e) => patch({ winScore: Number(e.target.value) })}
+              className="w-full"
+            />
+            <span className="text-xs text-zinc-400">Players win when they reach at least this many taps.</span>
           </Field>
           <Field label={`Button size · ${buttonSize}px`}>
             <input

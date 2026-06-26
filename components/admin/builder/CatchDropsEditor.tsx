@@ -24,6 +24,7 @@ export function CatchDropsEditor({ campaign, setCampaign }: Props) {
   }
 
   const gameSeconds = Math.max(10, Math.min(90, (config.gameSeconds as number | undefined) ?? 30));
+  const winScore    = Math.max(1, (config.winScore as number | undefined) ?? 8);
   const spawnEvery  = Math.max(300, Math.min(2000, (config.spawnEvery as number | undefined) ?? 850));
   const fallSpeed   = Math.max(60, Math.min(420, (config.fallSpeed as number | undefined) ?? 150));
   const badChance   = Math.max(0, Math.min(0.8, (config.badChance as number | undefined) ?? 0.3));
@@ -80,6 +81,11 @@ export function CatchDropsEditor({ campaign, setCampaign }: Props) {
           <Field label={`Game length · ${gameSeconds}s`}>
             <input type="range" min={10} max={90} step={5} value={gameSeconds}
               onChange={(e) => patch({ gameSeconds: Number(e.target.value) })} className="w-full" />
+          </Field>
+          <Field label={`Win at · ${winScore} caught`}>
+            <input type="range" min={1} max={40} step={1} value={winScore}
+              onChange={(e) => patch({ winScore: Number(e.target.value) })} className="w-full" />
+            <span className="text-xs text-zinc-400">Players win when they catch at least this many good items.</span>
           </Field>
           <Field label={`Spawn rate · every ${spawnEvery}ms`}>
             <input type="range" min={300} max={2000} step={50} value={spawnEvery}

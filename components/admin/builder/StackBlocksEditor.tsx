@@ -22,6 +22,7 @@ export function StackBlocksEditor({ campaign, setCampaign }: Props) {
 
   const baseWidth    = Math.max(60, Math.min(200, (config.baseWidth as number | undefined) ?? 120));
   const maxStack     = Math.max(3, Math.min(20, (config.maxStack as number | undefined) ?? 8));
+  const winStack     = Math.max(2, Math.min(maxStack, (config.winStack as number | undefined) ?? 8));
   const startSpeed   = Math.max(1, Math.min(8, (config.startSpeed as number | undefined) ?? 3));
   const speedStep    = Math.max(0, Math.min(1.5, (config.speedStep as number | undefined) ?? 0.4));
   const blockColorMode = (config.blockColorMode as string | undefined) ?? "rainbow";
@@ -83,6 +84,15 @@ export function StackBlocksEditor({ campaign, setCampaign }: Props) {
               onChange={(e) => patch({ maxStack: Number(e.target.value) })}
               className="w-full"
             />
+          </Field>
+          <Field label={`Win at · ${winStack} blocks`}>
+            <input
+              type="range" min={2} max={maxStack} step={1}
+              value={winStack}
+              onChange={(e) => patch({ winStack: Number(e.target.value) })}
+              className="w-full"
+            />
+            <span className="text-xs text-zinc-400">Players win when they successfully stack at least this many.</span>
           </Field>
           <Field label={`Start speed · ${startSpeed}`}>
             <input

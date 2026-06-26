@@ -72,11 +72,12 @@ export function StopTimerEditor({ campaign, setCampaign }: Props) {
               className="w-full" />
             <span className="text-xs text-zinc-400">Players try to stop the timer exactly here.</span>
           </Field>
-          <Field label={`Perfect window · ±${perfectWindowMs}ms`}>
+          <Field label={`Win window · ±${perfectWindowMs}ms`}>
             <input type="range" min={30} max={2000} step={10}
               value={perfectWindowMs}
               onChange={(e) => patch({ perfectWindowMs: Number(e.target.value) })}
               className="w-full" />
+            <span className="text-xs text-zinc-400">Players win when they stop within this window of the target time.</span>
             <div className="flex justify-between text-xs text-zinc-400 mt-0.5">
               <span>Strict (hard)</span><span>Generous (easy)</span>
             </div>

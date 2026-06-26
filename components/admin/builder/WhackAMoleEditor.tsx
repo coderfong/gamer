@@ -24,6 +24,7 @@ export function WhackAMoleEditor({ campaign, setCampaign }: Props) {
 
   const holeCount    = ([6, 9].includes(config.holeCount as number) ? (config.holeCount as number) : 9);
   const gameSeconds  = Math.max(5, Math.min(60, (config.gameSeconds as number | undefined) ?? 15));
+  const winScore     = Math.max(1, (config.winScore as number | undefined) ?? 8);
   const moleInterval = Math.max(300, Math.min(1500, (config.moleInterval as number | undefined) ?? 750));
   const moles        = toSymbolArray(config.moleSymbols, DEFAULT_MOLES);
   const holeSize     = Math.max(60, Math.min(110, (config.holeSize as number | undefined) ?? 80));
@@ -109,6 +110,16 @@ export function WhackAMoleEditor({ campaign, setCampaign }: Props) {
               onChange={(e) => patch({ gameSeconds: Number(e.target.value) })}
               className="w-full"
             />
+          </Field>
+
+          <Field label={`Win at · ${winScore} moles`}>
+            <input
+              type="range" min={1} max={40} step={1}
+              value={winScore}
+              onChange={(e) => patch({ winScore: Number(e.target.value) })}
+              className="w-full"
+            />
+            <span className="text-xs text-zinc-400">Players win when they whack at least this many moles.</span>
           </Field>
 
           <Field label={`Mole speed · every ${moleInterval}ms`}>

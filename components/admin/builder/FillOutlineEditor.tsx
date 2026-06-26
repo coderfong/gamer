@@ -49,6 +49,7 @@ export function FillOutlineEditor({ campaign, setCampaign }: Props) {
   const outlineImage = (config.outlineImage as string | undefined) ?? null;
   const fillImage    = (config.fillImage    as string | undefined) ?? null;
   const perfectThreshold = Math.max(50, Math.min(100, (config.perfectThreshold as number | undefined) ?? 90));
+  const winFillPercent   = Math.max(1, Math.min(100, (config.winFillPercent as number | undefined) ?? 80));
   const lockAnimation = (config.lockAnimation as string | undefined) ?? "pulse";
   const instructionText       = (config.instructionText       as string | undefined) ?? "Stop the slider to fill the outline!";
   const instructionColor      = (config.instructionColor      as string | undefined) ?? "#71717a";
@@ -163,6 +164,14 @@ export function FillOutlineEditor({ campaign, setCampaign }: Props) {
               <span>Slow (easy)</span><span>Fast (hard)</span>
             </div>
           </Field>
+          <Field label={`Win threshold · ${winFillPercent}% filled`}>
+            <input type="range" min={1} max={100} step={1}
+              value={winFillPercent}
+              onChange={(e) => patch({ winFillPercent: Number(e.target.value) })}
+              className="w-full" />
+            <span className="text-xs text-zinc-400">Players win when they fill the outline to at least this %.</span>
+          </Field>
+
           <Field label={`Perfect threshold · ${perfectThreshold}% filled`}>
             <input type="range" min={50} max={100} step={1}
               value={perfectThreshold}

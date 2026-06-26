@@ -25,6 +25,8 @@ export function AngleStop({ config, theme, onComplete }: GameProps) {
 
   // ── Config ─────────────────────────────────────────────────────────────────
   const rounds      = Math.max(1, Math.min(5, (config?.rounds as number | undefined) ?? 3));
+  // Win threshold: number of rounds that must be on target (default = all rounds).
+  const winHits     = Math.max(1, Math.min(rounds, (config?.winHits as number | undefined) ?? rounds));
   const speed0      = Math.max(0.2, Math.min(2.5, (config?.sweepSpeed as number | undefined) ?? 0.55)); // sweeps/sec (constant every round)
   const tolerance   = Math.max(3, Math.min(45, (config?.tolerance as number | undefined) ?? 12)); // degrees of fill — success threshold
   const perfectTol  = Math.max(0, Math.min(tolerance, (config?.perfectTolerance as number | undefined) ?? 4));
@@ -126,8 +128,8 @@ export function AngleStop({ config, theme, onComplete }: GameProps) {
           onComplete({
             score: hitsRef.current + perfectsRef.current,
             outcome: `angle_${hitsRef.current}/${rounds}${perfectsRef.current ? `_p${perfectsRef.current}` : ""}`,
-            // Win = every round was on target.
-            won: hitsRef.current >= rounds,
+            // Win = at least the required number of rounds were on target.
+            won: hitsRef.current >= winHits,
             durationMs: Math.round(performance.now() - startTs.current),
           });
         }, 900);

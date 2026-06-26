@@ -27,6 +27,10 @@ export function ReactionEditor({ campaign, setCampaign }: Props) {
   const earlyColor  = (config.earlyColor as string | undefined) ?? "#7f1d1d";
   const goSymbol    = (config.goSymbol as string | undefined) ?? "";
   const panelHeight = Math.max(140, Math.min(320, (config.panelHeight as number | undefined) ?? 224));
+  // Win when the reaction is fast enough. Score = 1000 - reactionMs, so the
+  // "win within" time is 1000 - winScore.
+  const winScore    = Math.max(1, Math.min(999, (config.winScore as number | undefined) ?? 500));
+  const winWithinMs = 1000 - winScore;
   const instructionText       = (config.instructionText       as string | undefined) ?? "Tap the instant the panel turns green";
   const instructionColor      = (config.instructionColor      as string | undefined) ?? "#71717a";
   const instructionFontSize   = (config.instructionFontSize   as number | undefined) ?? 16;
@@ -75,6 +79,11 @@ export function ReactionEditor({ campaign, setCampaign }: Props) {
           <Field label={`Panel height · ${panelHeight}px`}>
             <input type="range" min={140} max={320} step={10} value={panelHeight}
               onChange={(e) => patch({ panelHeight: Number(e.target.value) })} className="w-full" />
+          </Field>
+          <Field label={`Win if reaction ≤ ${winWithinMs}ms`}>
+            <input type="range" min={200} max={900} step={10} value={winWithinMs}
+              onChange={(e) => patch({ winScore: 1000 - Number(e.target.value) })} className="w-full" />
+            <span className="text-xs text-zinc-400">Players win when they tap at or under this reaction time.</span>
           </Field>
         </div>
       </Section>

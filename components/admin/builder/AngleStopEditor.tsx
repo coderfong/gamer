@@ -21,6 +21,7 @@ export function AngleStopEditor({ campaign, setCampaign }: Props) {
   }
 
   const rounds      = Math.max(1, Math.min(5, (config.rounds as number | undefined) ?? 3));
+  const winHits     = Math.max(1, Math.min(rounds, (config.winHits as number | undefined) ?? rounds));
   const sweepSpeed  = Math.max(0.2, Math.min(2.5, (config.sweepSpeed as number | undefined) ?? 0.55));
   const tolerance   = Math.max(3, Math.min(45, (config.tolerance as number | undefined) ?? 12));
   const perfectTolerance = Math.max(0, Math.min(tolerance, (config.perfectTolerance as number | undefined) ?? 5));
@@ -72,6 +73,11 @@ export function AngleStopEditor({ campaign, setCampaign }: Props) {
             <input type="range" min={1} max={5} step={1} value={rounds}
               onChange={(e) => patch({ rounds: Number(e.target.value) })} className="w-full" />
             <span className="text-xs text-zinc-400">Each round gets faster. Hits counted across all rounds.</span>
+          </Field>
+          <Field label={`Win at · ${winHits} of ${rounds} rounds on target`}>
+            <input type="range" min={1} max={rounds} step={1} value={winHits}
+              onChange={(e) => patch({ winHits: Number(e.target.value) })} className="w-full" />
+            <span className="text-xs text-zinc-400">Players win when they hit at least this many rounds.</span>
           </Field>
           <Field label={`Oscillation speed · ${sweepSpeed.toFixed(2)} sweeps/s (same every round)`}>
             <input type="range" min={0.2} max={2.5} step={0.05} value={sweepSpeed}

@@ -21,6 +21,7 @@ export function TapTargetEditor({ campaign, setCampaign }: Props) {
   }
 
   const gameSeconds  = Math.max(5, Math.min(60, (config.gameSeconds as number | undefined) ?? 12));
+  const winScore     = Math.max(1, (config.winScore as number | undefined) ?? 10);
   const arenaSize    = Math.max(220, Math.min(340, (config.arenaSize as number | undefined) ?? 280));
   const targetSize   = Math.max(36, Math.min(96, (config.targetSize as number | undefined) ?? 56));
   const targetImage  = (config.targetImage as string | undefined) ?? null;
@@ -72,6 +73,15 @@ export function TapTargetEditor({ campaign, setCampaign }: Props) {
               onChange={(e) => patch({ gameSeconds: Number(e.target.value) })}
               className="w-full"
             />
+          </Field>
+          <Field label={`Win at · ${winScore} hits`}>
+            <input
+              type="range" min={1} max={40} step={1}
+              value={winScore}
+              onChange={(e) => patch({ winScore: Number(e.target.value) })}
+              className="w-full"
+            />
+            <span className="text-xs text-zinc-400">Players win when they hit the target at least this many times.</span>
           </Field>
           <Field label={`Arena size · ${arenaSize}px`}>
             <input
