@@ -301,11 +301,14 @@ function PreviewResult({
 }) {
   const [claimed, setClaimed] = useState(false);
 
+  // Same display font as the game's headline, just a bit thinner than the heavy
+  // arcade-title default.
   const heading: React.CSSProperties = {
-    fontFamily: "var(--font-body)",
+    fontFamily: "var(--font-arcade)",
     fontWeight: 400,
     fontSize: "2.6rem",
     lineHeight: 1.1,
+    letterSpacing: "0.5px",
   };
   // The exact asset on the slice/box the player landed on (already optimized).
   const prizeImg = image ? (
