@@ -113,22 +113,35 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
     [boxCount, baseHue, wrapColorMode, ribbonColorCfg],
   );
 
-  const contents = useMemo(() => {
+  // Pre-place the winning symbol inside ONE random box (a real game of chance —
+  // you win only if you pick that box). Because it's part of the box contents
+  // from the first render, its image is already in the DOM/cache, so the reveal
+  // shows the correct image instantly instead of loading it late on flip.
+  const { contents, winIndex } = useMemo(() => {
     const pool = decoys.length ? decoys : DEFAULT_DECOYS;
-    const arr: string[] = [];
-    for (let i = 0; i < boxCount; i++)
-      arr.push(pool[i % pool.length] || DEFAULT_DECOYS[i % DEFAULT_DECOYS.length]);
-    return arr;
-  }, [boxCount, decoys]);
+    const arr = Array.from(
+      { length: boxCount },
+      (_, i) => pool[i % pool.length] || DEFAULT_DECOYS[i % DEFAULT_DECOYS.length],
+    );
+    let winIdx = -1;
+    if (winSymbol) {
+      winIdx = Math.floor(Math.random() * boxCount);
+      arr[winIdx] = winSymbol;
+    }
+    return { contents: arr, winIndex: winIdx };
+  }, [boxCount, decoys, winSymbol]);
 
   function pick(i: number) {
     if (picked != null) return;
     if (startTs.current === 0) startTs.current = performance.now();
     setPicked(i);
     setTimeout(() => setRevealAll(true), 900);
+    // Win only when the picked box is the one holding the winning symbol.
+    const won = winIndex >= 0 ? i === winIndex : undefined;
     setTimeout(() => {
       onComplete({
         outcome: `box_${i}`,
+        won,
         durationMs: performance.now() - startTs.current,
       });
     }, 2800);
@@ -248,7 +261,7 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
                     }}
                   >
                     <div style={{ animation: isPicked && REVEAL[revealAnimation] ? REVEAL[revealAnimation] : undefined }}>
-                      <Face value={isPicked && winSymbol ? winSymbol : contents[i]} size={boxSize * 0.92} />
+                      <Face value={contents[i]} size={boxSize * 0.92} />
                     </div>
                   </div>
                 </div>

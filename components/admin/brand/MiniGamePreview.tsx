@@ -11,7 +11,6 @@ import { StudioOverlays } from "./StudioOverlays";
 import { EditableOverlays } from "./EditableOverlays";
 import { StudioTexts } from "./StudioTexts";
 import { EditableTexts } from "./EditableTexts";
-import { PrizeDisplay } from "@/components/shared/PrizeDisplay";
 import { VoucherTicket } from "@/components/shared/VoucherTicket";
 import type { StudioText } from "@/lib/types/studio";
 import type { OverlayElement } from "@/lib/types/campaign";
@@ -204,17 +203,30 @@ function interpretResult(r: GameResult): { won: boolean; label: string | null } 
 // The follow-up result shown after a preview play-through, so a client sees the
 // whole flow (play → result). It renders inside the same phone frame, so it
 // inherits the brand background, colours and fonts — same styling as the game.
+// The headline uses the lighter body font at a large size (less heavy than the
+// arcade display font) per the brand brief.
 function PreviewResult({ won, label, brandColor }: { won: boolean; label: string | null; brandColor?: string }) {
+  const heading: React.CSSProperties = {
+    fontFamily: "var(--font-body)",
+    fontWeight: 400,
+    fontSize: "2.6rem",
+    lineHeight: 1.1,
+  };
+
   if (!won) {
     return (
-      <div className="py-4">
-        <PrizeDisplay name="Better luck next time!" description="Give it another go — tap ↻ to replay." isLoss />
+      <div className="py-6 text-center space-y-2">
+        <h2 style={{ ...heading, color: "var(--ink, #231b2e)" }}>Better luck next time!</h2>
+        <p className="arcade-muted text-base">Give it another go — tap ↻ to replay.</p>
       </div>
     );
   }
   return (
-    <div className="space-y-4 py-2">
-      <PrizeDisplay name={label ?? "You won a prize!"} description="Your reward is ready" isLoss={false} />
+    <div className="space-y-4 py-2 text-center">
+      <div className="space-y-1">
+        <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won 🎉</div>
+        <h2 style={{ ...heading, color: "var(--brand-color)" }}>{label ?? "You won a prize!"}</h2>
+      </div>
       <VoucherTicket code="DEMO-2K9X" prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />
     </div>
   );
