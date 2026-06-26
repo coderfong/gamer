@@ -351,8 +351,7 @@ function PreviewResult({
   if (!claimed) {
     return (
       <div className="py-5 text-center space-y-3">
-        <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won! 🎉</div>
-        <h2 style={{ ...heading, color: "var(--brand-color)" }}>Almost yours…</h2>
+        <h2 style={{ ...heading, color: "var(--brand-color)" }}>You won! 🎉</h2>
         <p className="arcade-muted text-sm">Enter your email to claim your prize.</p>
         <EmailGateForm
           cta="Claim prize"
