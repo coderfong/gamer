@@ -75,6 +75,17 @@ export function MiniGamePreview({
     setStage("result");
   }, []);
 
+  // Switching to a different game must always show THAT game — even if the
+  // preview was sitting on a result / email screen. Reset to playing on change.
+  const prevGame = useRef(gameType);
+  useEffect(() => {
+    if (prevGame.current === gameType) return;
+    prevGame.current = gameType;
+    setStage("playing");
+    setOutcome({ won: true, label: null, image: null });
+    setKey((k) => k + 1);
+  }, [gameType]);
+
   // Capture a hub email against the brand (no-op in non-hub previews). Best-effort
   // — never blocks the result UI.
   const captureEmail = useCallback(
