@@ -47,6 +47,8 @@ and billing is handled manually (clients pay via PayNow).
   - `/broadcasts` — **re-engagement**: email a segment of past customers via
     Resend. Sends ONLY to marketing-consented contacts; records each send (shown
     in history + on the promoted campaign's analytics). One-click unsubscribe.
+  - `/roi` — **compounding ROI**: tenure-growing metrics (customer-list growth,
+    repeat-visit rate, redemptions per customer over time) in recharts
   - `/brands`, `/brand/[id]` — Brand Studio (visual builder for a brand's game hub)
   - `/leads` — book-a-call leads; `/billing` — manual PayNow + invoice request
 
@@ -112,7 +114,7 @@ lib/
   prizes/{drawPrize,skillScoreLookup,previewDraw}.ts
   fraud/{upstashLimits,turnstile,fingerprint,velocityCheck,rateLimit}.ts
   brand/{imageOpt,gameAssets}.ts               — asset optimization + hero-slot registry
-  admin/{loadCampaignCards,loadCustomers}.ts   — dashboard + customer-database aggregation
+  admin/{loadCampaignCards,loadCustomers,loadRoiMetrics}.ts — dashboard / customers / ROI aggregation
   messaging/{resend,unsubscribe}.ts            — email (lifecycle + broadcasts) + opt-out tokens
   types/{database,campaign,game,studio}.ts
 supabase/

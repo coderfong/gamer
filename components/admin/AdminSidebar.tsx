@@ -31,6 +31,7 @@ const ICON = {
   users: ["M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "M22 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
   contact: ["M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", "M22 7l-10 6L2 7"],
   megaphone: ["M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z", "M15 8a4 4 0 0 1 0 8", "M14 4l4 2v12l-4-2"],
+  trend: ["M3 3v18h18", "M7 14l4-4 3 3 5-6"],
 };
 
 const NAV = [
@@ -38,6 +39,7 @@ const NAV = [
   { href: "/campaigns", label: "Campaigns", icon: ICON.rocket },
   { href: "/customers", label: "Customers", icon: ICON.users },
   { href: "/broadcasts", label: "Broadcasts", icon: ICON.megaphone },
+  { href: "/roi", label: "ROI & growth", icon: ICON.trend },
   { href: "/leads", label: "Leads", icon: ICON.contact },
   // matchPrefix lets the single-brand editor (/brand/<id>) keep this item active.
   { href: "/brands", label: "Brands", icon: ICON.palette, matchPrefix: "/brand" },
