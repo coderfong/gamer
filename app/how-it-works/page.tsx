@@ -30,6 +30,7 @@ export default function HowItWorksPage() {
             <Link href="/#contact">Contact</Link>
           </nav>
           <div className="nav-cta">
+            <Link href="/portal/login" className="btn btn-ghost">Dashboard</Link>
             <BookCallButton />
           </div>
         </div>

@@ -53,6 +53,7 @@ export default async function Home() {
             <a href="#contact">Contact</a>
           </nav>
           <div className="nav-cta">
+            <Link href="/portal/login" className="btn btn-ghost">Dashboard</Link>
             <BookCallButton />
           </div>
         </div>
