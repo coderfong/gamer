@@ -143,7 +143,7 @@ export function MiniGamePreview({
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
               {stage === "result" ? (
-                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} />
+                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} onTryAgain={replay} />
               ) : (
                 <>
                   {/* Big main header above the game — uses the headline (display)
@@ -201,12 +201,68 @@ function interpretResult(r: GameResult): { won: boolean; label: string | null; i
   return { won: true, label, image };
 }
 
+// A small brand-styled email capture form used on the result screens. Demo only
+// in previews — it captures nothing, it just shows the real capture flow.
+function EmailGateForm({
+  cta,
+  placeholder = "you@email.com",
+  onSubmit,
+}: {
+  cta: string;
+  placeholder?: string;
+  onSubmit: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  return (
+    <form
+      className="mx-auto flex w-full max-w-[300px] flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+    >
+      <input
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl border-2 border-black/15 px-3.5 py-2.5 text-base outline-none focus:border-[var(--brand-color)]"
+        style={{ fontFamily: "var(--font-body)" }}
+      />
+      <button
+        type="submit"
+        className="rounded-xl px-4 py-2.5 text-base font-bold transition-transform active:scale-[0.98]"
+        style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
+      >
+        {cta}
+      </button>
+    </form>
+  );
+}
+
 // The follow-up result shown after a preview play-through, so a client sees the
-// whole flow (play → result). It renders inside the same phone frame, so it
-// inherits the brand background, colours and fonts — same styling as the game.
-// The headline uses the lighter body font at a large size (less heavy than the
-// arcade display font) per the brand brief.
-function PreviewResult({ won, label, image, brandColor }: { won: boolean; label: string | null; image: string | null; brandColor?: string }) {
+// whole flow (play → capture → result). It renders inside the same phone frame,
+// so it inherits the brand background, colours and fonts — same styling as the
+// game. Headline uses the lighter body font at a large size per the brand brief.
+//
+// Win  → email GATE first (claim to reveal the prize + voucher).
+// Loss → email ENTRY to try again and receive new games / offers.
+function PreviewResult({
+  won,
+  label,
+  image,
+  brandColor,
+  onTryAgain,
+}: {
+  won: boolean;
+  label: string | null;
+  image: string | null;
+  brandColor?: string;
+  onTryAgain: () => void;
+}) {
+  const [claimed, setClaimed] = useState(false);
+
   const heading: React.CSSProperties = {
     fontFamily: "var(--font-body)",
     fontWeight: 400,
@@ -221,13 +277,29 @@ function PreviewResult({ won, label, image, brandColor }: { won: boolean; label:
 
   if (!won) {
     return (
-      <div className="py-6 text-center space-y-2">
+      <div className="py-5 text-center space-y-3">
         {prizeImg}
         <h2 style={{ ...heading, color: "var(--ink, #231b2e)" }}>Better luck next time!</h2>
-        <p className="arcade-muted text-base">Give it another go — tap ↻ to replay.</p>
+        <p className="arcade-muted text-sm">
+          Enter your email for another try — and to get new games &amp; offers.
+        </p>
+        <EmailGateForm cta="Try again" onSubmit={onTryAgain} />
       </div>
     );
   }
+
+  // Win: gate the prize behind email capture, then reveal.
+  if (!claimed) {
+    return (
+      <div className="py-5 text-center space-y-3">
+        <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won! 🎉</div>
+        <h2 style={{ ...heading, color: "var(--brand-color)" }}>Almost yours…</h2>
+        <p className="arcade-muted text-sm">Enter your email to claim your prize.</p>
+        <EmailGateForm cta="Claim prize" onSubmit={() => setClaimed(true)} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 py-2 text-center">
       <div className="space-y-1">
