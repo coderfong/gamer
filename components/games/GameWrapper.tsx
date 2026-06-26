@@ -288,6 +288,9 @@ export function GameByType(props: {
       </div>
     );
   }
+  // NOTE: several game_type keys are LEGACY and don't match what they render
+  // (e.g. dice_roll → Plinko, slot_machine → Fill the Outline). The keys are
+  // frozen — see docs/GAME_TYPE_MAP.md. Keep this switch in sync with GAME_META.
   switch (props.gameType) {
     case "spin_wheel":
       return <SpinWheel {...props} />;

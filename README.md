@@ -107,6 +107,7 @@ app/
   api/cron/velocity-check/route.ts             — fraud sweep
 components/
   games/                                       — ~25 game components + GameWrapper (GameByType switch)
+                                                 ⚠ legacy game_type keys — see docs/GAME_TYPE_MAP.md
   shared/{ResultScreen,PrizeDisplay,VoucherCodeDisplay,ShareButton,BrandingPanel}.tsx
   admin/  play/                                — admin UI + public play hub
 lib/
