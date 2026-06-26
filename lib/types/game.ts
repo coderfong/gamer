@@ -23,6 +23,11 @@ export interface GameResult {
   score?: number;          // skill games
   outcome?: string;         // freeform e.g. wheel landed on segment N
   durationMs?: number;
+  // Optional, preview-only hints: the real play flow ignores these (the server
+  // decides the prize), but the studio/landing previews use them to show a
+  // result screen that matches what the player just saw on screen.
+  won?: boolean;            // explicit win/loss when the game can determine it visually
+  prizeLabel?: string | null; // what they landed on (e.g. the wheel slice label)
 }
 
 export interface GameProps {

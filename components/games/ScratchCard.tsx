@@ -184,10 +184,14 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
         next[idx] = true;
         if (next.every(Boolean) && !firedRef.current) {
           firedRef.current = true;
+          // Did the revealed grid actually match? (preview result uses this)
+          const matched = next.reduce((n, v, i) => n + (v && symbols[i] === winSymbol ? 1 : 0), 0);
+          const didWin = matched >= winCount;
           setTimeout(
             () =>
               onComplete({
-                outcome: "scratched",
+                outcome: didWin ? "scratch_win" : "scratch_lose",
+                won: didWin,
                 durationMs: Math.round(performance.now() - startTs.current),
               }),
             800,
@@ -196,7 +200,7 @@ export function ScratchCard({ config, theme, onComplete }: GameProps) {
         return next;
       });
     },
-    [onComplete],
+    [onComplete, symbols, winSymbol, winCount],
   );
 
   const gap = Math.max(2, Math.round(boxSize * 0.03));

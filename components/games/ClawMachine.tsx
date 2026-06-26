@@ -45,7 +45,7 @@ export function ClawMachine({ theme, onComplete }: GameProps) {
     setTimeout(() => {
       setWon(success);
       setPhase("done");
-      setTimeout(() => onComplete({ outcome: success ? "claw_grab" : "claw_miss", durationMs: timer.elapsed() }), 700);
+      setTimeout(() => onComplete({ outcome: success ? "claw_grab" : "claw_miss", won: success, durationMs: timer.elapsed() }), 700);
     }, 700);
   }
 

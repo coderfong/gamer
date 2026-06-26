@@ -112,6 +112,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
       onComplete({
         outcome: won ? "shoot_cleared" : `shoot_failed_${count - hits}`,
         score: hits,
+        won,
         durationMs: Math.round(performance.now() - startTs.current),
       });
     }, 1400);

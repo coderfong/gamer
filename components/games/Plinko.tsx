@@ -150,6 +150,7 @@ export function Plinko({ config, theme, onComplete }: GameProps) {
           onComplete({
             outcome: didWin ? "plinko_win" : `plinko_miss_${slot}`,
             score: didWin ? 1 : 0,
+            won: didWin,
             durationMs: Math.round(performance.now() - startTs.current),
           });
         }, 700);

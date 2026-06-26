@@ -53,10 +53,14 @@ export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: Ga
     const target = turns * 360 + (360 - (idx * slice + slice / 2));
     const final  = rotation - (rotation % 360) + target;
     setRotation(final);
+    const landedLabel = labels[idx % labels.length] ?? "";
+    const landedLoss = /try again|better luck|no win|lose|oops|sorry/i.test(landedLabel);
     setTimeout(() => {
       setSpinning(false);
       setTimeout(() => onComplete({
         outcome: `segment_${idx}`,
+        prizeLabel: landedLabel,
+        won: !landedLoss,
         durationMs: performance.now() - startTs.current,
       }), 600);
     }, spinDuration);

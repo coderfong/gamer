@@ -123,6 +123,7 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
       onComplete({
         outcome: won ? "cup_correct" : "cup_wrong",
         score: won ? 1 : 0,
+        won,
         durationMs: Math.round(performance.now() - startTs.current),
       });
     }, 1600));

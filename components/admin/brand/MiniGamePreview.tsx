@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameByType } from "@/components/games/GameWrapper";
 import { getGameMeta } from "@/lib/games/gameMeta";
-import type { GameType } from "@/lib/types/game";
+import type { GameType, GameResult } from "@/lib/types/game";
 import type { BrandStudioTheme, BrandStudioText, StudioGameAssets } from "@/lib/types/studio";
 import { studioTextCss } from "@/lib/types/studio";
 import { optimizedImage } from "@/lib/brand/imageOpt";
@@ -56,31 +56,20 @@ export function MiniGamePreview({
   const [size, setSize] = useState({ w: GAME_W, h: GAME_W });
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Preview the FULL flow: play → result. After a game finishes we show a sample
-  // win/lose result screen (themed by the same phone frame), then replay with the
-  // outcome flipped so the client sees both a win and a loss over two plays.
+  // Preview the FULL flow: play → result. After a game finishes we show the
+  // matching win/lose result (derived from what the player actually saw), themed
+  // by the same phone frame. We stay on the result until the player taps replay.
   const [stage, setStage] = useState<"playing" | "result">("playing");
-  const [won, setWon] = useState(true);
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [outcome, setOutcome] = useState<{ won: boolean; label: string | null }>({ won: true, label: null });
 
   const replay = useCallback(() => {
-    if (resetTimer.current) clearTimeout(resetTimer.current);
     setStage("playing");
     setKey((k) => k + 1);
   }, []);
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback((r: GameResult) => {
+    setOutcome(interpretResult(r));
     setStage("result");
-    if (resetTimer.current) clearTimeout(resetTimer.current);
-    resetTimer.current = setTimeout(() => {
-      setWon((w) => !w);
-      setStage("playing");
-      setKey((k) => k + 1);
-    }, 3400);
-  }, []);
-
-  useEffect(() => () => {
-    if (resetTimer.current) clearTimeout(resetTimer.current);
   }, []);
 
   const bezel = 6;
@@ -155,7 +144,7 @@ export function MiniGamePreview({
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
               {stage === "result" ? (
-                <PreviewResult won={won} brandColor={theme.brandColor} />
+                <PreviewResult won={outcome.won} label={outcome.label} brandColor={theme.brandColor} />
               ) : (
                 <>
                   {/* Big main header above the game — uses the headline (display)
@@ -199,20 +188,34 @@ export function MiniGamePreview({
   );
 }
 
-// Sample win/lose result shown after a preview play-through, so a client sees the
+// Turn a game's reported result into a win/lose + prize label for the preview.
+// Games that can tell visually pass `won` (and sometimes a `prizeLabel`, e.g. the
+// wheel slice); otherwise we infer from the outcome string / score, defaulting to
+// a win for reveal-style games (pick-a-box, card flip) that always land on a prize.
+function interpretResult(r: GameResult): { won: boolean; label: string | null } {
+  const label = r.prizeLabel && r.prizeLabel.trim() ? r.prizeLabel.trim() : null;
+  if (typeof r.won === "boolean") return { won: r.won, label };
+  const outcome = String(r.outcome ?? "");
+  if (/miss|wrong|fail|lose|timeout|better.?luck/i.test(outcome)) return { won: false, label };
+  if (typeof r.score === "number") return { won: r.score > 0, label };
+  return { won: true, label };
+}
+
+// The follow-up result shown after a preview play-through, so a client sees the
 // whole flow (play → result). It renders inside the same phone frame, so it
 // inherits the brand background, colours and fonts — same styling as the game.
-function PreviewResult({ won, brandColor }: { won: boolean; brandColor?: string }) {
+function PreviewResult({ won, label, brandColor }: { won: boolean; label: string | null; brandColor?: string }) {
+  if (!won) {
+    return (
+      <div className="py-4">
+        <PrizeDisplay name="Better luck next time!" description="Give it another go — tap ↻ to replay." isLoss />
+      </div>
+    );
+  }
   return (
     <div className="space-y-4 py-2">
-      {won ? (
-        <>
-          <PrizeDisplay name="10% OFF" description="Your reward is ready" isLoss={false} />
-          <VoucherTicket code="DEMO-2K9X" prizeName="10% OFF" status="valid" showQr brandColor={brandColor} />
-        </>
-      ) : (
-        <PrizeDisplay name="So close!" description="Better luck next time — play again!" isLoss />
-      )}
+      <PrizeDisplay name={label ?? "You won a prize!"} description="Your reward is ready" isLoss={false} />
+      <VoucherTicket code="DEMO-2K9X" prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />
     </div>
   );
 }

@@ -115,6 +115,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
       onComplete({
         score: placedRef.current,
         outcome: won ? `pindrop_win_${placedRef.current}` : `pindrop_fail_${placedRef.current}`,
+        won,
         durationMs: Math.round(performance.now() - startTs.current),
       });
     }, 1300);
