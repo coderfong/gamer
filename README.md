@@ -20,7 +20,7 @@ and billing is handled manually (clients pay via PayNow).
 1. `npm install`
 2. Copy `.env.example` to `.env.local`; fill at minimum Supabase. Turnstile / Upstash / Resend
    are optional in dev (they become no-ops when their env vars are unset).
-3. Apply migrations in order (`supabase/migrations/0001` … `0013`). **Migrations are manual** —
+3. Apply migrations in order (`supabase/migrations/0001` … `0014`). **Migrations are manual** —
    the Supabase CLI isn't linked, so paste each file's SQL into the Supabase dashboard.
 4. Seed test campaigns + the demo brand: `supabase/seed.sql`
 5. `npm run dev`
@@ -34,6 +34,11 @@ and billing is handled manually (clients pay via PayNow).
 ## Surfaces
 - **Public play** — `/play/[slug]`: a single campaign's game (capture → play → result/voucher).
 - **Brand hub** — `/b/[slug]`: a brand's public landing with all its games (the Studio output).
+- **Client portal** (key-gated) — `/portal`: a read-only, single-brand dashboard a
+  client signs into with a per-brand access key (set by the operator on
+  `/brand/[id]/signups`). Brand-scoped metrics + captured emails; no Supabase auth
+  account, no access to other brands. Sign-in at `/portal/login` or a one-click magic
+  link. Optional env `CLIENT_PORTAL_SECRET` signs the session cookie.
 - **Admin** (hidden gate) — fully built:
   - `/dashboard` — campaign grid with filters, sort, search, and row actions
   - `/campaigns/new` + `/campaigns/[id]/edit` — 5-step campaign builder

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { BrandSignupsView, type SignupRow } from "@/components/admin/BrandSignupsView";
+import { ClientAccessPanel } from "@/components/admin/ClientAccessPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function BrandSignupsPage({ params }: { params: { id: strin
   // RLS scopes to the owner, so a foreign id returns nothing.
   const { data: brand } = await supabase
     .from("brands")
-    .select("id, name, public_slug")
+    .select("id, name, public_slug, client_access_key")
     .eq("id", params.id)
     .maybeSingle();
   if (!brand) notFound();
@@ -28,7 +29,8 @@ export default async function BrandSignupsPage({ params }: { params: { id: strin
     .order("created_at", { ascending: false })
     .limit(2000);
   const signups = (rows as SignupRow[] | null) ?? [];
-  const b = brand as { id: string; name: string; public_slug: string | null };
+  const b = brand as { id: string; name: string; public_slug: string | null; client_access_key: string | null };
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   return (
     <div className="ad space-y-6">
@@ -46,6 +48,13 @@ export default async function BrandSignupsPage({ params }: { params: { id: strin
           ) : null}
         </div>
       </header>
+
+      <ClientAccessPanel
+        brandId={b.id}
+        publicSlug={b.public_slug}
+        accessKey={b.client_access_key}
+        appUrl={appUrl}
+      />
 
       <BrandSignupsView brandName={b.name} signups={signups} />
     </div>
