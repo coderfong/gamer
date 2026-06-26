@@ -54,6 +54,8 @@ export function WhackAMole({ config, theme, onComplete }: GameProps) {
   const holeCount   = ([6, 9].includes(config?.holeCount as number) ? (config?.holeCount as number) : 9);
   const gameMs      = Math.max(5, Math.min(60, (config?.gameSeconds as number | undefined) ?? 15)) * 1000;
   const moleInterval = Math.max(300, Math.min(1500, (config?.moleInterval as number | undefined) ?? 750));
+  // Win threshold: whack at least this many moles.
+  const winScore    = Math.max(1, (config?.winScore as number | undefined) ?? 8);
   const moles       = parseSymbols(config?.moleSymbols, DEFAULT_MOLES);
   const moleSize    = Math.max(60, Math.min(110, (config?.holeSize as number | undefined) ?? 80));
   const moleColor   = (config?.moleColor as string | undefined) ?? pal.brand;
@@ -95,7 +97,7 @@ export function WhackAMole({ config, theme, onComplete }: GameProps) {
       setActive(null);
       const finalScore = score;
       setPhase("idle");
-      onComplete({ score: finalScore, outcome: `whack_${finalScore}`, durationMs: timer.elapsed() });
+      onComplete({ score: finalScore, outcome: `whack_${finalScore}`, won: finalScore >= winScore, durationMs: timer.elapsed() });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, phase]);

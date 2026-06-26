@@ -38,6 +38,8 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
   const outlineImage = (config?.outlineImage as string | undefined) ?? null;
   const fillImage    = (config?.fillImage    as string | undefined) ?? null;
   const perfectThreshold = Math.max(50, Math.min(100, (config?.perfectThreshold as number | undefined) ?? 96));
+  // Win threshold: fill the outline to at least this %.
+  const winFillPercent   = Math.max(1, Math.min(100, (config?.winFillPercent as number | undefined) ?? 80));
   const lockAnimation = (config?.lockAnimation as string | undefined) ?? "pulse";
   const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the slider to fill the outline!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
@@ -95,6 +97,7 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
       onComplete({
         score: finalFill,
         outcome: `fill_${finalFill}`,
+        won: finalFill >= winFillPercent,
         durationMs: Math.round(performance.now() - startTs.current),
       });
     }, 1200);

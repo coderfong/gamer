@@ -52,10 +52,13 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
     setPhase("done");
     const diff = Math.abs(e - target);
     const accuracy = Math.max(0, Math.round(100 - (diff * 1000) / 12)); // ~1200ms off = 0%
+    // Win = stopped on the dot (within the perfect window of the target time).
+    const won = diff * 1000 <= perfectWindowMs;
     setTimeout(() => {
       onComplete({
         score: accuracy,
         outcome: `timer_${e.toFixed(2)}s_${accuracy}pct`,
+        won,
         durationMs: Math.round(e * 1000),
       });
     }, 1300);

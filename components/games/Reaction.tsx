@@ -31,6 +31,8 @@ export function Reaction({ config, theme, onComplete }: GameProps) {
   const idleColor   = (config?.idleColor as string | undefined) ?? "rgba(0,0,0,0.25)";
   const goSymbol    = (config?.goSymbol as string | undefined) ?? "";
   const panelHeight = Math.max(140, Math.min(320, (config?.panelHeight as number | undefined) ?? 224));
+  // Win threshold: score is max(0, 1000 - reactionMs); default 500 ≈ react within 500ms.
+  const winScore    = Math.max(1, (config?.winScore as number | undefined) ?? 500);
   const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the instant the panel turns green";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
@@ -70,7 +72,7 @@ export function Reaction({ config, theme, onComplete }: GameProps) {
       setMs(rt);
       setPhase("done");
       const score = Math.max(0, 1000 - rt);
-      onComplete({ score, outcome: `reaction_${rt}ms`, durationMs: rt });
+      onComplete({ score, outcome: `reaction_${rt}ms`, won: score >= winScore, durationMs: rt });
     }
   }
 

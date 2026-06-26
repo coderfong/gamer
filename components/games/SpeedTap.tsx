@@ -19,6 +19,8 @@ export function SpeedTap({ config, theme, onComplete }: GameProps) {
   // ── Config ─────────────────────────────────────────────────────────────────
   const gameMs       = Math.max(2, Math.min(30, (config?.gameSeconds as number | undefined) ?? 5)) * 1000;
   const buttonSize   = Math.max(120, Math.min(260, (config?.buttonSize as number | undefined) ?? 192));
+  // Win threshold: reach at least this many taps.
+  const winScore     = Math.max(1, (config?.winScore as number | undefined) ?? 20);
   const buttonColor  = (config?.buttonColor as string | undefined) ?? pal.brand;
   const buttonImage  = (config?.buttonImage as string | undefined) ?? null;
   const buttonText   = (config?.buttonText  as string | undefined) ?? "TAP!";
@@ -63,7 +65,7 @@ export function SpeedTap({ config, theme, onComplete }: GameProps) {
       if (tick.current) clearInterval(tick.current);
       const finalScore = taps;
       setPhase("idle");
-      onComplete({ score: finalScore, outcome: `tap_${finalScore}`, durationMs: timer.elapsed() });
+      onComplete({ score: finalScore, outcome: `tap_${finalScore}`, won: finalScore >= winScore, durationMs: timer.elapsed() });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, phase]);

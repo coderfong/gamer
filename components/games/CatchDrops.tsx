@@ -55,6 +55,8 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
   const fallSpeed   = Math.max(60, Math.min(420, (config?.fallSpeed as number | undefined) ?? 150)); // px/s
   const badChance   = Math.max(0, Math.min(0.8, (config?.badChance as number | undefined) ?? 0.3));
   const lives0      = Math.max(1, Math.min(9, (config?.lives as number | undefined) ?? 3));
+  // Win threshold: catch at least this many good items.
+  const winScore    = Math.max(1, (config?.winScore as number | undefined) ?? 8);
   const goodSyms    = parseList(config?.goodSymbols, DEFAULT_GOOD);
   const badSyms     = parseList(config?.badSymbols, DEFAULT_BAD);
   const objSize     = Math.max(24, Math.min(80, (config?.objectSize as number | undefined) ?? 52));
@@ -108,6 +110,7 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
       onComplete({
         score: scoreRef.current,
         outcome: `catch_${scoreRef.current}`,
+        won: scoreRef.current >= winScore,
         durationMs: Math.round(performance.now() - startTs.current),
       });
     }, 1200);

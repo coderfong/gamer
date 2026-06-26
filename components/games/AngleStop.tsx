@@ -126,6 +126,8 @@ export function AngleStop({ config, theme, onComplete }: GameProps) {
           onComplete({
             score: hitsRef.current + perfectsRef.current,
             outcome: `angle_${hitsRef.current}/${rounds}${perfectsRef.current ? `_p${perfectsRef.current}` : ""}`,
+            // Win = every round was on target.
+            won: hitsRef.current >= rounds,
             durationMs: Math.round(performance.now() - startTs.current),
           });
         }, 900);

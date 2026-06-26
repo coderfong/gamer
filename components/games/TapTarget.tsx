@@ -26,6 +26,8 @@ export function TapTarget({ config, theme, onComplete }: GameProps) {
   const gameMs      = Math.max(5, Math.min(60, (config?.gameSeconds as number | undefined) ?? 12)) * 1000;
   const arena       = Math.max(220, Math.min(340, (config?.arenaSize as number | undefined) ?? 280));
   const targetSize  = Math.max(36, Math.min(96, (config?.targetSize as number | undefined) ?? 56));
+  // Win threshold: hit the target at least this many times.
+  const winScore    = Math.max(1, (config?.winScore as number | undefined) ?? 10);
   const targetImage = (config?.targetImage as string | undefined) ?? null;
   const targetColor = (config?.targetColor as string | undefined) ?? pal.brand;
   const arenaColor  = (config?.arenaColor  as string | undefined) ?? null;
@@ -72,7 +74,7 @@ export function TapTarget({ config, theme, onComplete }: GameProps) {
       if (tick.current) clearInterval(tick.current);
       const finalScore = score;
       setPhase("idle");
-      onComplete({ score: finalScore, outcome: `target_${finalScore}`, durationMs: timer.elapsed() });
+      onComplete({ score: finalScore, outcome: `target_${finalScore}`, won: finalScore >= winScore, durationMs: timer.elapsed() });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, phase]);

@@ -17,6 +17,8 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
   // ── Config ─────────────────────────────────────────────────────────────────
   const baseW       = Math.max(60, Math.min(200, (config?.baseWidth as number | undefined) ?? 120));
   const maxStack    = Math.max(3, Math.min(20, (config?.maxStack as number | undefined) ?? 10));
+  // Win threshold: successfully stack at least this many blocks.
+  const winStack    = Math.max(2, Math.min(maxStack, (config?.winStack as number | undefined) ?? 8));
   const startSpeed  = Math.max(1, Math.min(16, (config?.startSpeed as number | undefined) ?? 7));
   const speedStep   = Math.max(0, Math.min(3, (config?.speedStep as number | undefined) ?? 1));
   const blockColorMode = (config?.blockColorMode as string | undefined) ?? "rainbow"; // rainbow | solid
@@ -84,7 +86,7 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
   function finish(stack: number) {
     if (iv.current) clearInterval(iv.current);
     setPhase("done");
-    onComplete({ score: stack, outcome: `stack_${stack}`, durationMs: timer.elapsed() });
+    onComplete({ score: stack, outcome: `stack_${stack}`, won: stack >= winStack, durationMs: timer.elapsed() });
   }
 
   function drop() {
