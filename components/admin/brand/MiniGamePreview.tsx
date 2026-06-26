@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GameByType } from "@/components/games/GameWrapper";
 import { getGameMeta } from "@/lib/games/gameMeta";
 import type { GameType } from "@/lib/types/game";
@@ -11,6 +11,8 @@ import { StudioOverlays } from "./StudioOverlays";
 import { EditableOverlays } from "./EditableOverlays";
 import { StudioTexts } from "./StudioTexts";
 import { EditableTexts } from "./EditableTexts";
+import { PrizeDisplay } from "@/components/shared/PrizeDisplay";
+import { VoucherTicket } from "@/components/shared/VoucherTicket";
 import type { StudioText } from "@/lib/types/studio";
 import type { OverlayElement } from "@/lib/types/campaign";
 
@@ -54,6 +56,33 @@ export function MiniGamePreview({
   const [size, setSize] = useState({ w: GAME_W, h: GAME_W });
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Preview the FULL flow: play → result. After a game finishes we show a sample
+  // win/lose result screen (themed by the same phone frame), then replay with the
+  // outcome flipped so the client sees both a win and a loss over two plays.
+  const [stage, setStage] = useState<"playing" | "result">("playing");
+  const [won, setWon] = useState(true);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const replay = useCallback(() => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    setStage("playing");
+    setKey((k) => k + 1);
+  }, []);
+
+  const handleComplete = useCallback(() => {
+    setStage("result");
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => {
+      setWon((w) => !w);
+      setStage("playing");
+      setKey((k) => k + 1);
+    }, 3400);
+  }, []);
+
+  useEffect(() => () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+  }, []);
+
   const bezel = 6;
   const innerW = phoneWidth - bezel * 2;
   const screenH = Math.round(phoneWidth * 1.92);
@@ -71,7 +100,7 @@ export function MiniGamePreview({
     ro.observe(el);
     update();
     return () => ro.disconnect();
-  }, [key]);
+  }, [key, stage]);
 
   const scale = Math.min(availW / Math.max(1, size.w), availH / Math.max(1, size.h));
 
@@ -113,7 +142,7 @@ export function MiniGamePreview({
         {/* reset / replay */}
         <button
           type="button"
-          onClick={() => setKey((k) => k + 1)}
+          onClick={replay}
           title="Replay"
           className="absolute z-30 grid place-items-center rounded-full"
           style={{ top: 6, right: 6, width: 24, height: 24, background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: 13 }}
@@ -125,41 +154,65 @@ export function MiniGamePreview({
         <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: topPad }}>
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
-              {/* Big main header above the game — uses the headline (display)
-                  text settings via the .arcade-display class. */}
-              <div
-                className="arcade-display text-center leading-none"
-                style={{ fontSize: text?.display.size ?? 30, color: "var(--brand-color)", marginBottom: gameType === "spin_wheel" ? 64 : 32, letterSpacing: "0.12em" }}
-              >
-                {getGameMeta(gameType).headline}
-              </div>
-              {padTop > 0 && <div style={{ height: padTop }} />}
-              <GameByType
-                key={key}
-                gameType={gameType}
-                campaignId="studio-preview"
-                config={cfg}
-                theme={{ brandColor: theme.brandColor, brandFg: theme.brandFg }}
-                onComplete={() => setTimeout(() => setKey((k) => k + 1), 2400)}
-              />
-              {overlays && overlays.length > 0 && (
-                <div className="absolute inset-0 pointer-events-none">
-                  {onOverlayChange
-                    ? <EditableOverlays overlays={overlays} scale={scale} onChange={onOverlayChange} selectedId={selectedOverlayId} onSelect={onSelectOverlay} />
-                    : <StudioOverlays overlays={overlays} />}
-                </div>
-              )}
-              {texts && texts.length > 0 && (
-                <div className="absolute inset-0 pointer-events-none">
-                  {onTextChange
-                    ? <EditableTexts texts={texts} scale={scale} onChange={onTextChange} />
-                    : <StudioTexts texts={texts} />}
-                </div>
+              {stage === "result" ? (
+                <PreviewResult won={won} brandColor={theme.brandColor} />
+              ) : (
+                <>
+                  {/* Big main header above the game — uses the headline (display)
+                      text settings via the .arcade-display class. */}
+                  <div
+                    className="arcade-display text-center leading-none"
+                    style={{ fontSize: text?.display.size ?? 30, color: "var(--brand-color)", marginBottom: gameType === "spin_wheel" ? 64 : 32, letterSpacing: "0.12em" }}
+                  >
+                    {getGameMeta(gameType).headline}
+                  </div>
+                  {padTop > 0 && <div style={{ height: padTop }} />}
+                  <GameByType
+                    key={key}
+                    gameType={gameType}
+                    campaignId="studio-preview"
+                    config={cfg}
+                    theme={{ brandColor: theme.brandColor, brandFg: theme.brandFg }}
+                    onComplete={handleComplete}
+                  />
+                  {overlays && overlays.length > 0 && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {onOverlayChange
+                        ? <EditableOverlays overlays={overlays} scale={scale} onChange={onOverlayChange} selectedId={selectedOverlayId} onSelect={onSelectOverlay} />
+                        : <StudioOverlays overlays={overlays} />}
+                    </div>
+                  )}
+                  {texts && texts.length > 0 && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {onTextChange
+                        ? <EditableTexts texts={texts} scale={scale} onChange={onTextChange} />
+                        : <StudioTexts texts={texts} />}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Sample win/lose result shown after a preview play-through, so a client sees the
+// whole flow (play → result). It renders inside the same phone frame, so it
+// inherits the brand background, colours and fonts — same styling as the game.
+function PreviewResult({ won, brandColor }: { won: boolean; brandColor?: string }) {
+  return (
+    <div className="space-y-4 py-2">
+      {won ? (
+        <>
+          <PrizeDisplay name="10% OFF" description="Your reward is ready" isLoss={false} />
+          <VoucherTicket code="DEMO-2K9X" prizeName="10% OFF" status="valid" showQr brandColor={brandColor} />
+        </>
+      ) : (
+        <PrizeDisplay name="So close!" description="Better luck next time — play again!" isLoss />
+      )}
     </div>
   );
 }
