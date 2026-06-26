@@ -18,7 +18,7 @@ const STD_FONT = "var(--font-sans)";
 
 // Public, just-for-fun hub: pick any of the brand's games and play it, themed and
 // asset-dressed per the Brand Studio config. No prizes / rewards.
-export function PlayHub({ brandName, config }: { brandName: string; config: BrandStudioConfig }) {
+export function PlayHub({ brandName, config, captureSlug }: { brandName: string; config: BrandStudioConfig; captureSlug?: string }) {
   const theme = config.theme;
 
   return (
@@ -72,7 +72,7 @@ export function PlayHub({ brandName, config }: { brandName: string; config: Bran
         {/* All games shown as live, playable previews in a single grid. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
           {ENABLED.map(([gt, meta]) => (
-            <GamePreviewCard key={gt} gameType={gt as GameType} meta={meta} config={config} />
+            <GamePreviewCard key={gt} gameType={gt as GameType} meta={meta} config={config} captureSlug={captureSlug} />
           ))}
         </div>
 
@@ -92,10 +92,12 @@ function GamePreviewCard({
   gameType,
   meta,
   config,
+  captureSlug,
 }: {
   gameType: GameType;
   meta: GameMeta;
   config: BrandStudioConfig;
+  captureSlug?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -122,7 +124,7 @@ function GamePreviewCard({
   return (
     <div ref={ref} className="flex flex-col items-center">
       {inView ? (
-        <GameStage gameType={gameType} config={config} />
+        <GameStage gameType={gameType} config={config} captureSlug={captureSlug} />
       ) : (
         <PhonePlaceholder />
       )}
@@ -320,7 +322,7 @@ function CustomGameModal({ brandName, onClose }: { brandName: string; onClose: (
 
 // Renders the selected game in a full phone mockup that scales the whole game to
 // fit (no cropping) — reuses the Brand Studio's live preview frame.
-function GameStage({ gameType, config }: { gameType: GameType; config: BrandStudioConfig }) {
+function GameStage({ gameType, config, captureSlug }: { gameType: GameType; config: BrandStudioConfig; captureSlug?: string }) {
   const assets = config.games[gameType];
   const cfg = useMemo(() => buildGameConfig(gameType, assets, config.text), [gameType, assets, config.text]);
 
@@ -356,6 +358,7 @@ function GameStage({ gameType, config }: { gameType: GameType; config: BrandStud
         padTop={assets?.padTop ?? 0}
         text={text}
         phoneWidth={phoneWidth}
+        captureSlug={captureSlug}
       />
     </div>
   );

@@ -85,6 +85,18 @@ export interface PlayRow {
   completed_at: string | null;
 }
 
+export interface BrandSignupRow {
+  id: string;
+  brand_id: string;
+  email: string;
+  name: string | null;
+  game_type: string | null;
+  won: boolean | null;
+  marketing_consent: boolean;
+  source: string;
+  created_at: string;
+}
+
 export interface BroadcastRow {
   id: string;
   owner_id: string;

@@ -34,6 +34,7 @@ export function MiniGamePreview({
   onSelectOverlay,
   text,
   phoneWidth = 232,
+  captureSlug,
 }: {
   gameType: GameType;
   theme: BrandStudioTheme;
@@ -49,6 +50,9 @@ export function MiniGamePreview({
   text?: BrandStudioText;
   phoneWidth?: number;
   height?: number; // ignored — kept for caller compatibility
+  // When set (brand play hub), the result's email forms capture to this brand
+  // via /api/hub/<slug>/signup. Unset (studio editor / landing portfolio) = demo.
+  captureSlug?: string;
 }) {
   const cfg = useMemo(() => config, [config]);
   const [key, setKey] = useState(0);
@@ -70,6 +74,24 @@ export function MiniGamePreview({
     setOutcome(interpretResult(r));
     setStage("result");
   }, []);
+
+  // Capture a hub email against the brand (no-op in non-hub previews). Best-effort
+  // — never blocks the result UI.
+  const captureEmail = useCallback(
+    async (email: string, consent: boolean) => {
+      if (!captureSlug) return;
+      try {
+        await fetch(`/api/hub/${captureSlug}/signup`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, gameType, won: outcome.won, marketingConsent: consent }),
+        });
+      } catch {
+        /* ignore — preview capture is best-effort */
+      }
+    },
+    [captureSlug, gameType, outcome.won],
+  );
 
   const bezel = 6;
   const innerW = phoneWidth - bezel * 2;
@@ -143,7 +165,7 @@ export function MiniGamePreview({
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
               {stage === "result" ? (
-                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} onTryAgain={replay} />
+                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} onTryAgain={replay} onCapture={captureEmail} />
               ) : (
                 <>
                   {/* Big main header above the game — uses the headline (display)
@@ -201,24 +223,31 @@ function interpretResult(r: GameResult): { won: boolean; label: string | null; i
   return { won: true, label, image };
 }
 
-// A small brand-styled email capture form used on the result screens. Demo only
-// in previews — it captures nothing, it just shows the real capture flow.
+// A small brand-styled email capture form used on the result screens. On a brand
+// play hub it captures to that brand; in other previews it just shows the flow.
 function EmailGateForm({
   cta,
   placeholder = "you@email.com",
+  consentLabel,
+  defaultConsent = false,
   onSubmit,
 }: {
   cta: string;
   placeholder?: string;
-  onSubmit: () => void;
+  consentLabel?: string;       // optional opt-in checkbox
+  defaultConsent?: boolean;    // implied consent when there's no checkbox
+  onSubmit: (email: string, consent: boolean) => void;
 }) {
   const [email, setEmail] = useState("");
+  const [consent, setConsent] = useState(defaultConsent);
+  const [sent, setSent] = useState(false);
   return (
     <form
       className="mx-auto flex w-full max-w-[300px] flex-col gap-2"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit();
+        setSent(true);
+        onSubmit(email, consent);
       }}
     >
       <input
@@ -230,12 +259,19 @@ function EmailGateForm({
         className="w-full rounded-xl border-2 border-black/15 px-3.5 py-2.5 text-base outline-none focus:border-[var(--brand-color)]"
         style={{ fontFamily: "var(--font-body)" }}
       />
+      {consentLabel ? (
+        <label className="flex items-start gap-2 text-left text-xs" style={{ color: "#52525b" }}>
+          <input type="checkbox" className="mt-0.5" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          <span>{consentLabel}</span>
+        </label>
+      ) : null}
       <button
         type="submit"
-        className="rounded-xl px-4 py-2.5 text-base font-bold transition-transform active:scale-[0.98]"
+        disabled={sent}
+        className="rounded-xl px-4 py-2.5 text-base font-bold transition-transform active:scale-[0.98] disabled:opacity-70"
         style={{ background: "var(--brand-color)", color: "var(--brand-fg)" }}
       >
-        {cta}
+        {sent ? "Saved ✓" : cta}
       </button>
     </form>
   );
@@ -254,12 +290,14 @@ function PreviewResult({
   image,
   brandColor,
   onTryAgain,
+  onCapture,
 }: {
   won: boolean;
   label: string | null;
   image: string | null;
   brandColor?: string;
   onTryAgain: () => void;
+  onCapture?: (email: string, consent: boolean) => void | Promise<void>;
 }) {
   const [claimed, setClaimed] = useState(false);
 
@@ -283,7 +321,14 @@ function PreviewResult({
         <p className="arcade-muted text-sm">
           Enter your email for another try — and to get new games &amp; offers.
         </p>
-        <EmailGateForm cta="Try again" onSubmit={onTryAgain} />
+        <EmailGateForm
+          cta="Try again"
+          defaultConsent
+          onSubmit={(email, consent) => {
+            onCapture?.(email, consent);
+            onTryAgain();
+          }}
+        />
       </div>
     );
   }
@@ -295,7 +340,14 @@ function PreviewResult({
         <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won! 🎉</div>
         <h2 style={{ ...heading, color: "var(--brand-color)" }}>Almost yours…</h2>
         <p className="arcade-muted text-sm">Enter your email to claim your prize.</p>
-        <EmailGateForm cta="Claim prize" onSubmit={() => setClaimed(true)} />
+        <EmailGateForm
+          cta="Claim prize"
+          consentLabel="Keep me updated with new games & offers"
+          onSubmit={(email, consent) => {
+            onCapture?.(email, consent);
+            setClaimed(true);
+          }}
+        />
       </div>
     );
   }

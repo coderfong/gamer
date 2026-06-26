@@ -16,5 +16,5 @@ export default async function BrandHubPage({ params }: { params: { slug: string 
   if (!brand) notFound();
 
   const config = readStudioConfig((brand as { studio?: unknown }).studio);
-  return <PlayHub brandName={(brand as { name: string }).name} config={config} />;
+  return <PlayHub brandName={(brand as { name: string }).name} config={config} captureSlug={params.slug} />;
 }

@@ -20,7 +20,7 @@ and billing is handled manually (clients pay via PayNow).
 1. `npm install`
 2. Copy `.env.example` to `.env.local`; fill at minimum Supabase. Turnstile / Upstash / Resend
    are optional in dev (they become no-ops when their env vars are unset).
-3. Apply migrations in order (`supabase/migrations/0001` … `0012`). **Migrations are manual** —
+3. Apply migrations in order (`supabase/migrations/0001` … `0013`). **Migrations are manual** —
    the Supabase CLI isn't linked, so paste each file's SQL into the Supabase dashboard.
 4. Seed test campaigns + the demo brand: `supabase/seed.sql`
 5. `npm run dev`
@@ -49,7 +49,9 @@ and billing is handled manually (clients pay via PayNow).
     in history + on the promoted campaign's analytics). One-click unsubscribe.
   - `/roi` — **compounding ROI**: tenure-growing metrics (customer-list growth,
     repeat-visit rate, redemptions per customer over time) in recharts
-  - `/brands`, `/brand/[id]` — Brand Studio (visual builder for a brand's game hub)
+  - `/brands`, `/brand/[id]` — Brand Studio (visual builder for a brand's game hub);
+    `/brand/[id]/signups` — per-brand dashboard of emails captured from its play hub
+    (win-claim gate / loss "another try" entry), searchable + CSV export
   - `/leads` — book-a-call leads; `/billing` — manual PayNow + invoice request
 
 ## Security pipeline at `/api/play/[slug]/start`

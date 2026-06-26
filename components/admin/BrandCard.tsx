@@ -149,6 +149,12 @@ export function BrandCard({ brand }: { brand: BrandCardData }) {
         >
           Edit
         </Link>
+        <Link
+          href={`/brand/${brand.id}/signups`}
+          className="rounded px-2 py-1 text-zinc-700 hover:bg-zinc-100"
+        >
+          Signups
+        </Link>
         {brand.public_slug ? (
           <Link
             href={`/b/${brand.public_slug}`}
