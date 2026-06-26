@@ -34,11 +34,13 @@ and billing is handled manually (clients pay via PayNow).
 ## Surfaces
 - **Public play** — `/play/[slug]`: a single campaign's game (capture → play → result/voucher).
 - **Brand hub** — `/b/[slug]`: a brand's public landing with all its games (the Studio output).
-- **Client portal** (key-gated) — `/portal`: a read-only, single-brand dashboard a
-  client signs into with a per-brand access key (set by the operator on
-  `/brand/[id]/signups`). Brand-scoped metrics + captured emails; no Supabase auth
-  account, no access to other brands. Sign-in at `/portal/login` or a one-click magic
-  link. Optional env `CLIENT_PORTAL_SECRET` signs the session cookie.
+- **Client portal** (key-gated) — `/portal`: a single-brand area a client signs into
+  with a per-brand access key (set by the operator on `/brand/[id]/signups`). Tabs:
+  **Dashboard** (brand-scoped metrics + charts + captured emails) and **Redeem**
+  (`/portal/redeem`) — a phone QR scanner that redeems a winning voucher; redemption
+  is **scan-only** and scoped to the brand (voucher → prize → campaign → brand_id). No
+  Supabase auth account, no access to other brands. Sign-in at `/portal/login` or a
+  one-click magic link. Optional env `CLIENT_PORTAL_SECRET` signs the session cookie.
 - **Admin** (hidden gate) — fully built:
   - `/dashboard` — campaign grid with filters, sort, search, and row actions
   - `/campaigns/new` + `/campaigns/[id]/edit` — 5-step campaign builder
