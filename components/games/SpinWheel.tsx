@@ -53,13 +53,19 @@ export function SpinWheel({ config, onComplete, editorMode, onConfigChange }: Ga
     const target = turns * 360 + (360 - (idx * slice + slice / 2));
     const final  = rotation - (rotation % 360) + target;
     setRotation(final);
+    // Map the landed slice to its OWN asset, so the result matches what the
+    // pointer is on: custom image first, then emoji icon, with the slice label
+    // as the prize name. Win/loss is decided by that slice's label.
+    const landedImage = segmentImages[idx] ?? null;
     const landedLabel = labels[idx % labels.length] ?? "";
-    const landedLoss = /try again|better luck|no win|lose|oops|sorry/i.test(landedLabel);
+    const landedEmoji = segments[idx % segments.length] ?? "";
+    const landedLoss = /try ?again|better luck|no win|lose|oops|sorry|none/i.test(landedLabel);
     setTimeout(() => {
       setSpinning(false);
       setTimeout(() => onComplete({
         outcome: `segment_${idx}`,
-        prizeLabel: landedLabel,
+        prizeLabel: landedLabel || landedEmoji || null,
+        prizeImage: landedImage,
         won: !landedLoss,
         durationMs: performance.now() - startTs.current,
       }), 600);

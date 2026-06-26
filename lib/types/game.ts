@@ -28,6 +28,7 @@ export interface GameResult {
   // result screen that matches what the player just saw on screen.
   won?: boolean;            // explicit win/loss when the game can determine it visually
   prizeLabel?: string | null; // what they landed on (e.g. the wheel slice label)
+  prizeImage?: string | null; // the asset on the landed slice/box, shown in the result
 }
 
 export interface GameProps {

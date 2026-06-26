@@ -59,7 +59,7 @@ export function MiniGamePreview({
   // matching win/lose result (derived from what the player actually saw), themed
   // by the same phone frame. We stay on the result until the player taps replay.
   const [stage, setStage] = useState<"playing" | "result">("playing");
-  const [outcome, setOutcome] = useState<{ won: boolean; label: string | null }>({ won: true, label: null });
+  const [outcome, setOutcome] = useState<{ won: boolean; label: string | null; image: string | null }>({ won: true, label: null, image: null });
 
   const replay = useCallback(() => {
     setStage("playing");
@@ -143,7 +143,7 @@ export function MiniGamePreview({
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
               {stage === "result" ? (
-                <PreviewResult won={outcome.won} label={outcome.label} brandColor={theme.brandColor} />
+                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} />
               ) : (
                 <>
                   {/* Big main header above the game — uses the headline (display)
@@ -191,13 +191,14 @@ export function MiniGamePreview({
 // Games that can tell visually pass `won` (and sometimes a `prizeLabel`, e.g. the
 // wheel slice); otherwise we infer from the outcome string / score, defaulting to
 // a win for reveal-style games (pick-a-box, card flip) that always land on a prize.
-function interpretResult(r: GameResult): { won: boolean; label: string | null } {
+function interpretResult(r: GameResult): { won: boolean; label: string | null; image: string | null } {
   const label = r.prizeLabel && r.prizeLabel.trim() ? r.prizeLabel.trim() : null;
-  if (typeof r.won === "boolean") return { won: r.won, label };
+  const image = r.prizeImage && r.prizeImage.trim() ? r.prizeImage : null;
+  if (typeof r.won === "boolean") return { won: r.won, label, image };
   const outcome = String(r.outcome ?? "");
-  if (/miss|wrong|fail|lose|timeout|better.?luck/i.test(outcome)) return { won: false, label };
-  if (typeof r.score === "number") return { won: r.score > 0, label };
-  return { won: true, label };
+  if (/miss|wrong|fail|lose|timeout|better.?luck/i.test(outcome)) return { won: false, label, image };
+  if (typeof r.score === "number") return { won: r.score > 0, label, image };
+  return { won: true, label, image };
 }
 
 // The follow-up result shown after a preview play-through, so a client sees the
@@ -205,17 +206,23 @@ function interpretResult(r: GameResult): { won: boolean; label: string | null } 
 // inherits the brand background, colours and fonts — same styling as the game.
 // The headline uses the lighter body font at a large size (less heavy than the
 // arcade display font) per the brand brief.
-function PreviewResult({ won, label, brandColor }: { won: boolean; label: string | null; brandColor?: string }) {
+function PreviewResult({ won, label, image, brandColor }: { won: boolean; label: string | null; image: string | null; brandColor?: string }) {
   const heading: React.CSSProperties = {
     fontFamily: "var(--font-body)",
     fontWeight: 400,
     fontSize: "2.6rem",
     lineHeight: 1.1,
   };
+  // The exact asset on the slice/box the player landed on (already optimized).
+  const prizeImg = image ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={image} alt="" className="mx-auto h-24 w-24 object-contain drop-shadow" />
+  ) : null;
 
   if (!won) {
     return (
       <div className="py-6 text-center space-y-2">
+        {prizeImg}
         <h2 style={{ ...heading, color: "var(--ink, #231b2e)" }}>Better luck next time!</h2>
         <p className="arcade-muted text-base">Give it another go — tap ↻ to replay.</p>
       </div>
@@ -225,6 +232,7 @@ function PreviewResult({ won, label, brandColor }: { won: boolean; label: string
     <div className="space-y-4 py-2 text-center">
       <div className="space-y-1">
         <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won 🎉</div>
+        {prizeImg}
         <h2 style={{ ...heading, color: "var(--brand-color)" }}>{label ?? "You won a prize!"}</h2>
       </div>
       <VoucherTicket code="DEMO-2K9X" prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />

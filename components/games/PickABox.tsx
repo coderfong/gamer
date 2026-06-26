@@ -138,10 +138,12 @@ export function PickABox({ config, theme, onComplete }: GameProps) {
     setTimeout(() => setRevealAll(true), 900);
     // Win only when the picked box is the one holding the winning symbol.
     const won = winIndex >= 0 ? i === winIndex : undefined;
+    const pickedContent = contents[i];
     setTimeout(() => {
       onComplete({
         outcome: `box_${i}`,
         won,
+        prizeImage: isImg(pickedContent) ? pickedContent : null,
         durationMs: performance.now() - startTs.current,
       });
     }, 2800);
