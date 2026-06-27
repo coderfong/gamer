@@ -29,6 +29,13 @@ export default async function PortalPage() {
         </p>
       </div>
 
+      {/* TEMP DIAGNOSTIC — plain inline styles (no .ad-card / grid). If you can
+          read these numbers on the phone but the cards below are blank, the issue
+          is the card CSS on iOS Safari. */}
+      <div style={{ border: "2px solid #6d28d9", borderRadius: 8, padding: 12, fontSize: 14, color: "#191921", background: "#fff" }}>
+        <strong>Diagnostic:</strong> plays {data.stats.plays} · customers {data.stats.uniqueCustomers} · signups {data.stats.signups} · campaigns {data.stats.campaigns}
+      </div>
+
       <PortalDashboard data={data} />
 
       <section className="space-y-3">

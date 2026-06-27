@@ -1,8 +1,26 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScanner } from "@/components/admin/redemptions/QrScanner";
+
+// Decode a QR from a photo file. Reliable on iOS Safari, where live camera
+// scanning can be blocked — the customer's voucher QR is captured as a photo
+// and decoded locally.
+async function scanFileForQr(file: File): Promise<string> {
+  const { Html5Qrcode } = await import("html5-qrcode");
+  const el = document.createElement("div");
+  el.style.display = "none";
+  el.id = "qr-file-reader-" + Date.now();
+  document.body.appendChild(el);
+  const scanner = new Html5Qrcode(el.id);
+  try {
+    return await scanner.scanFile(file, false);
+  } finally {
+    try { await scanner.clear(); } catch { /* noop */ }
+    el.remove();
+  }
+}
 
 interface Voucher {
   code: string;
@@ -28,6 +46,7 @@ export function RedeemScanner() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const reset = useCallback(() => {
     setVoucher(null);
@@ -57,6 +76,20 @@ export function RedeemScanner() {
       setError("Network error — try again.");
     }
   }, []);
+
+  async function onPhoto(file: File) {
+    setView("result");
+    setNotFound(false);
+    setError(null);
+    setDone(null);
+    setVoucher(null);
+    try {
+      const code = await scanFileForQr(file);
+      await onScan(code);
+    } catch {
+      setError("Couldn't read a QR code in that photo — try again, filling the frame with the QR.");
+    }
+  }
 
   async function redeem() {
     if (!voucher) return;
@@ -96,9 +129,29 @@ export function RedeemScanner() {
       {view === "scanning" ? (
         <QrScanner onScan={onScan} onClose={() => setView("idle")} />
       ) : view === "idle" ? (
-        <button type="button" onClick={() => setView("scanning")} className="ad-btn ad-btn-primary w-full" style={{ padding: "12px" }}>
-          📷 Scan voucher QR
-        </button>
+        <div className="space-y-2">
+          <button type="button" onClick={() => setView("scanning")} className="ad-btn ad-btn-primary w-full" style={{ padding: "12px" }}>
+            📷 Scan voucher QR
+          </button>
+          <button type="button" onClick={() => fileRef.current?.click()} className="ad-btn ad-btn-ghost w-full" style={{ padding: "12px" }}>
+            📸 Take a photo of the QR
+          </button>
+          <p className="text-xs text-center" style={{ color: "var(--ad-faint)" }}>
+            On iPhone, “Take a photo” is the most reliable.
+          </p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onPhoto(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
       ) : (
         <div className="space-y-4">
           {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
