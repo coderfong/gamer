@@ -140,11 +140,12 @@ export async function loadBrandDashboard(
 
   const { data: signupRows } = await admin
     .from("brand_signups")
-    .select("id, email, name, game_type, won, marketing_consent, created_at")
+    .select("id, email, name, game_type, won, marketing_consent, redeemed_at, created_at")
     .eq("brand_id", brandId)
     .order("created_at", { ascending: false })
     .limit(2000);
-  const signups = (signupRows ?? []) as PortalSignup[];
+  const signups = (signupRows ?? []) as Array<PortalSignup & { redeemed_at: string | null }>;
+  const hubRedemptions = signups.filter((s) => s.redeemed_at).length;
   const signupsByDayMap = new Map<string, number>();
   for (const s of signups) {
     const day = s.created_at.slice(0, 10);
@@ -174,7 +175,7 @@ export async function loadBrandDashboard(
       uniqueCustomers,
       repeatRate: uniqueCustomers > 0 ? repeatCustomers / uniqueCustomers : null,
       winRate: totalPlays > 0 ? totalWins / totalPlays : null,
-      redemptions: redeemedPlayIds.size,
+      redemptions: redeemedPlayIds.size + hubRedemptions,
       redemptionRate: totalWins > 0 ? redeemedPlayIds.size / totalWins : null,
       vouchersRemaining,
       signups: signups.length,

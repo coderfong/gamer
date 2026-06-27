@@ -29,11 +29,17 @@ export async function POST(req: NextRequest) {
   if (voucher.redeemed) return err("already_redeemed", "This voucher was already redeemed.", 409);
 
   const now = new Date().toISOString();
-  const { error: updErr } = await admin.from("voucher_codes").update({ redeemed_at: now }).eq("id", voucher.id);
-  if (updErr) return err("update_failed", updErr.message, 500);
 
-  // Best-effort audit row; don't fail the redemption if it can't be written.
-  await admin.from("redemptions").insert({ voucher_code_id: voucher.id, redeemed_by: "client_portal" });
+  if (voucher.source === "hub") {
+    // Play-hub voucher lives on the brand_signups row.
+    const { error: updErr } = await admin.from("brand_signups").update({ redeemed_at: now }).eq("id", voucher.id);
+    if (updErr) return err("update_failed", updErr.message, 500);
+  } else {
+    const { error: updErr } = await admin.from("voucher_codes").update({ redeemed_at: now }).eq("id", voucher.id);
+    if (updErr) return err("update_failed", updErr.message, 500);
+    // Best-effort audit row; don't fail the redemption if it can't be written.
+    await admin.from("redemptions").insert({ voucher_code_id: voucher.id, redeemed_by: "client_portal" });
+  }
 
   return NextResponse.json({ ok: true, redeemedAt: now, prizeName: voucher.prizeName });
 }

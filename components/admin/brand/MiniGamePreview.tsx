@@ -86,22 +86,25 @@ export function MiniGamePreview({
     setKey((k) => k + 1);
   }, [gameType]);
 
-  // Capture a hub email against the brand (no-op in non-hub previews). Best-effort
-  // — never blocks the result UI.
+  // Capture a hub email against the brand (no-op in non-hub previews). On a win
+  // the brand mints a real voucher code, which we return so the result screen can
+  // show a scannable, redeemable QR. Best-effort — never blocks the result UI.
   const captureEmail = useCallback(
-    async (email: string, consent: boolean) => {
-      if (!captureSlug) return;
+    async (email: string, consent: boolean): Promise<string | null> => {
+      if (!captureSlug) return null;
       try {
-        await fetch(`/api/hub/${captureSlug}/signup`, {
+        const res = await fetch(`/api/hub/${captureSlug}/signup`, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, gameType, won: outcome.won, marketingConsent: consent }),
+          body: JSON.stringify({ email, gameType, won: outcome.won, marketingConsent: consent, prizeLabel: outcome.label }),
         });
+        const json = await res.json().catch(() => ({}));
+        return (json?.voucherCode as string | null) ?? null;
       } catch {
-        /* ignore — preview capture is best-effort */
+        return null;
       }
     },
-    [captureSlug, gameType, outcome.won],
+    [captureSlug, gameType, outcome.won, outcome.label],
   );
 
   const bezel = 6;
@@ -308,9 +311,10 @@ function PreviewResult({
   image: string | null;
   brandColor?: string;
   onTryAgain: () => void;
-  onCapture?: (email: string, consent: boolean) => void | Promise<void>;
+  onCapture?: (email: string, consent: boolean) => Promise<string | null> | void;
 }) {
   const [claimed, setClaimed] = useState(false);
+  const [voucherCode, setVoucherCode] = useState<string | null>(null);
 
   // Same display font as the game's headline, just a bit thinner than the heavy
   // arcade-title default.
@@ -356,8 +360,9 @@ function PreviewResult({
         <EmailGateForm
           cta="Claim prize"
           consentLabel="Keep me updated with new games & offers"
-          onSubmit={(email, consent) => {
-            onCapture?.(email, consent);
+          onSubmit={async (email, consent) => {
+            const code = await onCapture?.(email, consent);
+            if (code) setVoucherCode(code);
             setClaimed(true);
           }}
         />
@@ -372,7 +377,7 @@ function PreviewResult({
         {prizeImg}
         <h2 style={{ ...heading, color: "var(--brand-color)" }}>{label ?? "You won a prize!"}</h2>
       </div>
-      <VoucherTicket code="DEMO-2K9X" prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />
+      <VoucherTicket code={voucherCode ?? "DEMO-2K9X"} prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />
     </div>
   );
 }

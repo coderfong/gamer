@@ -94,6 +94,9 @@ export interface BrandSignupRow {
   won: boolean | null;
   marketing_consent: boolean;
   source: string;
+  voucher_code: string | null;
+  prize_label: string | null;
+  redeemed_at: string | null;
   created_at: string;
 }
 

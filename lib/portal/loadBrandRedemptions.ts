@@ -42,7 +42,7 @@ export async function loadBrandRedemptions(
     }
   }
 
-  return rows.map((r) => {
+  const campaignRedemptions: RedemptionRow[] = rows.map((r) => {
     const prize = Array.isArray(r.prizes) ? r.prizes[0] : r.prizes;
     return {
       code: r.code,
@@ -51,4 +51,20 @@ export async function loadBrandRedemptions(
       contact: r.claimed_by_play_id ? contactByPlay.get(r.claimed_by_play_id) ?? null : null,
     };
   });
+
+  // Play-hub vouchers (redeemed) for this brand.
+  const { data: hubRows } = await admin
+    .from("brand_signups")
+    .select("voucher_code, prize_label, email, redeemed_at")
+    .eq("brand_id", brandId)
+    .not("redeemed_at", "is", null)
+    .order("redeemed_at", { ascending: false })
+    .limit(limit);
+  const hubRedemptions: RedemptionRow[] = ((hubRows ?? []) as Array<{ voucher_code: string | null; prize_label: string | null; email: string; redeemed_at: string }>)
+    .filter((h) => h.voucher_code)
+    .map((h) => ({ code: h.voucher_code as string, prizeName: h.prize_label, redeemedAt: h.redeemed_at, contact: h.email }));
+
+  return [...campaignRedemptions, ...hubRedemptions]
+    .sort((a, b) => b.redeemedAt.localeCompare(a.redeemedAt))
+    .slice(0, limit);
 }
