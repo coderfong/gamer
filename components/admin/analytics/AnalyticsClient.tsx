@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ChartBoundary } from "@/components/ChartBoundary";
 import {
   ResponsiveContainer,
   LineChart,
@@ -44,6 +45,9 @@ export function AnalyticsClient({
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(0);
+  // Charts client-only (after mount) to avoid a recharts hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // ---- Stat cards ----
   const stats = useMemo(() => {
@@ -167,29 +171,41 @@ export function AnalyticsClient({
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={timeSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-              <XAxis dataKey="date" fontSize={11} />
-              <YAxis allowDecimals={false} fontSize={11} />
-              <Tooltip />
-              <Line type="monotone" dataKey="plays" stroke="#6d28d9" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={{ width: "100%", height: 220 }}>
+            {mounted ? (
+              <ChartBoundary fallback={<div className="grid h-full place-items-center text-xs text-zinc-400">Chart unavailable</div>}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={timeSeries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                    <XAxis dataKey="date" fontSize={11} />
+                    <YAxis allowDecimals={false} fontSize={11} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="plays" stroke="#6d28d9" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartBoundary>
+            ) : null}
+          </div>
         </div>
 
         <div className="rounded-xl border bg-white p-4">
           <h3 className="font-medium text-sm mb-3">Prize distribution</h3>
           {prizeDist.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={prizeDist}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                <XAxis dataKey="name" fontSize={11} />
-                <YAxis allowDecimals={false} fontSize={11} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#6d28d9" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ width: "100%", height: 220 }}>
+              {mounted ? (
+                <ChartBoundary fallback={<div className="grid h-full place-items-center text-xs text-zinc-400">Chart unavailable</div>}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={prizeDist}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis dataKey="name" fontSize={11} />
+                      <YAxis allowDecimals={false} fontSize={11} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#6d28d9" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartBoundary>
+              ) : null}
+            </div>
           ) : (
             <p className="text-sm text-zinc-500 py-12 text-center">No prizes awarded yet.</p>
           )}

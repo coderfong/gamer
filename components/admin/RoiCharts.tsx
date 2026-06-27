@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -11,6 +12,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { ChartBoundary } from "@/components/ChartBoundary";
 import type { RoiMetrics, RoiPoint } from "@/lib/admin/loadRoiMetrics";
 
 const ACCENT = "#6d28d9";
@@ -28,11 +30,13 @@ function Card({ label, value, sub }: { label: string; value: string; sub: string
 function ChartCard({
   title,
   subtitle,
+  mounted,
   children,
 }: {
   title: string;
   subtitle: string;
-  children: React.ReactNode;
+  mounted: boolean;
+  children: React.ReactElement;
 }) {
   return (
     <div className="ad-card p-4 space-y-3">
@@ -41,7 +45,13 @@ function ChartCard({
         <p className="text-xs" style={{ color: "var(--ad-muted)" }}>{subtitle}</p>
       </div>
       <div style={{ width: "100%", height: 220 }}>
-        <ResponsiveContainer>{children as React.ReactElement}</ResponsiveContainer>
+        {/* Client-only + boundary: avoids a recharts SSR/hydration mismatch
+            (which can blank the section on mobile) and isolates chart errors. */}
+        {mounted ? (
+          <ChartBoundary fallback={<div className="grid h-full place-items-center text-xs" style={{ color: "var(--ad-faint)" }}>Chart unavailable</div>}>
+            <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
+          </ChartBoundary>
+        ) : null}
       </div>
     </div>
   );
@@ -50,6 +60,8 @@ function ChartCard({
 export function RoiCharts({ metrics }: { metrics: RoiMetrics }) {
   const { series, totals } = metrics;
   const data: RoiPoint[] = series;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <div className="space-y-5">
@@ -59,7 +71,7 @@ export function RoiCharts({ metrics }: { metrics: RoiMetrics }) {
         <Card label="Redemptions / customer" value={totals.redemptionsPerCustomer.toFixed(2)} sub="lifetime" />
       </div>
 
-      <ChartCard title="Customer list growth" subtitle="Cumulative unique customers — the asset that compounds with tenure.">
+      <ChartCard title="Customer list growth" subtitle="Cumulative unique customers — the asset that compounds with tenure." mounted={mounted}>
         <AreaChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
           <defs>
             <linearGradient id="roiCustomers" x1="0" y1="0" x2="0" y2="1">
@@ -76,7 +88,7 @@ export function RoiCharts({ metrics }: { metrics: RoiMetrics }) {
       </ChartCard>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Repeat-visit rate over time" subtitle="Share of customers who came back for 2+ plays.">
+        <ChartCard title="Repeat-visit rate over time" subtitle="Share of customers who came back for 2+ plays." mounted={mounted}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
@@ -86,7 +98,7 @@ export function RoiCharts({ metrics }: { metrics: RoiMetrics }) {
           </LineChart>
         </ChartCard>
 
-        <ChartCard title="Redemptions per customer" subtitle="Lifetime value realized per customer, growing over time.">
+        <ChartCard title="Redemptions per customer" subtitle="Lifetime value realized per customer, growing over time." mounted={mounted}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} />
