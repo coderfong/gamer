@@ -11,13 +11,13 @@ const BAR_COLORS = ["#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd
 
 function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactElement }) {
   return (
-    <div className="ad-card p-4 space-y-3">
-      <div>
-        <h2 className="font-bold">{title}</h2>
-        <p className="text-xs" style={{ color: "var(--ad-muted)" }}>{subtitle}</p>
+    <div style={{ background: "#fff", border: "1px solid #e8e8ee", borderRadius: 16, padding: 16 }}>
+      <div style={{ marginBottom: 12 }}>
+        <h2 style={{ fontWeight: 700 }}>{title}</h2>
+        <p style={{ fontSize: 12, color: "#73737f" }}>{subtitle}</p>
       </div>
       <div style={{ width: "100%", height: 220 }}>
-        <ChartBoundary fallback={<div className="grid h-full place-items-center text-xs" style={{ color: "var(--ad-faint)" }}>Chart unavailable</div>}>
+        <ChartBoundary fallback={<div style={{ display: "grid", placeItems: "center", height: "100%", fontSize: 12, color: "#a2a2ad" }}>Chart unavailable</div>}>
           <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
         </ChartBoundary>
       </div>
@@ -38,8 +38,8 @@ export function PortalCharts({
   prizeBreakdown: Array<{ name: string; count: number }>;
 }) {
   return (
-    <div className="space-y-5">
-      <div className="grid gap-4 lg:grid-cols-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
         <ChartCard title="Plays · last 30 days" subtitle="Daily completed plays across your games.">
           <AreaChart data={playsData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
             <defs>

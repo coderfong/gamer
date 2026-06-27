@@ -19,7 +19,7 @@ export function PortalShell({ brandName, children }: { brandName: string; childr
       >
         <div className="font-extrabold">{brandName}</div>
         <form action="/api/portal/logout" method="post">
-          <button type="submit" className="ad-btn ad-btn-ghost" style={{ padding: "7px 13px" }}>Sign out</button>
+          <button type="submit" style={{ padding: "7px 13px", borderRadius: 10, border: "1px solid #e8e8ee", background: "#fff", color: "#191921", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Sign out</button>
         </form>
       </header>
 

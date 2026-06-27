@@ -118,10 +118,10 @@ export function RedeemScanner() {
   }
 
   return (
-    <div className="ad-card p-5 space-y-4" style={{ maxWidth: 520 }}>
+    <div style={{ ...CARD, padding: 20, maxWidth: 520, display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h2 className="text-lg font-bold">Redeem a voucher</h2>
-        <p className="text-sm" style={{ color: "var(--ad-muted)" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Redeem a voucher</h2>
+        <p style={{ fontSize: 14, color: MUTED }}>
           Scan the customer&apos;s voucher QR with your phone camera. Redemption is scan-only.
         </p>
       </div>
@@ -129,14 +129,14 @@ export function RedeemScanner() {
       {view === "scanning" ? (
         <QrScanner onScan={onScan} onClose={() => setView("idle")} />
       ) : view === "idle" ? (
-        <div className="space-y-2">
-          <button type="button" onClick={() => setView("scanning")} className="ad-btn ad-btn-primary w-full" style={{ padding: "12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button type="button" onClick={() => setView("scanning")} style={btnPrimary}>
             📷 Scan voucher QR
           </button>
-          <button type="button" onClick={() => fileRef.current?.click()} className="ad-btn ad-btn-ghost w-full" style={{ padding: "12px" }}>
+          <button type="button" onClick={() => fileRef.current?.click()} style={btnGhost}>
             📸 Take a photo of the QR
           </button>
-          <p className="text-xs text-center" style={{ color: "var(--ad-faint)" }}>
+          <p style={{ fontSize: 12, textAlign: "center", color: FAINT }}>
             On iPhone, “Take a photo” is the most reliable.
           </p>
           <input
@@ -144,7 +144,7 @@ export function RedeemScanner() {
             type="file"
             accept="image/*"
             capture="environment"
-            className="hidden"
+            style={{ display: "none" }}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) onPhoto(f);
@@ -153,49 +153,57 @@ export function RedeemScanner() {
           />
         </div>
       ) : (
-        <div className="space-y-4">
-          {error ? <p className="text-sm font-semibold text-red-600">{error}</p> : null}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {error ? <p style={{ fontSize: 14, fontWeight: 600, color: "#dc2626" }}>{error}</p> : null}
 
           {notFound ? (
-            <div className="rounded-lg px-3 py-3 text-sm font-semibold text-center" style={{ background: "#fef2f2", color: "#b91c1c" }}>
+            <div style={{ borderRadius: 8, padding: 12, fontSize: 14, fontWeight: 600, textAlign: "center", background: "#fef2f2", color: "#b91c1c" }}>
               Not one of your vouchers.
             </div>
           ) : voucher ? (
-            <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: "var(--ad-border)" }}>
-              <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ad-faint)" }}>Prize</div>
-              <div className="text-xl font-extrabold">{voucher.prizeName ?? "—"}</div>
-              <div className="text-sm" style={{ color: "var(--ad-muted)" }}>
-                <div>Code · <span className="font-mono">{voucher.code}</span></div>
+            <div style={{ borderRadius: 12, border: `1px solid ${BORDER}`, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: FAINT }}>Prize</div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>{voucher.prizeName ?? "—"}</div>
+              <div style={{ fontSize: 14, color: MUTED }}>
+                <div>Code · <span style={{ fontFamily: "monospace" }}>{voucher.code}</span></div>
                 <div>Won · {fmt(voucher.wonAt)}</div>
                 {voucher.contact ? <div>Customer · {voucher.contact}</div> : null}
               </div>
-              <div className="pt-1">
+              <div>
                 {voucher.redeemed ? (
-                  <span className="ad-badge" style={{ background: "#f4f4f6", color: "#71717a" }}>Already redeemed</span>
+                  <span style={{ ...badge, background: "#f4f4f6", color: "#71717a" }}>Already redeemed</span>
                 ) : !voucher.claimed ? (
-                  <span className="ad-badge" style={{ background: "#fef2f2", color: "#b91c1c" }}>Not a winning voucher</span>
+                  <span style={{ ...badge, background: "#fef2f2", color: "#b91c1c" }}>Not a winning voucher</span>
                 ) : (
-                  <span className="ad-badge" style={{ background: "#ecfdf5", color: "#065f46" }}>Valid — ready to redeem</span>
+                  <span style={{ ...badge, background: "#ecfdf5", color: "#065f46" }}>Valid — ready to redeem</span>
                 )}
               </div>
             </div>
           ) : (
-            <p className="text-sm" style={{ color: "var(--ad-muted)" }}>Reading…</p>
+            <p style={{ fontSize: 14, color: MUTED }}>Reading…</p>
           )}
 
           {done ? (
-            <div className="rounded-lg px-3 py-3 text-sm font-semibold text-center" style={{ background: "#ecfdf5", color: "#065f46" }}>
+            <div style={{ borderRadius: 8, padding: 12, fontSize: 14, fontWeight: 600, textAlign: "center", background: "#ecfdf5", color: "#065f46" }}>
               ✅ {done}
             </div>
           ) : voucher && voucher.claimed && !voucher.redeemed ? (
-            <button type="button" onClick={redeem} disabled={busy} className="ad-btn ad-btn-primary w-full" style={{ padding: "11px" }}>
+            <button type="button" onClick={redeem} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.7 : 1 }}>
               {busy ? "Redeeming…" : "Mark as redeemed"}
             </button>
           ) : null}
 
-          <button type="button" onClick={reset} className="ad-btn ad-btn-ghost w-full">Scan another</button>
+          <button type="button" onClick={reset} style={btnGhost}>Scan another</button>
         </div>
       )}
     </div>
   );
 }
+
+const CARD: React.CSSProperties = { background: "#ffffff", border: "1px solid #e8e8ee", borderRadius: 16 };
+const BORDER = "#e8e8ee";
+const MUTED = "#73737f";
+const FAINT = "#a2a2ad";
+const btnPrimary: React.CSSProperties = { padding: "12px", borderRadius: 10, border: "1px solid transparent", background: "#6D4AFF", color: "#fff", fontWeight: 600, fontSize: 15, width: "100%", cursor: "pointer" };
+const btnGhost: React.CSSProperties = { padding: "12px", borderRadius: 10, border: "1px solid #e8e8ee", background: "#fff", color: "#191921", fontWeight: 600, fontSize: 15, width: "100%", cursor: "pointer" };
+const badge: React.CSSProperties = { fontWeight: 700, fontSize: 12, padding: "4px 10px", borderRadius: 999, display: "inline-flex", alignItems: "center" };

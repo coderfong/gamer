@@ -43,22 +43,22 @@ export default async function PortalRedeemPage() {
         {redemptions.length === 0 ? (
           <EmptyState icon="🎟️" title="No redemptions yet" description="Vouchers you redeem will be listed here, newest first." />
         ) : (
-          <div className="ad-card overflow-x-auto">
-            <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+          <div style={{ background: "#fff", border: "1px solid #e8e8ee", borderRadius: 16, overflowX: "auto" }}>
+            <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--ad-border)" }}>
+                <tr style={{ borderBottom: "1px solid #e8e8ee" }}>
                   {["Redeemed", "Prize", "Code", "Customer"].map((h) => (
-                    <th key={h} className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wide" style={{ color: "var(--ad-faint)" }}>{h}</th>
+                    <th key={h} style={{ padding: 12, textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a2a2ad" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {redemptions.map((r, i) => (
-                  <tr key={`${r.code}-${i}`} style={{ borderBottom: "1px solid var(--ad-border)" }}>
-                    <td className="px-3 py-3 whitespace-nowrap" style={{ color: "var(--ad-muted)" }}>{fmt(r.redeemedAt)}</td>
-                    <td className="px-3 py-3 font-semibold">{r.prizeName ?? "—"}</td>
-                    <td className="px-3 py-3 font-mono text-xs">{r.code}</td>
-                    <td className="px-3 py-3" style={{ color: "var(--ad-muted)" }}>{r.contact ?? "—"}</td>
+                  <tr key={`${r.code}-${i}`} style={{ borderBottom: "1px solid #e8e8ee" }}>
+                    <td style={{ padding: 12, whiteSpace: "nowrap", color: "#73737f" }}>{fmt(r.redeemedAt)}</td>
+                    <td style={{ padding: 12, fontWeight: 600 }}>{r.prizeName ?? "—"}</td>
+                    <td style={{ padding: 12, fontFamily: "monospace", fontSize: 12 }}>{r.code}</td>
+                    <td style={{ padding: 12, color: "#73737f" }}>{r.contact ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

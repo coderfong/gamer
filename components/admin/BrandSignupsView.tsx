@@ -67,7 +67,7 @@ export function BrandSignupsView({ brandName, signups }: { brandName: string; si
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
         <Stat label="Total signups" value={String(signups.length)} />
         <Stat label="Marketing-consented" value={String(consentedCount)} />
         <Stat label="Win-claims" value={String(signups.filter((s) => s.won).length)} />
@@ -94,12 +94,12 @@ export function BrandSignupsView({ brandName, signups }: { brandName: string; si
       {visible.length === 0 ? (
         <EmptyState icon="🔍" title="No matches" description="Try a different search or clear the consent filter." />
       ) : (
-        <div className="ad-card overflow-x-auto">
-          <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
+        <div style={{ background: "#fff", border: "1px solid #e8e8ee", borderRadius: 16, overflowX: "auto" }}>
+          <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid var(--ad-border)" }}>
+              <tr style={{ borderBottom: "1px solid #e8e8ee" }}>
                 {["Captured", "Email", "Name", "Game", "Result", "Consent"].map((h) => (
-                  <th key={h} className="px-3 py-3 text-left text-xs font-bold uppercase tracking-wide" style={{ color: "var(--ad-faint)" }}>
+                  <th key={h} style={{ padding: 12, textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a2a2ad" }}>
                     {h}
                   </th>
                 ))}
@@ -107,19 +107,19 @@ export function BrandSignupsView({ brandName, signups }: { brandName: string; si
             </thead>
             <tbody>
               {visible.map((s) => (
-                <tr key={s.id} style={{ borderBottom: "1px solid var(--ad-border)" }}>
-                  <td className="px-3 py-3 whitespace-nowrap" style={{ color: "var(--ad-muted)" }}>{fmtDate(s.created_at)}</td>
-                  <td className="px-3 py-3">
-                    <a href={`mailto:${s.email}`} className="underline" style={{ color: "var(--ad-accent)" }}>{s.email}</a>
+                <tr key={s.id} style={{ borderBottom: "1px solid #e8e8ee" }}>
+                  <td style={{ padding: 12, whiteSpace: "nowrap", color: "#73737f" }}>{fmtDate(s.created_at)}</td>
+                  <td style={{ padding: 12 }}>
+                    <a href={`mailto:${s.email}`} style={{ color: "#6D4AFF", textDecoration: "underline" }}>{s.email}</a>
                   </td>
-                  <td className="px-3 py-3">{s.name || "—"}</td>
-                  <td className="px-3 py-3" style={{ color: "var(--ad-muted)" }}>{s.game_type ? getGameMeta(s.game_type).label : "—"}</td>
-                  <td className="px-3 py-3">{s.won === null ? "—" : s.won ? "Won" : "Lost"}</td>
-                  <td className="px-3 py-3">
+                  <td style={{ padding: 12 }}>{s.name || "—"}</td>
+                  <td style={{ padding: 12, color: "#73737f" }}>{s.game_type ? getGameMeta(s.game_type).label : "—"}</td>
+                  <td style={{ padding: 12 }}>{s.won === null ? "—" : s.won ? "Won" : "Lost"}</td>
+                  <td style={{ padding: 12 }}>
                     {s.marketing_consent ? (
-                      <span style={{ color: "var(--ad-accent-ink)", fontWeight: 700 }}>Yes</span>
+                      <span style={{ color: "#4A2FCC", fontWeight: 700 }}>Yes</span>
                     ) : (
-                      <span style={{ color: "var(--ad-faint)" }}>No</span>
+                      <span style={{ color: "#a2a2ad" }}>No</span>
                     )}
                   </td>
                 </tr>
@@ -134,9 +134,9 @@ export function BrandSignupsView({ brandName, signups }: { brandName: string; si
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="ad-card p-4">
-      <div className="text-2xl font-extrabold" style={{ color: "var(--ad-ink)" }}>{value}</div>
-      <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ad-faint)" }}>{label}</div>
+    <div style={{ background: "#fff", border: "1px solid #e8e8ee", borderRadius: 16, padding: 16, flex: "1 1 140px", minWidth: 140 }}>
+      <div style={{ fontSize: 24, fontWeight: 800, color: "#191921" }}>{value}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#a2a2ad" }}>{label}</div>
     </div>
   );
 }
