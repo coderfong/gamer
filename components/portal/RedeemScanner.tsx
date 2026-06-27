@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { QrScanner } from "@/components/admin/redemptions/QrScanner";
 
 interface Voucher {
@@ -20,6 +21,7 @@ function fmt(iso: string | null): string {
 
 // Scan-only redemption: a voucher can only be redeemed here by scanning its QR.
 export function RedeemScanner() {
+  const router = useRouter();
   const [view, setView] = useState<View>("idle");
   const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -73,6 +75,8 @@ export function RedeemScanner() {
       }
       setDone(`Redeemed${voucher.prizeName ? ` · ${voucher.prizeName}` : ""}`);
       setVoucher({ ...voucher, redeemed: true });
+      router.refresh(); // update the redemption history list below
+
     } catch {
       setError("Network error — try again.");
     } finally {
