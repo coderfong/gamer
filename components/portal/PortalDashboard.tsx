@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
 } from "recharts";
+import { ChartBoundary } from "@/components/ChartBoundary";
 import type { BrandDashboard } from "@/lib/portal/loadBrandDashboard";
 
 const ACCENT = "#6d28d9";
@@ -23,7 +25,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function ChartCard({ title, subtitle, mounted, children }: { title: string; subtitle: string; mounted: boolean; children: React.ReactElement }) {
   return (
     <div className="ad-card p-4 space-y-3">
       <div>
@@ -31,7 +33,13 @@ function ChartCard({ title, subtitle, children }: { title: string; subtitle: str
         <p className="text-xs" style={{ color: "var(--ad-muted)" }}>{subtitle}</p>
       </div>
       <div style={{ width: "100%", height: 220 }}>
-        <ResponsiveContainer>{children as React.ReactElement}</ResponsiveContainer>
+        {/* Render the chart only after mount (avoids a recharts SSR/hydration
+            mismatch) and inside a boundary (so a chart error can't blank the page). */}
+        {mounted ? (
+          <ChartBoundary fallback={<div className="grid h-full place-items-center text-xs" style={{ color: "var(--ad-faint)" }}>Chart unavailable</div>}>
+            <ResponsiveContainer width="100%" height="100%">{children}</ResponsiveContainer>
+          </ChartBoundary>
+        ) : null}
       </div>
     </div>
   );
@@ -39,6 +47,10 @@ function ChartCard({ title, subtitle, children }: { title: string; subtitle: str
 
 export function PortalDashboard({ data }: { data: BrandDashboard }) {
   const { stats, campaigns, playsByDay, signupsByDay, prizeBreakdown } = data;
+  // Charts are client-only to avoid a recharts hydration mismatch (which can
+  // blank the whole section on mobile). The stat cards + tables always render.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const fmtDay = (day: string) => new Date(day).toLocaleDateString("en-SG", { day: "numeric", month: "short" });
   const playsData = playsByDay.map((d) => ({ label: fmtDay(d.day), plays: d.plays }));
   const signupsData = signupsByDay.map((d) => ({ label: fmtDay(d.day), signups: d.signups }));
@@ -57,7 +69,7 @@ export function PortalDashboard({ data }: { data: BrandDashboard }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Plays · last 30 days" subtitle="Daily completed plays across your games.">
+        <ChartCard title="Plays · last 30 days" subtitle="Daily completed plays across your games." mounted={mounted}>
           <AreaChart data={playsData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="pPlays" x1="0" y1="0" x2="0" y2="1">
@@ -73,7 +85,7 @@ export function PortalDashboard({ data }: { data: BrandDashboard }) {
           </AreaChart>
         </ChartCard>
 
-        <ChartCard title="Signups · last 30 days" subtitle="Emails captured from your play hub.">
+        <ChartCard title="Signups · last 30 days" subtitle="Emails captured from your play hub." mounted={mounted}>
           <AreaChart data={signupsData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id="pSignups" x1="0" y1="0" x2="0" y2="1">
@@ -91,7 +103,7 @@ export function PortalDashboard({ data }: { data: BrandDashboard }) {
       </div>
 
       {prizeBreakdown.length > 0 ? (
-        <ChartCard title="Prizes awarded" subtitle="Which prizes players have won.">
+        <ChartCard title="Prizes awarded" subtitle="Which prizes players have won." mounted={mounted}>
           <BarChart data={prizeBreakdown} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
             <XAxis dataKey="name" tick={{ fontSize: 10 }} />
