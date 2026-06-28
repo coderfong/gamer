@@ -68,7 +68,7 @@ export function Memory({ config, theme, onComplete }: GameProps) {
   const timer = useTimer();
 
   // ── Styling config (all optional, fall back to brand palette) ──────────────
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Find all the matching pairs";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Match all the pairs to win!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

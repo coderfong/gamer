@@ -33,7 +33,7 @@ export function Reaction({ config, theme, onComplete }: GameProps) {
   const panelHeight = Math.max(140, Math.min(320, (config?.panelHeight as number | undefined) ?? 224));
   // Win threshold: score is max(0, 1000 - reactionMs); default 500 ≈ react within 500ms.
   const winScore    = Math.max(1, (config?.winScore as number | undefined) ?? 500);
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the instant the panel turns green";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the instant the panel turns green — the faster you react, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

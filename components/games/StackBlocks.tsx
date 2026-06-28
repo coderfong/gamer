@@ -28,7 +28,7 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
   const arenaImage  = (config?.arenaImage   as string | undefined) ?? null;
   const pictureImage = (config?.pictureImage as string | undefined) ?? null;
   const dropAnimation = (config?.dropAnimation as string | undefined) ?? "settle"; // settle | flash | none
-  const instructionIdle  = (config?.instructionIdle  as string | undefined) ?? "Tap DROP to stack the blocks — keep them aligned!";
+  const instructionIdle  = (config?.instructionIdle  as string | undefined) ?? "Tap DROP to stack the blocks, keep them aligned — the higher you stack, the bigger your prize!";
   const instructionPlay  = (config?.instructionPlay  as string | undefined) ?? "Tap DROP to land the block";
   const instructionDone  = (config?.instructionDone  as string | undefined) ?? "Stacked {count}!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;

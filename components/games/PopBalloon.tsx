@@ -23,7 +23,7 @@ export function PopBalloon({ config, theme, onComplete }: GameProps) {
   const showTimer    = (config?.showTimer    as boolean | undefined) ?? true;
   const showMarker   = (config?.showTargetMarker as boolean | undefined) ?? true;
   const lockAnimation = (config?.lockAnimation as string | undefined) ?? "pulse";
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the timer exactly at {target}s!";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the timer exactly at {target}s — the closer you get, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

@@ -174,7 +174,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
   }
 
   const instructionText =
-    phase === "idle" ? "Shoot pins into the core — don't hit another pin!"
+    phase === "idle" ? "Shoot pins into the core without hitting another pin — land them all to win!"
     : phase === "done" ? (wonState ? winText : loseText)
     : undefined;
 

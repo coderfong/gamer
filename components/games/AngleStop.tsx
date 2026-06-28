@@ -138,7 +138,7 @@ export function AngleStop({ config, theme, onComplete }: GameProps) {
   }
 
   const instructionText =
-    phase === "idle" ? "Stop the reveal exactly on the target angle!"
+    phase === "idle" ? "Stop the reveal exactly on the target angle — nail it to win!"
     : phase === "done" ? `${hits}/${rounds} on target${perfects ? ` · ${perfects} bullseye` : ""}`
     : feedback ?? `Round ${round + 1} / ${rounds}`;
 

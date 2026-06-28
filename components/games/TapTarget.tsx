@@ -35,7 +35,7 @@ export function TapTarget({ config, theme, onComplete }: GameProps) {
   const shrinkOnHit = (config?.shrinkOnHit as boolean | undefined) ?? false;
   const idleEmoji   = (config?.idleEmoji   as string | undefined) ?? "🎯";
   const hitAnimation = (config?.hitAnimation as string | undefined) ?? "pop";
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the bullseye as many times as you can in {seconds}s!";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the bullseye as many times as you can in {seconds}s — the more hits, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

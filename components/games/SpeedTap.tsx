@@ -27,7 +27,7 @@ export function SpeedTap({ config, theme, onComplete }: GameProps) {
   const isImgBtn = !!buttonImage;
   const buttonTextColor = (config?.buttonTextColor as string | undefined) ?? "#ffffff";
   const tapAnimation = (config?.tapAnimation as string | undefined) ?? "bump";
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the button as fast as you can for {seconds} seconds!";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Tap the button as fast as you can for {seconds} seconds — the more taps, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

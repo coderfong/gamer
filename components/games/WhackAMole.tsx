@@ -60,7 +60,7 @@ export function WhackAMole({ config, theme, onComplete }: GameProps) {
   const moleSize    = Math.max(60, Math.min(110, (config?.holeSize as number | undefined) ?? 80));
   const moleColor   = (config?.moleColor as string | undefined) ?? pal.brand;
   const holeColor   = (config?.holeColor as string | undefined) ?? darken(pal.dark, 0.2);
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Whack as many moles as you can in {seconds}s!";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Whack as many moles as you can in {seconds}s — the more you whack, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

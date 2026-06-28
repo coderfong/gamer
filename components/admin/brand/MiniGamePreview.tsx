@@ -179,7 +179,7 @@ export function MiniGamePreview({
           <div style={{ width: GAME_W, transform: `scale(${scale})`, transformOrigin: "center center" }}>
             <div ref={contentRef} className="relative">
               {stage === "result" ? (
-                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} brandColor={theme.brandColor} onTryAgain={replay} onCapture={captureEmail} />
+                <PreviewResult won={outcome.won} label={outcome.label} image={outcome.image} gameType={gameType} brandColor={theme.brandColor} onTryAgain={replay} onCapture={captureEmail} />
               ) : (
                 <>
                   {/* Big main header above the game — uses the headline (display)
@@ -302,6 +302,7 @@ function PreviewResult({
   won,
   label,
   image,
+  gameType,
   brandColor,
   onTryAgain,
   onCapture,
@@ -309,6 +310,7 @@ function PreviewResult({
   won: boolean;
   label: string | null;
   image: string | null;
+  gameType: GameType;
   brandColor?: string;
   onTryAgain: () => void;
   onCapture?: (email: string, consent: boolean) => Promise<string | null> | void;
@@ -330,6 +332,9 @@ function PreviewResult({
     // eslint-disable-next-line @next/next/no-img-element
     <img src={image} alt="" className="mx-auto h-24 w-24 object-contain drop-shadow" />
   ) : null;
+  // Spin the Wheel already shows the prize on the wheel slice, so the win screen
+  // omits the redundant prize image.
+  const winImg = gameType === "spin_wheel" ? null : prizeImg;
 
   if (!won) {
     return (
@@ -374,7 +379,7 @@ function PreviewResult({
     <div className="space-y-4 py-2 text-center">
       <div className="space-y-1">
         <div className="text-xs uppercase tracking-[0.2em] arcade-muted">🎉 You won 🎉</div>
-        {prizeImg}
+        {winImg}
         <h2 style={{ ...heading, color: "var(--brand-color)" }}>{label ?? "You won a prize!"}</h2>
       </div>
       <VoucherTicket code={voucherCode ?? "DEMO-2K9X"} prizeName={label ?? "Your reward"} status="valid" showQr brandColor={brandColor} />

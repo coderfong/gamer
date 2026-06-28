@@ -34,6 +34,7 @@ export function RingShooterEditor({ campaign, setCampaign }: Props) {
   const hitTolerance = Math.max(4, Math.min(45, (config.hitTolerance as number | undefined) ?? 11));
   const crosshairColor  = (config.crosshairColor  as string | undefined) ?? "#ef4444";
   const crosshairSymbol = (config.crosshairSymbol as string | undefined) ?? "";
+  const crosshairScale  = Math.max(0.6, Math.min(3, (config.crosshairScale as number | undefined) ?? 1.7));
   const shootLabel  = (config.shootLabel as string | undefined) ?? "SHOOT";
   const timeLimit   = Math.max(0, Math.min(60, (config.timeLimit as number | undefined) ?? 0));
   const hitAnimation = (config.hitAnimation as string | undefined) ?? "pop";
@@ -210,6 +211,15 @@ export function RingShooterEditor({ campaign, setCampaign }: Props) {
                 className="w-full h-9 rounded border bg-white" />
             </Field>
           )}
+          <Field label={`Crosshair size · ×${crosshairScale.toFixed(2)}`}>
+            <input type="range" min={0.6} max={3} step={0.1}
+              value={crosshairScale}
+              onChange={(e) => patch({ crosshairScale: Number(e.target.value) })}
+              className="w-full" />
+            <div className="flex justify-between text-xs text-zinc-400 mt-0.5">
+              <span>Small</span><span>Large</span>
+            </div>
+          </Field>
           <Field label="Hit animation">
             <select value={hitAnimation} onChange={(e) => patch({ hitAnimation: e.target.value })}
               className="w-full rounded border px-2 py-1.5 text-sm bg-white">

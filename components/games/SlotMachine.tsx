@@ -41,7 +41,7 @@ export function SlotMachine({ config, theme, onComplete }: GameProps) {
   // Win threshold: fill the outline to at least this %.
   const winFillPercent   = Math.max(1, Math.min(100, (config?.winFillPercent as number | undefined) ?? 80));
   const lockAnimation = (config?.lockAnimation as string | undefined) ?? "pulse";
-  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the slider to fill the outline!";
+  const instructionTpl        = (config?.instructionText       as string | undefined) ?? "Stop the slider to fill the outline — the fuller it lands, the bigger your prize!";
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;

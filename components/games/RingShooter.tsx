@@ -59,6 +59,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
   const ringColor   = (config?.ringColor as string | undefined) ?? pal.brand;
   const crosshairColor  = (config?.crosshairColor  as string | undefined) ?? "#ef4444";
   const crosshairSymbol = (config?.crosshairSymbol as string | undefined) ?? "";
+  const crosshairScale  = Math.max(0.6, Math.min(3, (config?.crosshairScale as number | undefined) ?? 1.7));
   const instructionColor      = (config?.instructionColor      as string | undefined) ?? null;
   const instructionFontSize   = (config?.instructionFontSize   as number | undefined) ?? 16;
   const instructionFontFamily = (config?.instructionFontFamily as string | undefined) ?? null;
@@ -72,7 +73,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
   const arena = (ringRadius + targetSize) * 2 + 8;
   const cx = arena / 2;
   const cy = arena / 2;
-  const crossSize = targetSize * 1.7;
+  const crossSize = targetSize * crosshairScale;
 
   const [phase, setPhase] = useState<"idle" | "play" | "done">("idle");
   const [alive, setAlive] = useState<boolean[]>(() => Array(count).fill(true));
@@ -169,7 +170,7 @@ export function RingShooter({ config, theme, onComplete }: GameProps) {
 
   const hits = alive.filter((a) => !a).length;
   const instructionText =
-    phase === "idle" ? "Tap SHOOT when a target lines up with the crosshair!"
+    phase === "idle" ? "Tap SHOOT when a target lines up with the crosshair — clear them all to win!"
     : phase === "done" ? (wonRef.current ? winText : loseText)
     : undefined;
 

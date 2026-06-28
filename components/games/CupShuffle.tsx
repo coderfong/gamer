@@ -131,7 +131,7 @@ export function CupShuffle({ config, theme, onComplete }: GameProps) {
 
   const won = phase === "done" && picked === ballId;
   const instructionText =
-    phase === "idle" ? "Find the object hidden under a cup!"
+    phase === "idle" ? "Find the object hidden under a cup — pick the right one to win!"
     : phase === "reveal" ? watchText
     : phase === "shuffle" ? shuffleText
     : phase === "pick" ? pickText

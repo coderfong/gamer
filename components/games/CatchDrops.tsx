@@ -209,7 +209,7 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
   }
 
   const instructionText =
-    phase === "idle" ? "Catch the good ones — dodge the bad!"
+    phase === "idle" ? "Catch the good ones, dodge the bad — the more you catch, the bigger your prize!"
     : phase === "done" ? (wonRef.current ? winText : loseText)
     : undefined;
 
