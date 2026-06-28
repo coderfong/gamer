@@ -202,12 +202,8 @@ export function Memory({ config, theme, onComplete }: GameProps) {
   return (
     <Stage instruction={instruction}>
       <div className="flex items-center gap-3">
-        {showMoves && <Readout label={movesLabel} value={moves} color={pal.brand} />}
-        <Readout
-          label={timeLabel}
-          value={`${timeLeft}s`}
-          color={timeLeft <= 5 ? "#e11d48" : pal.brand}
-        />
+        {showMoves && <Readout label={movesLabel} value={moves} />}
+        <Readout label={timeLabel} value={`${timeLeft}s`} />
       </div>
       {outOfTime && (
         <div

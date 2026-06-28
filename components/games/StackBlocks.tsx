@@ -161,7 +161,7 @@ export function StackBlocks({ config, theme, onComplete }: GameProps) {
         ) : undefined
       }
     >
-      {phase !== "idle" ? <Readout label={stackedLabel} value={stackCount} color={pal.brand} /> : null}
+      {phase !== "idle" ? <Readout label={stackedLabel} value={stackCount} /> : null}
       <div
         className="relative overflow-hidden rounded-2xl"
         style={{

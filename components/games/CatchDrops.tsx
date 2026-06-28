@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
-import { palette } from "@/lib/games/colors";
 
 // Catch the Drops — move the catcher to grab the good items and dodge the bad
 // ones before time runs out. Server still decides the actual prize; the score
@@ -46,8 +45,7 @@ interface Drop {
 }
 interface Effect { id: number; x: number; y: number; text: string; color: string; }
 
-export function CatchDrops({ config, theme, onComplete }: GameProps) {
-  const pal = palette(theme.brandColor, theme.brandFg);
+export function CatchDrops({ config, onComplete }: GameProps) {
 
   // ── Config ─────────────────────────────────────────────────────────────────
   const gameMs      = Math.max(10, Math.min(90, (config?.gameSeconds as number | undefined) ?? 30)) * 1000;
@@ -228,7 +226,7 @@ export function CatchDrops({ config, theme, onComplete }: GameProps) {
         <div className="flex gap-3 items-stretch">
           <div className="arcade-chip px-4 py-1.5 text-center">
             <div className="text-[10px] uppercase tracking-widest arcade-muted">{scoreLabel}</div>
-            <div className="arcade-display text-xl leading-none" style={{ color: pal.brand }}>{score}</div>
+            <div className="arcade-display text-xl leading-none" style={{ color: "var(--ink)" }}>{score}</div>
           </div>
           <div className="arcade-chip px-4 py-1.5 text-center">
             <div className="text-[10px] uppercase tracking-widest arcade-muted">Time</div>

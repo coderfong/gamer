@@ -136,7 +136,7 @@ export function WhackAMole({ config, theme, onComplete }: GameProps) {
     >
       {phase === "play" ? (
         <div className="flex gap-3">
-          <Readout label={scoreLabel} value={score} color={pal.brand} />
+          <Readout label={scoreLabel} value={score} />
           <Readout label={timeLabel} value={`${(left / 1000).toFixed(1)}s`} />
         </div>
       ) : null}

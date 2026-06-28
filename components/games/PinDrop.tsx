@@ -217,7 +217,7 @@ export function PinDrop({ config, theme, onComplete }: GameProps) {
         <div className="flex gap-3 items-stretch">
           <div className="arcade-chip px-4 py-1.5 text-center">
             <div className="text-[10px] uppercase tracking-widest arcade-muted">Pins</div>
-            <div className="arcade-display text-xl leading-none" style={{ color: pal.brand }}>{placed}/{targetPins}</div>
+            <div className="arcade-display text-xl leading-none" style={{ color: "var(--ink)" }}>{placed}/{targetPins}</div>
           </div>
           <div className="arcade-chip px-3 py-1.5 text-center flex flex-col justify-center">
             <div className="text-sm leading-none whitespace-nowrap">

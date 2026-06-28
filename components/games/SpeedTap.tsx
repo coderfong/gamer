@@ -103,7 +103,7 @@ export function SpeedTap({ config, theme, onComplete }: GameProps) {
     >
       {phase === "play" ? (
         <div className="flex gap-3">
-          <Readout label={tapsLabel} value={taps} color={pal.brand} />
+          <Readout label={tapsLabel} value={taps} />
           <Readout label={timeLabel} value={`${(left / 1000).toFixed(1)}s`} />
         </div>
       ) : null}

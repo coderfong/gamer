@@ -110,7 +110,7 @@ export function TapTarget({ config, theme, onComplete }: GameProps) {
     >
       {phase === "play" ? (
         <div className="flex gap-3">
-          <Readout label={hitsLabel} value={score} color={pal.brand} />
+          <Readout label={hitsLabel} value={score} />
           <Readout label={timeLabel} value={`${(left / 1000).toFixed(1)}s`} />
         </div>
       ) : null}

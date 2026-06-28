@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { GameProps } from "@/lib/types/game";
-import { useArcade, useTimer, ArcadeButton, Stage, Readout } from "./arcade/Kit";
+import { useTimer, ArcadeButton, Stage, Readout } from "./arcade/Kit";
 import { rotateHue, readableText } from "@/lib/games/colors";
 
 const ROUNDS = 6;
@@ -24,8 +24,7 @@ function makeRound(): Round {
 }
 
 // Stroop-style: match the COLOR NAME shown to the correct swatch. N rounds.
-export function ColorMatch({ theme, onComplete }: GameProps) {
-  const pal = useArcade(theme);
+export function ColorMatch({ onComplete }: GameProps) {
   const timer = useTimer();
   const [phase, setPhase] = useState<"idle" | "play">("idle");
   const [round, setRound] = useState(0);
@@ -64,7 +63,7 @@ export function ColorMatch({ theme, onComplete }: GameProps) {
         <>
           <div className="flex gap-3">
             <Readout label="Round" value={`${round + 1}/${ROUNDS}`} />
-            <Readout label="Correct" value={score} color={pal.brand} />
+            <Readout label="Correct" value={score} />
           </div>
           <div
             className="arcade-title text-4xl"

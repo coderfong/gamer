@@ -177,7 +177,7 @@ export function AngleStop({ config, theme, onComplete }: GameProps) {
           )}
           <div className="arcade-chip px-4 py-1.5 text-center">
             <div className="text-[10px] uppercase tracking-widest arcade-muted">Hits</div>
-            <div className="arcade-display text-xl leading-none" style={{ color: pal.brand }}>{hits}/{rounds}</div>
+            <div className="arcade-display text-xl leading-none" style={{ color: "var(--ink)" }}>{hits}/{rounds}</div>
           </div>
         </div>
       )}

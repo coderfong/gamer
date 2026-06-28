@@ -68,12 +68,14 @@ export function Stage({
   );
 }
 
-/** A bold count/score readout. */
-export function Readout({ label, value, color }: { label: string; value: ReactNode; color?: string }) {
+// Score / timer HUD readout. The value is always rendered in the dark ink colour
+// (never the brand colour) so it stays legible on any brand background — a yellow
+// score on a yellow background is unreadable.
+export function Readout({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="arcade-chip px-4 py-1.5 text-center">
       <div className="text-[10px] uppercase tracking-widest arcade-muted">{label}</div>
-      <div className="arcade-display text-xl leading-none" style={{ color: color ?? "var(--ink)" }}>
+      <div className="arcade-display text-xl leading-none" style={{ color: "var(--ink)" }}>
         {value}
       </div>
     </div>
