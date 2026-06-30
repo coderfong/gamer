@@ -115,11 +115,22 @@ export function MiniGamePreview({
   const availW = innerW - sidePad * 2;
   const availH = screenH - topPad - 14;
 
-  // Measure the game's actual rendered size (incl. overflow) and scale to fit.
+  // Measure the game's rendered size and scale to fit the phone screen.
+  //
+  // Use offsetWidth/offsetHeight, NOT scrollWidth/scrollHeight: the measured
+  // node lives inside the `transform: scale(...)` wrapper below, and WebKit /
+  // iOS Safari report scroll* in *transformed* units. Reading those fed the
+  // fit-scale back into itself, so the game (and its text) shrank a little on
+  // every replay. offset* are layout pixels — transform-independent on every
+  // browser. The 1px threshold stops sub-pixel jitter from re-triggering.
   useEffect(() => {
     const el = contentRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
-    const update = () => setSize({ w: Math.max(el.scrollWidth, GAME_W), h: el.scrollHeight || GAME_W });
+    const update = () => {
+      const w = Math.max(el.offsetWidth, GAME_W);
+      const h = el.offsetHeight || GAME_W;
+      setSize((prev) => (Math.abs(prev.w - w) <= 1 && Math.abs(prev.h - h) <= 1 ? prev : { w, h }));
+    };
     const ro = new ResizeObserver(update);
     ro.observe(el);
     update();
