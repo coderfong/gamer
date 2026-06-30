@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 const AGENCY = {
   name: "GAMEABLE STUDIOS",
   mark: "G",
-  email: "gameablestudiosg@gmail.com",
+  email: "jonathan@gameablestudios.com",
   phone: "+6594799717",
   phoneDisplay: "+65 9479 9717",
 };
@@ -64,8 +64,9 @@ export default async function Home() {
         <div className="wrap">
           <div className="sec-head">
             <span className="eyebrow">Gameable Studios</span>
-            <h2>{cells.length || ""} brands. Every kind of game.</h2>
-            <p>Custom-built, fully-branded mini-games. Each one is live — play it right here, or open its hub.</p>
+            <h2>Launch a branded QR campaign your customers actually want to play.</h2>
+            <p>Gameable Studios helps F&amp;B, retail, lifestyle, and service brands plan, build, and launch interactive reward campaigns.</p>
+            <p>We handle the campaign idea, game concepts, branded QR games, reward setup, redemption flow, testing, hosting, and analytics — so you get more than a game. You get a full customer engagement campaign.</p>
           </div>
 
           {cells.length > 0 ? (
@@ -98,13 +99,13 @@ export default async function Home() {
         <div className="wrap">
           <div className="sec-head">
             <span className="eyebrow on-dark">What we do</span>
-            <h2 style={{ color: "#fff" }}>A full-service branded game studio.</h2>
-            <p>From first concept to a live, shareable link — we handle design, build, and the whole capture-and-reward loop.</p>
+            <h2 style={{ color: "#fff" }}>A campaign agency for branded customer engagement.</h2>
+            <p>From campaign idea to live QR launch, we help brands create interactive reward campaigns that drive attention, customer data, redemptions, and repeat visits.</p>
           </div>
           <div className="games">
             <div className="gcard" style={{ background: "var(--grape)", color: "#fff" }}>
-              <h3>Custom Game Design</h3>
-              <p>Bespoke mechanics and art direction matched to your brand and campaign goal.</p>
+              <h3>Campaign Strategy &amp; Concepts</h3>
+              <p>The campaign idea and game concepts, with bespoke mechanics matched to your brand and goal.</p>
             </div>
             <div className="gcard" style={{ background: "var(--sun)" }}>
               <h3>Full Brand Theming</h3>
@@ -125,7 +126,7 @@ export default async function Home() {
             <div className="gcard" style={{ background: "#fff", justifyContent: "center" }}>
               <h3 style={{ color: "var(--grape-d)", fontSize: 22 }}>Hosting &amp; support</h3>
               <p style={{ color: "var(--muted)" }}>We host, maintain, and tweak your game so it&apos;s always live and on-brand.</p>
-              <a className="tag" style={{ color: "var(--grape-d)" }} href={`mailto:${AGENCY.email}`}>Start a project →</a>
+              <a className="tag" style={{ color: "var(--grape-d)" }} href={`mailto:${AGENCY.email}`}>Start a campaign →</a>
             </div>
           </div>
         </div>
@@ -135,25 +136,25 @@ export default async function Home() {
       <section id="process">
         <div className="wrap">
           <div className="sec-head">
-            <span className="eyebrow">How we work</span>
-            <h2>From brief to live game in three steps.</h2>
-            <p>You bring the brand and the prize. We design the game, build it, and hand you a link.</p>
+            <span className="eyebrow">How it works</span>
+            <h2>From campaign idea to live QR launch in three steps.</h2>
+            <p>You bring the brand and the reward. We shape the campaign, build the branded QR game, and launch it — strategy, concepts, build, launch, measure.</p>
           </div>
           <div className="steps">
             <div className="step">
               <div className="num" style={{ background: "var(--grape)" }}>1</div>
-              <h3>Discovery</h3>
-              <p>We learn your brand, audience, and goal — leads, footfall, launch buzz — and pick the right game.</p>
+              <h3>Campaign strategy</h3>
+              <p>We learn your brand, audience, and goal — leads, footfall, launch buzz — and shape the campaign and the right game format.</p>
             </div>
             <div className="step">
               <div className="num" style={{ background: "var(--coral)" }}>2</div>
-              <h3>Design &amp; build</h3>
-              <p>We theme and build a fully custom game, then send you a live preview to play and refine.</p>
+              <h3>Concepts &amp; build</h3>
+              <p>We theme and build the branded QR game and reward flow, then send you a live preview to test and refine.</p>
             </div>
             <div className="step">
               <div className="num" style={{ background: "var(--mint)" }}>3</div>
               <h3>Launch &amp; measure</h3>
-              <p>Go live with a link or QR, hand out prizes, and watch the plays and leads roll in.</p>
+              <p>Go live with a link or QR, redeem rewards, and track plays, leads, and redemptions as they roll in.</p>
             </div>
           </div>
         </div>
@@ -188,10 +189,10 @@ export default async function Home() {
       <section className="cta-band" id="contact">
         <div className="wrap">
           <div className="cta-card">
-            <h2>Let&apos;s build your <span className="display" style={{ color: "var(--sun)" }}>branded game</span>.</h2>
-            <p>Tell us about your brand and what you want to achieve. We&apos;ll come back with a concept — and a game you can play.</p>
+            <h2>Let&apos;s build your <span className="display" style={{ color: "var(--sun)" }}>campaign</span>.</h2>
+            <p>Tell us about your brand and what you want to achieve. We&apos;ll come back with a campaign concept — and a branded QR game you can play.</p>
             <div className="hero-cta">
-              <a className="btn btn-sun btn-lg" href={`mailto:${AGENCY.email}`}>Email the studio →</a>
+              <a className="btn btn-sun btn-lg" href={`mailto:${AGENCY.email}`}>Start a campaign →</a>
               <a className="btn btn-ghost on-dark btn-lg" href="#work">See the work</a>
             </div>
           </div>
@@ -205,7 +206,7 @@ export default async function Home() {
             <div>
               <div className="logo"><span className="mark">{AGENCY.mark}</span> {AGENCY.name}</div>
               <p style={{ marginTop: 14, maxWidth: 260, fontSize: 14 }}>
-                A branded game studio. We design and build custom games that make brands play.
+                A campaign agency for branded customer engagement. We plan, build, and launch interactive QR reward campaigns.
               </p>
             </div>
             <div><h4>Studio</h4><ul><li><Link href="/how-it-works#dashboard">Dashboard</Link></li><li><a href="#services">Services</a></li><li><a href="#process">Process</a></li></ul></div>
