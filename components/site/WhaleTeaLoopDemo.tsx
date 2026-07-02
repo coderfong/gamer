@@ -33,6 +33,7 @@ const WHALE_STAMP: StampCardAssets = {
 };
 const GOAL = WHALE_STAMP.goal;
 const VOUCHER_CODE = "TOPPING482";
+const REFERRAL_POOL = ["Ben", "Priya", "Wei", "Marcus", "Nadia", "Chloe"];
 const WA = waLink("Hi Gameable, I saw the Whale Tea demo — I'd like a rewards page for my business");
 
 // Bonus spin-wheel config — outcomes like Double Stamp. Reuses the real SpinWheel.
@@ -61,6 +62,7 @@ export function WhaleTeaLoopDemo() {
   const [wheelOpen, setWheelOpen] = useState(false);
   const [wheelNonce, setWheelNonce] = useState(0);
   const [bonus, setBonus] = useState<string | null>(null);
+  const [referrals, setReferrals] = useState<string[]>(["Amanda"]);
 
   const voucherActive = stamps >= GOAL && !redeemed;
 
@@ -81,11 +83,19 @@ export function WhaleTeaLoopDemo() {
     setStamps(0);
   }
 
+  function inviteFriend() {
+    const next = REFERRAL_POOL.find((n) => !referrals.includes(n));
+    if (!next) return;
+    setReferrals((prev) => [next, ...prev]);
+    addStamp(); // a successful referral earns a bonus stamp
+  }
+
   function resetDemo() {
     setStamps(4);
     setRedeemed(false);
     setBonus(null);
     setWheelOpen(false);
+    setReferrals(["Amanda"]);
     setJoined(true);
   }
 
@@ -167,6 +177,8 @@ export function WhaleTeaLoopDemo() {
               voucherActive={voucherActive}
               redeemed={redeemed}
               onPlayBonus={openWheel}
+              referrals={referrals}
+              onInvite={inviteFriend}
             />
           )}
           {tab === "staff" && (
@@ -185,10 +197,11 @@ export function WhaleTeaLoopDemo() {
 
 // ── Customer view ────────────────────────────────────────────────────────────
 function CustomerView({
-  joined, onJoin, stamps, addStamp, voucherActive, redeemed, onPlayBonus,
+  joined, onJoin, stamps, addStamp, voucherActive, redeemed, onPlayBonus, referrals, onInvite,
 }: {
   joined: boolean; onJoin: () => void; stamps: number; addStamp: () => void;
   voucherActive: boolean; redeemed: boolean; onPlayBonus: () => void;
+  referrals: string[]; onInvite: () => void;
 }) {
   if (!joined) {
     return (
@@ -257,6 +270,38 @@ function CustomerView({
           </div>
         </div>
       )}
+
+      {/* Refer a friend — extend reach, capture new members */}
+      <div className="rounded-3xl p-5" style={{ background: "#fff", border: `1px solid ${BRAND}22` }}>
+        <div className="flex items-center justify-between">
+          <div className="text-[15px] font-extrabold" style={{ color: INK }}>Refer a friend</div>
+          <span className="text-lg">🔗</span>
+        </div>
+        <p className="mt-1 text-[13px]" style={{ color: "#5B6B70" }}>
+          Share your link. When a friend joins, they become a member too — and you earn a bonus stamp.
+        </p>
+        <div className="mt-3 flex items-center gap-2 rounded-2xl px-3 py-2.5" style={{ background: CREAM }}>
+          <span className="flex-1 truncate font-mono text-[13px]" style={{ color: BRAND_D }}>whaletea.sg/join/sarah</span>
+          <button
+            type="button"
+            onClick={onInvite}
+            className="rounded-xl px-3.5 py-1.5 text-[13px] font-extrabold transition-transform active:scale-95"
+            style={{ background: BRAND, color: BRAND_FG }}
+          >
+            Invite
+          </button>
+        </div>
+        {referrals.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {referrals.map((n) => (
+              <li key={n} className="flex items-center gap-2 text-[13px]" style={{ color: "#3A4A50" }}>
+                <span style={{ color: "#1A8F60" }}>✓</span>
+                <span><b>{n}</b> joined through your link — +1 bonus stamp</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

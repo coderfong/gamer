@@ -107,7 +107,7 @@ export default async function Home() {
       </header>
 
       {/* HERO */}
-      <section className="hero hero-center">
+      <section className="hero">
         <div className="wrap">
           <div className="hero-grid">
             <div>
@@ -119,7 +119,15 @@ export default async function Home() {
               </p>
               <div className="hero-cta">
                 <a className="btn btn-sun btn-lg" href={WA_DEFAULT} target="_blank" rel="noopener noreferrer">WhatsApp us →</a>
-                <Link className="btn btn-ghost on-dark btn-lg" href="/b/whale-tea">Play a live demo</Link>
+                <Link className="btn btn-ghost on-dark btn-lg" href="/b/whale-tea">Open full demo ↗</Link>
+              </div>
+            </div>
+
+            {/* Live, tappable demo embedded in a phone */}
+            <div className="demo-stage">
+              <div className="demo-badge"><span className="dot" /> Live demo — tap to play</div>
+              <div className="demo-frame">
+                <iframe src="/b/whale-tea" title="Whale Tea rewards demo" loading="lazy" />
               </div>
             </div>
           </div>
