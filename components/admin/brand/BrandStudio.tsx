@@ -9,6 +9,7 @@ import { HeroStepAll } from "./steps/HeroStepAll";
 import { TextStepAll } from "./steps/TextStepAll";
 import { BackgroundsStepAll } from "./steps/BackgroundsStepAll";
 import { OverlaysStepAll } from "./steps/OverlaysStepAll";
+import { StampCardStep } from "./steps/StampCardStep";
 import { ShareStep } from "./steps/ShareStep";
 
 const STEPS = [
@@ -17,6 +18,7 @@ const STEPS = [
   { key: "text", label: "Text", hint: "Headline & supporting text styles" },
   { key: "backgrounds", label: "Backgrounds", hint: "Background images, adjustable" },
   { key: "overlays", label: "Extra assets", hint: "Decorative images + animations" },
+  { key: "stamp", label: "Rewards card", hint: "Stamp card assets — background, stamp icons, reward image" },
   { key: "share", label: "Share", hint: "One QR for all your games" },
 ] as const;
 
@@ -144,6 +146,9 @@ export function BrandStudio({
         )}
         {step === "overlays" && (
           <OverlaysStepAll brandId={brandId} config={config} patchConfig={patchConfig} />
+        )}
+        {step === "stamp" && (
+          <StampCardStep brandId={brandId} brandName={name} config={config} patchConfig={patchConfig} />
         )}
         {step === "share" && (
           <ShareStep

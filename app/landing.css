@@ -53,6 +53,12 @@
 .lp .nav-links a:hover { color: var(--ink); }
 .lp .nav-cta { display: flex; gap: 12px; align-items: center; }
 @media (max-width: 880px) { .lp .nav-links { display: none; } }
+/* Small screens: keep the primary WhatsApp CTA, drop the secondary ghost login (still in footer) */
+@media (max-width: 560px) {
+  .lp .nav-cta .btn-ghost { display: none; }
+  .lp .nav .logo { font-size: 16px; }
+  .lp .nav-cta .btn { padding: 11px 18px; font-size: 14px; }
+}
 
 .lp .hero { background: radial-gradient(120% 90% at 80% -10%, #3A2350, var(--plum) 60%); color: #fff; position: relative; overflow: hidden; }
 .lp .hero::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 2px, transparent 2px); background-size: 22px 22px; opacity: .6; }
@@ -393,3 +399,91 @@
 @media (max-width: 560px) { .lp .dash-src { grid-template-columns: 116px 1fr 56px; gap: 10px; } .lp .dash-src .nm { font-size: 12.5px; } }
 
 .lp .dash-caption { text-align: center; max-width: 620px; margin: 18px auto 0; font-size: 13px; color: var(--muted); font-style: italic; }
+
+/* ============================================================
+   LOYALTY PIVOT — hero, rewards product, who-it's-for,
+   comparison, WhatsApp float, section connectors
+   ============================================================ */
+
+/* Centered single-column hero variant */
+.lp .hero-center { text-align: center; }
+.lp .hero-center .hero-grid { grid-template-columns: 1fr; padding: 72px 0 80px; }
+.lp .hero-center h1 { font-size: clamp(38px, 5.6vw, 62px); max-width: 15ch; margin: 16px auto 0; }
+.lp .hero-center .hero-sub { margin: 22px auto 0; }
+.lp .hero-center .hero-cta { justify-content: center; }
+@media (max-width: 880px) { .lp .hero-center .hero-grid { padding: 52px 0 60px; } }
+
+/* Caption above the work carousel */
+.lp .work-caption { text-align: center; max-width: 640px; margin: 0 auto 28px; font-size: 15.5px; font-weight: 700; color: var(--ink2); }
+.lp .work-caption span { color: var(--grape-d); }
+
+/* The Rewards Program — the product */
+.lp .rw { background: var(--cream); }
+.lp .rw-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.lp .rw-card { background: var(--paper); border: 3px solid #15101C; border-radius: 20px; box-shadow: 6px 7px 0 #15101C; padding: 24px 22px; display: flex; flex-direction: column; }
+.lp .rw-card .rw-ico { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-size: 26px; color: #fff; margin-bottom: 16px; }
+.lp .rw-card h3 { font-size: 19px; color: var(--ink); }
+.lp .rw-card p { font-size: 14px; color: var(--muted); font-weight: 600; margin-top: 8px; line-height: 1.5; }
+@media (max-width: 980px) { .lp .rw-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .lp .rw-grid { grid-template-columns: 1fr; } }
+.lp .rw-connect { text-align: center; max-width: 780px; margin: 32px auto 0; font-size: clamp(17px, 2.2vw, 21px); font-weight: 700; color: var(--ink); line-height: 1.45; }
+.lp .rw-connect span { color: var(--grape-d); }
+
+/* Who it's for */
+.lp .who-row { display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start; background: var(--paper); border: 1px solid var(--line); border-radius: 24px; padding: 30px 32px; }
+.lp .who-row + .who-row { margin-top: 20px; }
+.lp .who-head h3 { font-size: 24px; color: var(--ink); }
+.lp .who-head p { font-size: 14.5px; color: var(--muted); font-weight: 600; margin-top: 10px; line-height: 1.5; }
+.lp .who-brands { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+.lp .who-chip { font-size: 14px; font-weight: 700; color: var(--ink2); background: var(--cream); border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; transition: border-color .12s, color .12s, transform .12s; }
+.lp a.who-chip:hover { border-color: var(--grape); color: var(--grape-d); transform: translateY(-2px); }
+@media (max-width: 720px) { .lp .who-row { grid-template-columns: 1fr; gap: 18px; padding: 24px; } }
+
+/* Honest comparison table */
+.lp .cmp-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 22px; -webkit-overflow-scrolling: touch; }
+.lp table.cmp { width: 100%; border-collapse: collapse; min-width: 640px; background: var(--paper); }
+.lp table.cmp th { text-align: left; font-size: 13px; font-weight: 800; padding: 18px 18px; border-bottom: 2px solid var(--line); vertical-align: bottom; }
+.lp table.cmp thead th { color: var(--ink2); }
+.lp table.cmp thead th.us { color: var(--grape-d); }
+.lp table.cmp td { padding: 15px 18px; font-size: 14px; color: var(--ink2); font-weight: 600; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.lp table.cmp td:first-child { font-weight: 800; color: var(--ink); }
+.lp table.cmp tr:last-child td { border-bottom: 0; }
+.lp table.cmp col.us-col, .lp table.cmp .us { background: rgba(138,107,255,.07); }
+.lp table.cmp td.us { color: var(--ink); font-weight: 700; }
+.lp .cmp-yes { color: #1A8F60; font-weight: 900; }
+.lp .cmp-no { color: #C9C2D2; font-weight: 900; }
+.lp .cmp-badge { display: inline-block; margin-left: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; color: #fff; background: var(--grape); border-radius: 999px; padding: 3px 9px; vertical-align: middle; }
+.lp .cmp-note { text-align: center; max-width: 640px; margin: 18px auto 0; font-size: 13px; color: var(--muted); font-style: italic; }
+
+/* Comparison — stacked cards on small screens (the 3-col table can't breathe at 375px) */
+.lp .cmp-cards { display: none; flex-direction: column; gap: 14px; }
+.lp .cmp-col { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--paper); }
+.lp .cmp-col.us { border: 2px solid var(--grape); box-shadow: 0 16px 40px -26px var(--grape); }
+.lp .cmp-col-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; font-size: 16px; font-weight: 800; color: var(--ink); background: var(--cream); border-bottom: 1px solid var(--line); }
+.lp .cmp-col.us .cmp-col-head { background: rgba(138,107,255,.1); color: var(--grape-d); }
+.lp .cmp-col-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 18px; border-bottom: 1px solid var(--line); }
+.lp .cmp-col-row:last-child { border-bottom: 0; }
+.lp .cmp-col-row .k { font-size: 13px; font-weight: 700; color: var(--muted); }
+.lp .cmp-col-row .val { font-size: 14px; font-weight: 700; color: var(--ink); text-align: right; }
+@media (max-width: 560px) {
+  .lp .cmp-wrap { display: none; }
+  .lp .cmp-cards { display: flex; }
+}
+
+/* Floating WhatsApp button — mobile viewports only */
+.lp .wa-fab { position: fixed; right: 16px; bottom: 18px; z-index: 90; width: 56px; height: 56px; border-radius: 999px; display: none; place-items: center; color: #fff; background: #25D366; box-shadow: 0 10px 26px -8px rgba(37,211,102,.7), 0 0 0 4px rgba(37,211,102,.18); transition: transform .12s ease; }
+.lp .wa-fab:hover { transform: translateY(-2px); }
+.lp .wa-fab:active { transform: translateY(1px); }
+@media (max-width: 880px) { .lp .wa-fab { display: grid; } }
+
+/* Privacy page body copy */
+.lp .privacy-body p { font-size: 15px; color: var(--ink2); line-height: 1.65; }
+.lp .privacy-body p + p { margin-top: 12px; }
+.lp .privacy-body ul { margin: 12px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.lp .privacy-body li { font-size: 15px; color: var(--ink2); line-height: 1.55; }
+.lp .privacy-body strong { color: var(--ink); font-weight: 800; }
+.lp .privacy-body a { color: var(--grape-d); text-decoration: underline; font-weight: 700; }
+
+/* Quiet email link in CTA bands */
+.lp .cta-email { position: relative; display: inline-block; margin-top: 18px; font-size: 14px; color: #B6A6C6; font-weight: 600; }
+.lp .cta-email a { color: #EDE4F5; text-decoration: underline; }

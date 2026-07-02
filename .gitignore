@@ -11,3 +11,10 @@ dist
 .idea
 coverage
 next-env.d.ts
+
+# editor file-history + generated build cache
+.history/
+tsconfig.tsbuildinfo
+
+# stray uploads not part of the project
+/photo_*.jpg

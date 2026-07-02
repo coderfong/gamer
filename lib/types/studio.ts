@@ -52,6 +52,33 @@ export interface StudioGameAssets {
   pointerFlipY?: boolean;
 }
 
+// Per-brand rewards / stamp-card assets set in the Brand Studio — the loyalty
+// equivalent of StudioGameAssets. All image slots are optional; anything unset
+// falls back to a themed default in the <StampCard> component.
+export interface StampCardAssets {
+  // Background image with the same adjustable framing as game backgrounds.
+  bg?: {
+    url: string;
+    x: number;        // % offset -100..100
+    y: number;        // % offset -100..100
+    scale: number;    // 1 = cover
+    opacity: number;  // 0..1
+  };
+  logoUrl?: string;         // header logo on the card (falls back to the brand logo)
+  stampEmptyUrl?: string;   // icon for an uncollected stamp slot
+  stampFilledUrl?: string;  // icon for a collected stamp
+  rewardImageUrl?: string;  // image shown when the card is full / reward unlocked
+  overlays?: OverlayElement[]; // decorative overlays (reserved; passed through)
+  goal: number;             // stamps needed to unlock the reward (2..12)
+  rewardLabel: string;      // e.g. "Free drink"
+  // Emoji fallbacks used when no icon image is uploaded — a quick way to brand a
+  // stamp/reward without an asset. Empty = use the built-in default (✓ / 🎁).
+  stampEmoji?: string;
+  rewardEmoji?: string;
+}
+
+export const DEFAULT_STAMP_CARD: StampCardAssets = { goal: 5, rewardLabel: "Free reward" };
+
 export interface BrandStudioTheme {
   brandColor: string;
   brandFg: string;
@@ -80,6 +107,7 @@ export interface BrandStudioConfig {
   logoUrl: string | null;
   text: BrandStudioText;
   games: Record<string, StudioGameAssets>;
+  stampCard: StampCardAssets;
 }
 
 export const DEFAULT_STUDIO_TEXT: BrandStudioText = {
@@ -112,6 +140,40 @@ export function defaultStudioConfig(): BrandStudioConfig {
     logoUrl: null,
     text: { display: { ...DEFAULT_STUDIO_TEXT.display }, body: { ...DEFAULT_STUDIO_TEXT.body } },
     games: {},
+    stampCard: { ...DEFAULT_STAMP_CARD },
+  };
+}
+
+const clampNum = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+// Normalise a stored stampCard blob into a complete StampCardAssets.
+function readStampCard(raw: unknown): StampCardAssets {
+  const base = { ...DEFAULT_STAMP_CARD };
+  if (!raw || typeof raw !== "object") return base;
+  const o = raw as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  const rb = o.bg && typeof o.bg === "object" ? (o.bg as Record<string, unknown>) : null;
+  const bg =
+    rb && typeof rb.url === "string" && rb.url
+      ? {
+          url: rb.url as string,
+          x: Number(rb.x) || 0,
+          y: Number(rb.y) || 0,
+          scale: Number(rb.scale) || 1,
+          opacity: rb.opacity == null ? 1 : Number(rb.opacity),
+        }
+      : undefined;
+  return {
+    goal: clampNum(Math.round(Number(o.goal) || base.goal), 2, 12),
+    rewardLabel: typeof o.rewardLabel === "string" ? o.rewardLabel : base.rewardLabel,
+    logoUrl: str(o.logoUrl),
+    stampEmptyUrl: str(o.stampEmptyUrl),
+    stampFilledUrl: str(o.stampFilledUrl),
+    rewardImageUrl: str(o.rewardImageUrl),
+    stampEmoji: str(o.stampEmoji),
+    rewardEmoji: str(o.rewardEmoji),
+    bg,
+    overlays: Array.isArray(o.overlays) ? (o.overlays as OverlayElement[]) : undefined,
   };
 }
 
@@ -131,5 +193,6 @@ export function readStudioConfig(raw: unknown): BrandStudioConfig {
       body: { ...base.text.body, ...(rawText.body ?? {}) },
     },
     games: (o.games && typeof o.games === "object" ? (o.games as Record<string, StudioGameAssets>) : {}),
+    stampCard: readStampCard(o.stampCard),
   };
 }
