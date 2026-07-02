@@ -71,17 +71,20 @@ create trigger loyalty_cards_updated_at before update on loyalty_cards
 -- Adds one stamp to the member's active card (creating one if needed). When the
 -- card reaches its goal it flips to 'completed' and mints a loyalty voucher.
 -- Returns the resulting card state + any newly minted voucher code.
+-- (DROP first: changing OUT-parameter names changes the return type, which
+--  CREATE OR REPLACE cannot do.)
+drop function if exists loyalty_add_stamp(uuid, uuid, int, text);
 create or replace function loyalty_add_stamp(
   p_brand_id     uuid,
   p_member_id    uuid,
   p_goal         int,
   p_reward_label text
 ) returns table (
-  card_id      uuid,
-  stamps       int,
-  goal         int,
-  status       text,
-  voucher_code text
+  out_card_id      uuid,
+  out_stamps       int,
+  out_goal         int,
+  out_status       text,
+  out_voucher_code text
 ) as $$
 declare
   v_card_id uuid;
@@ -90,17 +93,18 @@ declare
   v_status  text;
   v_code    text;
 begin
-  select id, stamps, goal
+  select lc.id, lc.stamps, lc.goal
     into v_card_id, v_stamps, v_goal
-  from loyalty_cards
-  where member_id = p_member_id and status = 'active'
+  from loyalty_cards lc
+  where lc.member_id = p_member_id and lc.status = 'active'
   for update
   limit 1;
 
   if v_card_id is null then
     insert into loyalty_cards (brand_id, member_id, stamps, goal, status)
     values (p_brand_id, p_member_id, 0, greatest(coalesce(p_goal, 5), 1), 'active')
-    returning id, stamps, goal into v_card_id, v_stamps, v_goal;
+    returning loyalty_cards.id, loyalty_cards.stamps, loyalty_cards.goal
+      into v_card_id, v_stamps, v_goal;
   end if;
 
   v_stamps := v_stamps + 1;
@@ -117,21 +121,26 @@ begin
     update loyalty_cards set stamps = v_stamps where id = v_card_id;
   end if;
 
-  card_id := v_card_id; stamps := v_stamps; goal := v_goal; status := v_status; voucher_code := v_code;
+  out_card_id := v_card_id;
+  out_stamps := v_stamps;
+  out_goal := v_goal;
+  out_status := v_status;
+  out_voucher_code := v_code;
   return next;
 end;
 $$ language plpgsql security definer;
 
 -- ------------- loyalty_redeem_voucher -------------
 -- Marks an active voucher redeemed and closes its card. Returns ok + label.
+drop function if exists loyalty_redeem_voucher(uuid, text, text);
 create or replace function loyalty_redeem_voucher(
   p_brand_id uuid,
   p_code     text,
   p_staff    text
 ) returns table (
-  ok           boolean,
-  reward_label text,
-  already      boolean
+  out_ok           boolean,
+  out_reward_label text,
+  out_already      boolean
 ) as $$
 declare
   v_id     uuid;
@@ -139,17 +148,17 @@ declare
   v_status text;
   v_card   uuid;
 begin
-  select id, reward_label, status, card_id
+  select lv.id, lv.reward_label, lv.status, lv.card_id
     into v_id, v_label, v_status, v_card
-  from loyalty_vouchers
-  where brand_id = p_brand_id and code = p_code
+  from loyalty_vouchers lv
+  where lv.brand_id = p_brand_id and lv.code = p_code
   for update;
 
   if v_id is null then
-    ok := false; reward_label := null; already := false; return next; return;
+    out_ok := false; out_reward_label := null; out_already := false; return next; return;
   end if;
   if v_status = 'redeemed' then
-    ok := false; reward_label := v_label; already := true; return next; return;
+    out_ok := false; out_reward_label := v_label; out_already := true; return next; return;
   end if;
 
   update loyalty_vouchers
@@ -159,7 +168,7 @@ begin
     update loyalty_cards set status = 'redeemed' where id = v_card;
   end if;
 
-  ok := true; reward_label := v_label; already := false; return next;
+  out_ok := true; out_reward_label := v_label; out_already := false; return next;
 end;
 $$ language plpgsql security definer;
 

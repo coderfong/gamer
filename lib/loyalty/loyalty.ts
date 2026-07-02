@@ -193,11 +193,11 @@ export async function addStamp(
   const row = Array.isArray(data) ? data[0] : data;
   if (error || !row) throw new Error(error?.message ?? "add_stamp_failed");
   return {
-    cardId: row.card_id as string,
-    stamps: Number(row.stamps),
-    goal: Number(row.goal),
-    status: row.status as LoyaltyCard["status"],
-    voucherCode: (row.voucher_code as string | null) ?? null,
+    cardId: row.out_card_id as string,
+    stamps: Number(row.out_stamps),
+    goal: Number(row.out_goal),
+    status: row.out_status as LoyaltyCard["status"],
+    voucherCode: (row.out_voucher_code as string | null) ?? null,
   };
 }
 
@@ -222,8 +222,8 @@ export async function redeemVoucher(
   if (error) throw new Error(error.message);
   if (!row) return { ok: false, rewardLabel: null, already: false };
   return {
-    ok: Boolean(row.ok),
-    rewardLabel: (row.reward_label as string | null) ?? null,
-    already: Boolean(row.already),
+    ok: Boolean(row.out_ok),
+    rewardLabel: (row.out_reward_label as string | null) ?? null,
+    already: Boolean(row.out_already),
   };
 }
