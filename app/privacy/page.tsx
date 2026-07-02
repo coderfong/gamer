@@ -143,7 +143,7 @@ export default function PrivacyPage() {
               <div className="logo"><span className="mark">{AGENCY.mark}</span> {AGENCY.name}</div>
               <p style={{ marginTop: 14, maxWidth: 280, fontSize: 14 }}>{IDENTITY_LINE}</p>
             </div>
-            <div><h4>Product</h4><ul><li><Link href="/#rewards">Rewards program</Link></li><li><Link href="/#who">Who it&apos;s for</Link></li><li><Link href="/b/whale-tea">Live demo</Link></li></ul></div>
+            <div><h4>Product</h4><ul><li><Link href="/#rewards">Rewards program</Link></li><li><Link href="/#who">Who it&apos;s for</Link></li><li><Link href="/demo">Live demo</Link></li></ul></div>
             <div><h4>Explore</h4><ul><li><Link href="/how-it-works">How it works</Link></li><li><Link href="/#formats">Game formats</Link></li><li><Link href="/portal/login">Client login</Link></li></ul></div>
             <div><h4>Contact</h4><ul><li><a href={WA_DEFAULT} target="_blank" rel="noopener noreferrer">WhatsApp us</a></li><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><Link href="/privacy">Privacy</Link></li></ul></div>
           </div>

@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
           <p>No jargon. Here&apos;s the whole thing — how a customer joins, how your staff add a stamp, and how you watch it all from one dashboard.</p>
           <div className="hero-cta">
             <a className="btn btn-sun btn-lg" href={WA_DEFAULT} target="_blank" rel="noopener noreferrer">WhatsApp us →</a>
-            <Link className="btn btn-ghost on-dark btn-lg" href="/b/whale-tea">Play a live demo</Link>
+            <Link className="btn btn-ghost on-dark btn-lg" href="/demo">Play a live demo</Link>
           </div>
         </div>
       </section>
@@ -287,7 +287,7 @@ export default function HowItWorksPage() {
               <div className="logo"><span className="mark">{AGENCY.mark}</span> {AGENCY.name}</div>
               <p style={{ marginTop: 14, maxWidth: 280, fontSize: 14 }}>{IDENTITY_LINE}</p>
             </div>
-            <div><h4>Product</h4><ul><li><Link href="/#rewards">Rewards program</Link></li><li><Link href="/#who">Who it&apos;s for</Link></li><li><Link href="/b/whale-tea">Live demo</Link></li></ul></div>
+            <div><h4>Product</h4><ul><li><Link href="/#rewards">Rewards program</Link></li><li><Link href="/#who">Who it&apos;s for</Link></li><li><Link href="/demo">Live demo</Link></li></ul></div>
             <div><h4>Explore</h4><ul><li><a href="#loop">The loop</a></li><li><a href="#dashboard">Dashboard</a></li><li><Link href="/portal/login">Client login</Link></li></ul></div>
             <div><h4>Contact</h4><ul><li><a href={WA_DEFAULT} target="_blank" rel="noopener noreferrer">WhatsApp us</a></li><li><a href={`mailto:${AGENCY.email}`}>{AGENCY.email}</a></li><li><a href={`tel:${AGENCY.phone}`}>{AGENCY.phoneDisplay}</a></li><li><Link href="/privacy">Privacy</Link></li></ul></div>
           </div>

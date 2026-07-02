@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/how-it-works`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${SITE_URL}/b/whale-tea`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE_URL}/demo`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not("public_slug", "is", null);
     const brandRoutes: MetadataRoute.Sitemap = (data ?? [])
       .map((r) => (r as { public_slug: string | null }).public_slug)
-      .filter((s): s is string => !!s && s !== "whale-tea")
+      .filter((s): s is string => !!s)
       .map((slug) => ({
         url: `${SITE_URL}/b/${slug}`,
         lastModified: now,
