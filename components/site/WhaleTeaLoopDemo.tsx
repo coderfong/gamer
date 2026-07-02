@@ -14,6 +14,11 @@ const BRAND_D = "#0C7C77";
 const BRAND_FG = "#ffffff";
 const INK = "#12232B";
 const CREAM = "#F3FBFA";
+// Whale Tea look & feel — rounded, friendly bubble-tea font + a soft teal wash.
+const FONT = '"Fredoka", "Plus Jakarta Sans", system-ui, sans-serif';
+const PAGE_BG = "#EDF8F6";
+const PAGE_BG_IMAGE =
+  "radial-gradient(120% 70% at 50% -8%, rgba(18,167,160,0.22), transparent 62%), radial-gradient(90% 60% at 100% 0%, rgba(255,194,60,0.10), transparent 60%)";
 
 // The demo's stamp card renders from a StampCardAssets config — the same model
 // and <StampCard> component the Brand Studio configures per brand. Swap these
@@ -23,8 +28,20 @@ const WHALE_THEME: BrandStudioTheme = {
   brandFg: BRAND_FG,
   accentColor: "#FFC23C",
   bgColor: "#FFFFFF",
-  fontFamily: "Plus Jakarta Sans",
+  fontFamily: "Fredoka",
 };
+
+// Screen 1 (pre-join) tiles — 2×3 grid. Only "Join rewards" is brand-filled;
+// tiles 2–6 open the join flow with a contextual line. This grid is also the
+// spec for the real /r/[slug] rewards page landing (see loyalty backend notes).
+const LANDING_TILES: { icon: string; label: string; sub: string; ctx: string | null; primary?: boolean }[] = [
+  { icon: "🧋", label: "Join rewards", sub: "10 seconds, no app", ctx: null, primary: true },
+  { icon: "🎟️", label: "Collect stamp", sub: "5 stamps = reward", ctx: "Join free to start collecting stamps" },
+  { icon: "🎁", label: "Claim voucher", sub: "Welcome reward", ctx: "Join free to claim your welcome reward" },
+  { icon: "🎡", label: "Bonus game", sub: "Spin to upgrade", ctx: "Join free to play the bonus game" },
+  { icon: "🎂", label: "Birthday treat", sub: "Free on your month", ctx: "Join free to get a birthday treat" },
+  { icon: "🔗", label: "Refer a friend", sub: "Both get a stamp", ctx: "Join free, then refer a friend" },
+];
 const WHALE_STAMP: StampCardAssets = {
   goal: 5,
   rewardLabel: "Free Topping",
@@ -113,7 +130,7 @@ export function WhaleTeaLoopDemo() {
 
   return (
     <main
-      style={{ background: CREAM, color: INK, minHeight: "100dvh", fontFamily: '"Plus Jakarta Sans", system-ui, sans-serif' }}
+      style={{ background: PAGE_BG, backgroundImage: PAGE_BG_IMAGE, color: INK, minHeight: "100dvh", fontFamily: FONT }}
     >
       {/* Persistent demo banner */}
       <div
@@ -203,27 +220,65 @@ function CustomerView({
   voucherActive: boolean; redeemed: boolean; onPlayBonus: () => void;
   referrals: string[]; onInvite: () => void;
 }) {
+  const [formOpen, setFormOpen] = useState(false);
+  const [ctx, setCtx] = useState<string | null>(null);
+
   if (!joined) {
+    // Contextual join form (reached by tapping any landing tile).
+    if (formOpen) {
+      return (
+        <section className="rounded-3xl p-6" style={{ background: "#fff", border: `1px solid ${BRAND}22`, boxShadow: "0 20px 50px -30px rgba(18,167,160,.6)" }}>
+          <button type="button" onClick={() => setFormOpen(false)} className="text-[13px] font-bold" style={{ color: BRAND_D }}>← Back</button>
+          <div className="mt-2 text-center">
+            <div className="text-4xl">🧋</div>
+            <h2 className="mt-2 text-2xl font-extrabold" style={{ color: INK }}>Join Whale Tea Rewards</h2>
+            <p className="mt-2 text-[14px] font-semibold" style={{ color: BRAND_D }}>{ctx ?? "Join free — it takes 10 seconds."}</p>
+          </div>
+          <div className="mt-5 space-y-2.5 text-left">
+            <MockField label="Name" value="Sarah Tan" />
+            <MockField label="Mobile" value="9123 4567" />
+          </div>
+          <button
+            type="button"
+            onClick={onJoin}
+            className="mt-5 w-full rounded-2xl py-3.5 text-base font-extrabold transition-transform active:scale-[0.98]"
+            style={{ background: BRAND, color: BRAND_FG }}
+          >
+            Join in one tap →
+          </button>
+          <p className="mt-3 text-center text-[11.5px]" style={{ color: "#93A3A7" }}>Demo only — no real details are collected.</p>
+        </section>
+      );
+    }
+
+    // Screen 1 — 2×3 tile landing. Every tile funnels into the join flow.
     return (
-      <section className="rounded-3xl p-6 text-center" style={{ background: "#fff", border: `1px solid ${BRAND}22`, boxShadow: "0 20px 50px -30px rgba(18,167,160,.6)" }}>
-        <div className="text-4xl">🧋</div>
-        <h2 className="mt-3 text-2xl font-extrabold" style={{ color: INK }}>Join Whale Tea Rewards</h2>
-        <p className="mt-2 text-[14.5px] font-medium" style={{ color: "#5B6B70" }}>
-          Collect a stamp every visit. Buy 5, get 1 free. No app — just your name and number.
-        </p>
-        <div className="mt-5 space-y-2.5 text-left">
-          <MockField label="Name" value="Sarah Tan" />
-          <MockField label="Mobile" value="9123 4567" />
+      <section>
+        <div className="text-center">
+          <div className="text-3xl leading-none">🧋</div>
+          <h2 className="mt-1.5 text-xl font-extrabold" style={{ color: INK }}>Whale Tea Rewards</h2>
+          <p className="mt-1 text-[13px] font-medium" style={{ color: "#5B6B70" }}>Collect a stamp every visit. Buy 5, get 1 free. No app.</p>
         </div>
-        <button
-          type="button"
-          onClick={onJoin}
-          className="mt-5 w-full rounded-2xl py-3.5 text-base font-extrabold transition-transform active:scale-[0.98]"
-          style={{ background: BRAND, color: BRAND_FG }}
-        >
-          Join in one tap →
-        </button>
-        <p className="mt-3 text-[11.5px]" style={{ color: "#93A3A7" }}>Demo only — no real details are collected.</p>
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          {LANDING_TILES.map((t) => (
+            <button
+              key={t.label}
+              type="button"
+              onClick={() => { setCtx(t.ctx); setFormOpen(true); }}
+              className="flex flex-col items-center rounded-2xl px-2.5 py-4 text-center transition-transform active:scale-95"
+              style={
+                t.primary
+                  ? { background: BRAND, color: BRAND_FG, border: `2px solid ${BRAND}`, boxShadow: "0 12px 24px -14px rgba(18,167,160,.9)" }
+                  : { background: "#fff", color: INK, border: `1.5px solid ${BRAND}2e` }
+              }
+            >
+              <span className="text-2xl leading-none">{t.icon}</span>
+              <span className="mt-2 text-[13.5px] font-extrabold leading-tight">{t.label}</span>
+              <span className="mt-0.5 text-[11px] font-medium leading-tight" style={{ color: t.primary ? "rgba(255,255,255,0.92)" : "#6C8085" }}>{t.sub}</span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-[11.5px]" style={{ color: "#93A3A7" }}>Demo only — tap any tile to see the join flow.</p>
       </section>
     );
   }
